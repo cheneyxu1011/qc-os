@@ -1756,7 +1756,6 @@
                 <p>先录入问题和措施，系统自动生成执行任务、复核流程和正式报告。</p>
               </div>
               <div class="toolbar">
-                <button class="btn" id="addMeasureBtn">新增措施</button>
                 <button class="btn primary" id="saveReportBtn" type="button">保存报告</button>
               </div>
             </div>
@@ -2009,10 +2008,10 @@
 
         <section class="page" id="tasks">
           <div class="metric-grid">
-            <div class="metric"><span>我的待执行</span><strong>3</strong><small>项</small></div>
-            <div class="metric"><span>今天到期</span><strong>1</strong><small>项</small></div>
-            <div class="metric"><span>已逾期</span><strong>1</strong><small>项</small></div>
-            <div class="metric"><span>本月完成率</span><strong>82%</strong></div>
+            <div class="metric"><span>我的待执行</span><strong id="taskPendingCount">0</strong><small>项</small></div>
+            <div class="metric"><span>今天到期</span><strong id="taskDueTodayCount">0</strong><small>项</small></div>
+            <div class="metric"><span>已逾期</span><strong id="taskOverdueCount">0</strong><small>项</small></div>
+            <div class="metric"><span>本月完成率</span><strong id="taskCompletionRate">0%</strong></div>
           </div>
 
           <div class="task-board">
@@ -2023,95 +2022,13 @@
                   <p>责任人只看到分配给自己的措施任务，上传改善照片后可标记已执行。</p>
                 </div>
                 <div class="toolbar">
-                  <select>
-                    <option>当前责任人：夏红霞</option>
-                    <option>朱小丽</option>
-                    <option>李小华</option>
-                    <option>朱玲玲</option>
-                    <option>张吉云</option>
-                    <option>张亚琴</option>
-                    <option>顾瑶</option>
-                    <option>顾永宏</option>
-                  </select>
-                  <button class="btn">只看逾期</button>
+                  <select id="taskPersonFilter" aria-label="按责任人筛选任务"></select>
+                  <button class="btn" id="taskOverdueToggle" type="button">只看逾期</button>
                 </div>
               </div>
 
-              <div class="task-list">
-                <article class="task-card">
-                  <div class="task-card-head">
-                    <div>
-                      <h3>里布腰上节超过1CM松量的全部返修处理</h3>
-                      <div class="task-meta">
-                        <span>报告：<b>XCJ2026-001</b></span>
-                        <span>款号：<b>JK57</b></span>
-                        <span>来源：<b>压胶部</b></span>
-                        <span>期限：<b>2026/7/25</b></span>
-                      </div>
-                    </div>
-                    <span class="pill red">已逾期</span>
-                  </div>
-                  <div class="compare-grid">
-                    <div class="compare-photo">
-                      <b>问题照片</b>
-                      <img src="assets/issue-photo-sewing-clean.png" alt="问题照片" data-problem-image>
-                      <p class="readonly-note">问题描述：<b data-problem-text>左内里布上下分配不均匀，造成里布上节多布约1CM左右，扭曲。客人QC不接受，需要返修处理。</b></p>
-                    </div>
-                    <label class="upload-zone" style="min-height: 220px;">
-                      <input type="file" accept="image/*" multiple hidden>
-                      <strong>上传改善照片</strong>
-                      <span>每条措施至少 1 张，未上传不能关闭</span>
-                    </label>
-                  </div>
-                  <div class="task-actions">
-                    <div class="field"><label>执行说明</label><input value="已按标准止口返修，待压胶部复核。"></div>
-                    <button class="btn primary">标记已执行</button>
-                    <button class="btn">查看报告</button>
-                  </div>
-                </article>
-
-                <article class="task-card">
-                  <div class="task-card-head">
-                    <div>
-                      <h3>把下摆折位0.8CM改回1CM，减少上下节松量差</h3>
-                      <div class="task-meta">
-                        <span>报告：<b>XCJ2026-001</b></span>
-                        <span>款号：<b>JK57</b></span>
-                        <span>来源：<b>压胶部</b></span>
-                        <span>期限：<b>2026/7/27</b></span>
-                      </div>
-                    </div>
-                    <span class="pill amber">待执行</span>
-                  </div>
-                  <div class="task-actions">
-                    <label class="upload-zone" style="min-height: 92px;">
-                      <input type="file" accept="image/*" multiple hidden>
-                      <strong>上传改善照片</strong>
-                    </label>
-                    <button class="btn primary">标记已执行</button>
-                    <button class="btn">查看报告</button>
-                  </div>
-                </article>
-
-                <article class="task-card">
-                  <div class="task-card-head">
-                    <div>
-                      <h3>组长每日首件确认，品质巡检同步确认标准线</h3>
-                      <div class="task-meta">
-                        <span>报告：<b>XCJ2026-001</b></span>
-                        <span>款号：<b>JK57</b></span>
-                        <span>协同：<b>QC部、业务部</b></span>
-                        <span>周期：<b>长期执行</b></span>
-                      </div>
-                    </div>
-                    <span class="pill blue">长期执行</span>
-                  </div>
-                  <div class="task-actions">
-                    <div class="field"><label>本次巡检记录</label><input value="首件确认正常，继续跟进量产稳定性。"></div>
-                    <button class="btn primary">提交记录</button>
-                    <button class="btn">查看历史</button>
-                  </div>
-                </article>
+              <div class="task-list" id="taskList">
+                <div class="readonly-note">正在读取已分配的改善任务...</div>
               </div>
             </div>
 
@@ -3646,6 +3563,130 @@
       return `<span class="pill ${color}">${reportStatusNames[status] || status}</span>`;
     }
 
+    let taskReports = [];
+    let taskOverdueOnly = false;
+
+    function localDateValue(date = new Date()) {
+      const offset = date.getTimezoneOffset() * 60000;
+      return new Date(date.getTime() - offset).toISOString().slice(0, 10);
+    }
+
+    function taskState(action) {
+      if (action.status === "executed" || action.completed_at) {
+        return { key: "completed", label: "已执行", color: "green" };
+      }
+      const today = localDateValue();
+      if (action.due_date && action.due_date < today) {
+        return { key: "overdue", label: "已逾期", color: "red" };
+      }
+      if (action.due_date === today) {
+        return { key: "today", label: "今天到期", color: "amber" };
+      }
+      return { key: "pending", label: "待执行", color: "amber" };
+    }
+
+    function assignedTasks(personName) {
+      return taskReports.flatMap((report) =>
+        (report.actions || [])
+          .filter((action) => (action.assignees || []).some((assignee) => assignee.person_name === personName))
+          .map((action) => ({ report, action, state: taskState(action) }))
+      );
+    }
+
+    function renderTaskPersonOptions() {
+      const select = document.getElementById("taskPersonFilter");
+      const current = select.value;
+      const assignedNames = taskReports.flatMap((report) =>
+        (report.actions || []).flatMap((action) => (action.assignees || []).map((assignee) => assignee.person_name))
+      );
+      const people = [...new Set([...allPeople(), ...assignedNames].filter(Boolean))];
+      select.innerHTML = people.map((person) =>
+        `<option value="${escapeHtml(person)}">${escapeHtml(person)}</option>`
+      ).join("");
+      if (people.includes(current)) {
+        select.value = current;
+      } else {
+        select.value = people.find((person) => assignedTasks(person).length > 0) || people[0] || "";
+      }
+    }
+
+    function renderTaskList() {
+      const personName = document.getElementById("taskPersonFilter").value;
+      const allTasks = assignedTasks(personName);
+      const visibleTasks = taskOverdueOnly
+        ? allTasks.filter((task) => task.state.key === "overdue")
+        : allTasks;
+      const pending = allTasks.filter((task) => task.state.key !== "completed").length;
+      const dueToday = allTasks.filter((task) => task.state.key === "today").length;
+      const overdue = allTasks.filter((task) => task.state.key === "overdue").length;
+      const completed = allTasks.filter((task) => task.state.key === "completed").length;
+      const completionRate = allTasks.length ? Math.round((completed / allTasks.length) * 100) : 0;
+
+      document.getElementById("taskPendingCount").textContent = pending;
+      document.getElementById("taskDueTodayCount").textContent = dueToday;
+      document.getElementById("taskOverdueCount").textContent = overdue;
+      document.getElementById("taskCompletionRate").textContent = `${completionRate}%`;
+
+      const container = document.getElementById("taskList");
+      container.innerHTML = visibleTasks.map(({ report, action, state }) => {
+        const image = report.problem_attachments?.[0]?.view_url || "assets/issue-photo-sewing-clean.png";
+        const assignees = (action.assignees || []).map((item) => item.person_name).join("、");
+        return `
+          <article class="task-card" data-report-no="${escapeHtml(report.report_no)}" data-action-id="${escapeHtml(action.id)}">
+            <div class="task-card-head">
+              <div>
+                <h3>${escapeHtml(action.action_content)}</h3>
+                <div class="task-meta">
+                  <span>报告：<b>${escapeHtml(report.report_no)}</b></span>
+                  <span>工厂：<b>${escapeHtml(report.factory_name || "")}</b></span>
+                  <span>款号：<b>${escapeHtml(report.style_no || "")}</b></span>
+                  <span>来源：<b>${escapeHtml(report.source_department_name || "")}</b></span>
+                  <span>期限：<b>${escapeHtml(formatDate(action.due_date) || "长期执行")}</b></span>
+                  <span>共同责任人：<b>${escapeHtml(assignees)}</b></span>
+                </div>
+              </div>
+              <span class="pill ${state.color}">${state.label}</span>
+            </div>
+            <div class="compare-grid">
+              <div class="compare-photo">
+                <b>问题照片</b>
+                <img src="${escapeHtml(image)}" alt="${escapeHtml(report.problem_description || "问题照片")}">
+                <p class="readonly-note">问题描述：<b>${escapeHtml(report.problem_description || "未填写")}</b></p>
+              </div>
+              <label class="upload-zone" style="min-height: 220px;">
+                <input type="file" accept="image/*" multiple hidden data-task-upload="${escapeHtml(action.id)}">
+                <strong>上传改善照片</strong>
+                <span>每条措施至少 1 张，未上传不能关闭</span>
+              </label>
+            </div>
+            <div class="task-actions">
+              <div class="field"><label>执行说明</label><input placeholder="填写本次改善执行说明"></div>
+              <button class="btn primary" type="button" disabled>标记已执行</button>
+            </div>
+          </article>`;
+      }).join("") || `<div class="readonly-note">${escapeHtml(personName || "当前人员")}目前没有${taskOverdueOnly ? "逾期" : "已分配"}的改善任务。</div>`;
+    }
+
+    async function loadTaskReports() {
+      renderTaskPersonOptions();
+      if (location.protocol === "file:") {
+        renderTaskList();
+        return;
+      }
+      const container = document.getElementById("taskList");
+      container.innerHTML = '<div class="readonly-note">正在读取已分配的改善任务...</div>';
+      try {
+        const response = await fetch("/api/qc/reports?limit=5000");
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "读取改善任务失败");
+        taskReports = result.reports || [];
+        renderTaskPersonOptions();
+        renderTaskList();
+      } catch (error) {
+        container.innerHTML = `<div class="readonly-note">${escapeHtml(error.message || "读取改善任务失败")}</div>`;
+      }
+    }
+
     function updateHistoryStyleOptions(reports) {
       const select = document.getElementById("historyStyleFilter");
       const current = select.value;
@@ -3910,8 +3951,13 @@
     document.getElementById("factoryAddBtn").addEventListener("click", addFactory);
     document.getElementById("styleCatalogAddBtn").addEventListener("click", addStyleCatalogItem);
     fields.styleNo.addEventListener("change", () => renderStyleColors());
-    document.getElementById("addMeasureBtn").addEventListener("click", addMeasure);
     document.getElementById("addMeasureInlineBtn").addEventListener("click", addMeasure);
+    document.getElementById("taskPersonFilter").addEventListener("change", renderTaskList);
+    document.getElementById("taskOverdueToggle").addEventListener("click", (event) => {
+      taskOverdueOnly = !taskOverdueOnly;
+      event.currentTarget.textContent = taskOverdueOnly ? "显示全部" : "只看逾期";
+      renderTaskList();
+    });
     document.getElementById("newReportBtn").addEventListener("click", () => {
       document.querySelector('[data-tab="report"]').click();
       newReport();
@@ -4032,7 +4078,7 @@
         button.textContent = "已保存";
         setUploadStatus(status, `报告 ${result.reportNo} 已保存，措施任务已分配。`, "success");
         updateReportPreview();
-        await Promise.all([loadHistoryReports(), loadProjectorReports(), loadFactories()]);
+        await Promise.all([loadHistoryReports(), loadProjectorReports(), loadTaskReports(), loadFactories()]);
       } catch (error) {
         button.disabled = false;
         button.textContent = "重新保存";
@@ -4094,6 +4140,7 @@
     loadFactories();
     loadHistoryReports();
     loadProjectorReports();
+    loadTaskReports();
     fields.sourceDept.value = "压胶部";
     renderResponsibleDepartments();
     renderMeasures();
