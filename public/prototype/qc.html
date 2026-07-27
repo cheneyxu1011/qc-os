@@ -593,6 +593,25 @@
       align-items: center;
     }
 
+    .report-no-indicator {
+      min-height: 38px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f7fafc;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .report-no-indicator b {
+      color: var(--ink);
+      font-size: 16px;
+    }
+
     .field {
       display: grid;
       gap: 6px;
@@ -1827,13 +1846,14 @@
                 <p>先录入问题和措施，系统自动生成执行任务、复核流程和正式报告。</p>
               </div>
               <div class="toolbar">
+                <span class="report-no-indicator">系统编号 <b id="reportNoDisplay">XCJ2026-001</b></span>
+                <input id="reportNo" type="hidden" value="XCJ2026-001">
                 <button class="btn primary" id="saveReportBtn" type="button">保存报告</button>
               </div>
             </div>
             <div class="upload-status" id="saveReportStatus"></div>
 
             <div class="form-grid">
-              <div class="field"><label>报告编号</label><input id="reportNo" value="XCJ2026-001" readonly></div>
               <div class="field"><label>发现日期</label><input id="foundDate" type="date" value="2026-07-05"></div>
               <div class="field"><label>品牌（按款号自动带出）</label><input id="brandName" value="迪赛特" readonly></div>
               <div class="field"><label>款号</label><select id="styleNo"><option value="迪赛特::JK57" data-brand="迪赛特" data-style="JK57">JK57 · 迪赛特</option></select></div>
@@ -3317,6 +3337,7 @@
     function updateReportPreview() {
       const departments = selectedResponsibleDepartments();
       const people = assignedMeasurePeople();
+      setText("reportNoDisplay", fields.reportNo.value);
       document.getElementById("summaryReportNo").textContent = fields.reportNo.value;
       document.getElementById("summarySource").textContent = fields.sourceDept.value;
       document.getElementById("summaryDept").textContent = departments.join("、") || "未选择";
