@@ -19,10 +19,6 @@ const nextConfig = {
       {
         source: "/",
         destination: "/prototype/qc.html"
-      },
-      {
-        source: "/mobile",
-        destination: "/prototype/mobile.html"
       }
     ];
   }

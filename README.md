@@ -13,7 +13,9 @@ The current prototype contains both live integrations and demonstration-only sec
 Current deployment strategy:
 
 - The validated workshop prototype is served from `/prototype/qc.html`.
-- The mobile capture prototype is served from `/prototype/mobile.html`.
+- The desktop application is served from `/`.
+- The mobile application is served from `/mobile`.
+- Legacy `/prototype/qc` and `/prototype/mobile` links redirect to the formal routes.
 - Root `/` redirects to `/prototype/qc.html` for the first workshop trial.
 - Current Vercel production URL: `https://qc-os.vercel.app/prototype/qc.html`.
 - Production domain: `https://qc-os.vanwellgroup.com`.
