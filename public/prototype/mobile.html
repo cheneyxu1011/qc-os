@@ -420,11 +420,11 @@
           </div>
           <div class="upload-status" data-status-for="problemThumbs"></div>
           <div class="grid-2">
-            <div class="field"><label>品牌</label><input value="迪赛特"></div>
-            <div class="field"><label>款号</label><input value="JK57"></div>
+            <div class="field"><label>品牌（自动带出）</label><input id="mobileBrandName" value="迪赛特" readonly></div>
+            <div class="field"><label>款号</label><select id="mobileStyleNo"><option value="迪赛特::JK57" data-brand="迪赛特" data-style="JK57">JK57 · 迪赛特</option></select></div>
           </div>
           <div class="grid-2">
-            <div class="field"><label>颜色</label><input value="深灰"></div>
+            <div class="field"><label>颜色</label><select id="mobileColorName"><option value="深灰" data-style-id="">深灰</option></select></div>
             <div class="field"><label>严重程度</label><select><option>不可接受，需要返修</option><option>严重问题</option><option>一般问题</option></select></div>
           </div>
           <div class="grid-2">
@@ -586,6 +586,12 @@
   <script>
     const navButtons = document.querySelectorAll(".bottom-nav button");
     const pages = document.querySelectorAll(".page");
+    const mobileBrandName = document.getElementById("mobileBrandName");
+    const mobileStyleNo = document.getElementById("mobileStyleNo");
+    const mobileColorName = document.getElementById("mobileColorName");
+    let mobileStyleCatalog = [
+      { id: "", brand: "迪赛特", style_no: "JK57", color: "深灰" }
+    ];
 
     function openTab(id) {
       navButtons.forEach((button) => button.classList.toggle("active", button.dataset.tab === id));
@@ -597,6 +603,68 @@
     navButtons.forEach((button) => {
       button.addEventListener("click", () => openTab(button.dataset.tab));
     });
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function renderMobileStyleColors(preferredColor = "") {
+      const selected = mobileStyleNo.selectedOptions[0];
+      const brand = selected?.dataset.brand || "";
+      const styleNo = selected?.dataset.style || "";
+      const colors = mobileStyleCatalog.filter(
+        (item) => item.brand === brand && item.style_no === styleNo
+      );
+      mobileBrandName.value = brand;
+      mobileColorName.innerHTML = colors.map((item) => `
+        <option value="${escapeHtml(item.color)}" data-style-id="${escapeHtml(item.id)}">
+          ${escapeHtml(item.color)}
+        </option>
+      `).join("");
+      if (colors.some((item) => item.color === preferredColor)) {
+        mobileColorName.value = preferredColor;
+      }
+    }
+
+    function renderMobileStyleSelectors() {
+      const previousStyle = mobileStyleNo.value;
+      const previousColor = mobileColorName.value;
+      const groups = new Map();
+      mobileStyleCatalog.forEach((item) => {
+        const key = `${item.brand}::${item.style_no}`;
+        if (!groups.has(key)) groups.set(key, item);
+      });
+      mobileStyleNo.innerHTML = [...groups.entries()].map(([key, item]) => `
+        <option value="${escapeHtml(key)}" data-brand="${escapeHtml(item.brand)}" data-style="${escapeHtml(item.style_no)}">
+          ${escapeHtml(item.style_no)} · ${escapeHtml(item.brand)}
+        </option>
+      `).join("");
+      if (groups.has(previousStyle)) mobileStyleNo.value = previousStyle;
+      renderMobileStyleColors(previousColor);
+    }
+
+    async function loadMobileStyleCatalog() {
+      if (location.protocol === "file:") {
+        renderMobileStyleSelectors();
+        return;
+      }
+      try {
+        const response = await fetch("/api/qc/styles");
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "读取款式资料失败");
+        mobileStyleCatalog = result.styles || [];
+        renderMobileStyleSelectors();
+      } catch (error) {
+        setUploadStatus("problemThumbs", error.message || "款式资料读取失败", "error");
+      }
+    }
+
+    mobileStyleNo.addEventListener("change", () => renderMobileStyleColors());
 
     const uploadTypeByTarget = {
       problemThumbs: "problem-before",
@@ -673,6 +741,7 @@
     });
 
     const initial = location.hash.replace("#", "");
+    loadMobileStyleCatalog();
     if (["report", "tasks", "review", "archive"].includes(initial)) openTab(initial);
     else requestAnimationFrame(() => window.scrollTo(0, 0));
   </script>

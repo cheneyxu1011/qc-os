@@ -27,6 +27,7 @@ type ReportAttachment = {
 
 type CreateReportPayload = {
   reportNo?: string;
+  styleCatalogId?: string;
   foundDate: string;
   brand?: string;
   styleNo?: string;
@@ -92,6 +93,7 @@ function validatePayload(body: unknown): CreateReportPayload {
   if (!reporter) throw new Error("请选择报告人");
   if (!problemDescription) throw new Error("请填写问题描述");
   if (!allowedSeverities.has(severity)) throw new Error("严重程度不正确");
+  if (!cleanText(input.styleCatalogId, 80)) throw new Error("请从 08 款式资料库选择款号和颜色");
 
   const actions = Array.isArray(input.actions)
     ? input.actions.map((raw, index) => {
@@ -140,6 +142,7 @@ function validatePayload(body: unknown): CreateReportPayload {
 
   return {
     reportNo: cleanText(input.reportNo, 30) || undefined,
+    styleCatalogId: cleanText(input.styleCatalogId, 80) || undefined,
     foundDate,
     brand: cleanText(input.brand, 200) || undefined,
     styleNo: cleanText(input.styleNo, 200) || undefined,
@@ -231,6 +234,19 @@ export async function POST(request: Request) {
     if (!sourceDepartmentId) throw new Error("问题来源部门不在人员库中");
     if (!reporterPersonId) throw new Error("报告人不在人员库中");
 
+    const { data: selectedStyle, error: selectedStyleError } = payload.styleCatalogId
+      ? await supabase
+          .from("qc_style_catalog")
+          .select("id,brand,style_no,color")
+          .eq("id", payload.styleCatalogId)
+          .eq("is_active", true)
+          .maybeSingle()
+      : { data: null, error: null };
+    if (selectedStyleError) throw selectedStyleError;
+    if (payload.styleCatalogId && !selectedStyle) {
+      throw new Error("所选款式资料不存在或已停用");
+    }
+
     const requestedNumber = parseRequestedReportNumber(payload.reportNo);
     const reportYear = Number(payload.foundDate.slice(0, 4));
     const reportInsert = {
@@ -241,10 +257,11 @@ export async function POST(request: Request) {
           }
         : {}),
       report_year: reportYear,
+      style_catalog_id: selectedStyle?.id || null,
       found_date: payload.foundDate,
-      brand: payload.brand || null,
-      style_no: payload.styleNo || null,
-      color: payload.color || null,
+      brand: selectedStyle?.brand || payload.brand || null,
+      style_no: selectedStyle?.style_no || payload.styleNo || null,
+      color: selectedStyle?.color || payload.color || null,
       severity: payload.severity,
       source_department_id: sourceDepartmentId,
       source_department_name: payload.sourceDepartment,

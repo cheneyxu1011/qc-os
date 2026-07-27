@@ -1,4 +1,4 @@
 -- Canonical QC OS schema:
--- ../supabase/migrations/20260727155030_create_qc_os_pilot_schema.sql
+-- ../supabase/migrations/*.sql
 --
--- The migration is idempotent and includes the pilot department/person seed data.
+-- Apply migrations in timestamp order. They include pilot master data and subsequent schema changes.

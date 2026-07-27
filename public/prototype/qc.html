@@ -1526,6 +1526,7 @@
         <button data-tab="archive" data-icon="05">归档审批</button>
         <button data-tab="kpi" data-icon="06">月KPI汇总</button>
         <button data-tab="people" data-icon="07">人员库</button>
+        <button data-tab="styles" data-icon="08">款式资料库</button>
       </nav>
       <div class="people-library-card">
         <h3>人员库</h3>
@@ -1760,9 +1761,9 @@
             <div class="form-grid">
               <div class="field"><label>报告编号</label><input id="reportNo" value="XCJ2026-001" readonly></div>
               <div class="field"><label>发现日期</label><input id="foundDate" type="date" value="2026-07-05"></div>
-              <div class="field"><label>品牌</label><input id="brandName" value="迪赛特"></div>
-              <div class="field"><label>款号</label><input id="styleNo" value="JK57"></div>
-              <div class="field"><label>颜色</label><input id="colorName" value="深灰"></div>
+              <div class="field"><label>品牌（按款号自动带出）</label><input id="brandName" value="迪赛特" readonly></div>
+              <div class="field"><label>款号</label><select id="styleNo"><option value="迪赛特::JK57" data-brand="迪赛特" data-style="JK57">JK57 · 迪赛特</option></select></div>
+              <div class="field"><label>颜色</label><select id="colorName"><option value="深灰" data-style-id="">深灰</option></select></div>
               <div class="field"><label>严重程度</label><select id="severity"><option>不可接受，需要返修</option><option>一般，需要改善</option><option>轻微，提醒改善</option></select></div>
               <div class="field"><label>问题来源</label><select id="sourceDept"><option>压胶部</option><option>车缝部</option><option>裁剪部</option><option>QC部</option><option>业务部</option><option>厂长</option></select></div>
               <div class="field span-2"><label>责任部门（可多选）</label><div class="chip-list" id="responsibleDepartments"></div></div>
@@ -2500,6 +2501,65 @@
           </div>
         </section>
 
+        <section class="page" id="styles">
+          <div class="metric-grid">
+            <div class="metric"><span>资料组合</span><strong id="styleCatalogCount">1</strong><small>条</small></div>
+            <div class="metric"><span>品牌数量</span><strong id="styleBrandCount">1</strong><small>个</small></div>
+            <div class="metric"><span>款号数量</span><strong id="styleNumberCount">1</strong><small>个</small></div>
+            <div class="metric"><span>数据来源</span><strong id="styleSourceStatus">手动</strong></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>款式资料库</h2>
+                <p>统一维护品牌、款号和颜色；纠正报告选择款号后自动带出，不再重复手工输入。</p>
+              </div>
+              <button class="btn primary" id="styleCatalogAddBtn" type="button">新增款式资料</button>
+            </div>
+            <div class="form-grid">
+              <div class="field"><label>品牌</label><input id="styleCatalogBrand" placeholder="例如：迪赛特"></div>
+              <div class="field"><label>款号</label><input id="styleCatalogStyleNo" placeholder="例如：JK57"></div>
+              <div class="field"><label>颜色</label><input id="styleCatalogColor" placeholder="例如：深灰"></div>
+              <div class="field"><label>同步说明</label><input value="当前手动维护，后续由 Factory OS 同步" readonly></div>
+            </div>
+            <div class="upload-status" id="styleCatalogStatus"></div>
+            <div style="overflow-x:auto;">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>品牌</th>
+                    <th>款号</th>
+                    <th>颜色</th>
+                    <th>来源</th>
+                    <th>更新时间</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="styleCatalogRows"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-top:18px;">
+            <div class="panel-head">
+              <div>
+                <h2>数据联动范围</h2>
+                <p>款式资料更新后，新建报告和筛选项使用最新资料；历史报告继续保留创建时快照。</p>
+              </div>
+            </div>
+            <div class="subpanel-body">
+              <div class="library-sync-list">
+                <div><b>02 纠正报告：</b>选择款号，自动显示品牌和该款号已有颜色。</div>
+                <div><b>01 现场投屏：</b>按款号筛选，并显示报告保存时的品牌、款号和颜色。</div>
+                <div><b>05 归档审批：</b>完整报告使用创建报告时保存的款式快照。</div>
+                <div><b>06 月 KPI：</b>按款号汇总部门与个人质量表现。</div>
+                <div><b>Factory OS：</b>正式对接后保留本页作为同步状态和资料检查入口。</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section class="page" id="kpi">
           <div class="metric-grid">
             <div class="metric"><span>车缝责任问题</span><strong>11</strong><small>件</small></div>
@@ -2625,6 +2685,16 @@
       "QC部": ["朱玲玲", "张吉云"],
       "业务部": ["顾瑶", "顾永宏"]
     };
+    let styleCatalog = [
+      {
+        id: "",
+        brand: "迪赛特",
+        style_no: "JK57",
+        color: "深灰",
+        source: "manual",
+        updated_at: ""
+      }
+    ];
     let reportCounter = 1;
     let measures = [
       {
@@ -2676,6 +2746,204 @@
       if (!value) return "";
       const parts = value.split("-");
       return parts.length === 3 ? `${Number(parts[0])}/${Number(parts[1])}/${Number(parts[2])}` : value;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function selectedStyleOption() {
+      return fields.styleNo.selectedOptions[0] || null;
+    }
+
+    function currentStyleNo() {
+      return selectedStyleOption()?.dataset.style || "";
+    }
+
+    function currentStyleCatalogId() {
+      return fields.colorName.selectedOptions[0]?.dataset.styleId || "";
+    }
+
+    function renderStyleSelectors() {
+      const previousStyleKey = fields.styleNo.value;
+      const previousColor = fields.colorName.value;
+      const groups = new Map();
+      styleCatalog.forEach((item) => {
+        const key = `${item.brand}::${item.style_no}`;
+        if (!groups.has(key)) groups.set(key, item);
+      });
+
+      fields.styleNo.innerHTML = [...groups.entries()].map(([key, item]) => `
+        <option value="${escapeHtml(key)}" data-brand="${escapeHtml(item.brand)}" data-style="${escapeHtml(item.style_no)}">
+          ${escapeHtml(item.style_no)} · ${escapeHtml(item.brand)}
+        </option>
+      `).join("") || '<option value="">请先到 08 款式资料库新增资料</option>';
+      if ([...groups.keys()].includes(previousStyleKey)) fields.styleNo.value = previousStyleKey;
+      renderStyleColors(previousColor);
+    }
+
+    function renderStyleColors(preferredColor = "") {
+      const option = selectedStyleOption();
+      const brand = option?.dataset.brand || "";
+      const styleNo = option?.dataset.style || "";
+      const colors = styleCatalog.filter((item) => item.brand === brand && item.style_no === styleNo);
+      fields.brandName.value = brand;
+      fields.colorName.innerHTML = colors.map((item) => `
+        <option value="${escapeHtml(item.color)}" data-style-id="${escapeHtml(item.id)}">${escapeHtml(item.color)}</option>
+      `).join("");
+      if (colors.some((item) => item.color === preferredColor)) fields.colorName.value = preferredColor;
+      updateReportPreview();
+    }
+
+    function renderStyleCatalogPage() {
+      const brands = new Set(styleCatalog.map((item) => item.brand));
+      const styleNumbers = new Set(styleCatalog.map((item) => `${item.brand}::${item.style_no}`));
+      document.getElementById("styleCatalogCount").textContent = styleCatalog.length;
+      document.getElementById("styleBrandCount").textContent = brands.size;
+      document.getElementById("styleNumberCount").textContent = styleNumbers.size;
+      document.getElementById("styleSourceStatus").textContent =
+        styleCatalog.some((item) => item.source === "factory_os") ? "Factory OS" : "手动";
+
+      const container = document.getElementById("styleCatalogRows");
+      container.innerHTML = styleCatalog.map((item) => `
+        <tr data-style-catalog-id="${escapeHtml(item.id)}">
+          <td><input data-style-field="brand" value="${escapeHtml(item.brand)}" ${item.source === "factory_os" ? "readonly" : ""}></td>
+          <td><input data-style-field="styleNo" value="${escapeHtml(item.style_no)}" ${item.source === "factory_os" ? "readonly" : ""}></td>
+          <td><input data-style-field="color" value="${escapeHtml(item.color)}" ${item.source === "factory_os" ? "readonly" : ""}></td>
+          <td><span class="pill ${item.source === "factory_os" ? "green" : "blue"}">${item.source === "factory_os" ? "Factory OS" : "手动"}</span></td>
+          <td>${item.updated_at ? formatDate(item.updated_at.slice(0, 10)) : "当前预览"}</td>
+          <td>
+            <div class="toolbar">
+              <button class="btn save-style-row" type="button" ${item.source === "factory_os" ? "disabled" : ""}>保存</button>
+              <button class="btn danger delete-style-row" type="button" ${item.source === "factory_os" ? "disabled" : ""}>删除</button>
+            </div>
+          </td>
+        </tr>
+      `).join("") || '<tr><td colspan="6"><div class="readonly-note">暂无款式资料，请先新增。</div></td></tr>';
+
+      container.querySelectorAll(".save-style-row").forEach((button) => {
+        button.addEventListener("click", () => saveStyleCatalogRow(button.closest("tr")));
+      });
+      container.querySelectorAll(".delete-style-row").forEach((button) => {
+        button.addEventListener("click", () => deleteStyleCatalogRow(button.closest("tr")));
+      });
+    }
+
+    async function loadStyleCatalog() {
+      if (location.protocol === "file:") {
+        renderStyleSelectors();
+        renderStyleCatalogPage();
+        return;
+      }
+      try {
+        const response = await fetch("/api/qc/styles");
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "读取款式资料失败");
+        styleCatalog = result.styles || [];
+        renderStyleSelectors();
+        renderStyleCatalogPage();
+      } catch (error) {
+        setUploadStatus(document.getElementById("styleCatalogStatus"), error.message || "款式资料读取失败", "error");
+      }
+    }
+
+    async function addStyleCatalogItem() {
+      const brandInput = document.getElementById("styleCatalogBrand");
+      const styleInput = document.getElementById("styleCatalogStyleNo");
+      const colorInput = document.getElementById("styleCatalogColor");
+      const status = document.getElementById("styleCatalogStatus");
+      const payload = {
+        brand: brandInput.value.trim(),
+        styleNo: styleInput.value.trim(),
+        color: colorInput.value.trim()
+      };
+      if (!payload.brand || !payload.styleNo || !payload.color) {
+        setUploadStatus(status, "请完整填写品牌、款号和颜色。", "error");
+        return;
+      }
+      try {
+        if (location.protocol === "file:") {
+          styleCatalog.push({
+            id: `local-${Date.now()}`,
+            brand: payload.brand,
+            style_no: payload.styleNo,
+            color: payload.color,
+            source: "manual",
+            updated_at: ""
+          });
+        } else {
+          const response = await fetch("/api/qc/styles", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || "新增款式资料失败");
+          styleCatalog.push(result.style);
+        }
+        brandInput.value = "";
+        styleInput.value = "";
+        colorInput.value = "";
+        renderStyleSelectors();
+        renderStyleCatalogPage();
+        setUploadStatus(status, "款式资料已新增，并同步到纠正报告。", "success");
+      } catch (error) {
+        setUploadStatus(status, error.message || "新增款式资料失败", "error");
+      }
+    }
+
+    async function saveStyleCatalogRow(row) {
+      const id = row.dataset.styleCatalogId;
+      const payload = {
+        brand: row.querySelector('[data-style-field="brand"]').value.trim(),
+        styleNo: row.querySelector('[data-style-field="styleNo"]').value.trim(),
+        color: row.querySelector('[data-style-field="color"]').value.trim()
+      };
+      const status = document.getElementById("styleCatalogStatus");
+      try {
+        if (location.protocol === "file:") {
+          const item = styleCatalog.find((entry) => entry.id === id) || styleCatalog[0];
+          Object.assign(item, { brand: payload.brand, style_no: payload.styleNo, color: payload.color });
+        } else {
+          const response = await fetch(`/api/qc/styles/${encodeURIComponent(id)}`, {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || "更新款式资料失败");
+          styleCatalog = styleCatalog.map((item) => item.id === id ? result.style : item);
+        }
+        renderStyleSelectors();
+        renderStyleCatalogPage();
+        setUploadStatus(status, "款式资料已更新；历史报告快照不受影响。", "success");
+      } catch (error) {
+        setUploadStatus(status, error.message || "更新款式资料失败", "error");
+      }
+    }
+
+    async function deleteStyleCatalogRow(row) {
+      const id = row.dataset.styleCatalogId;
+      const status = document.getElementById("styleCatalogStatus");
+      if (!window.confirm("确认停用这条款式资料？已创建报告不会受影响。")) return;
+      try {
+        if (location.protocol !== "file:") {
+          const response = await fetch(`/api/qc/styles/${encodeURIComponent(id)}`, { method: "DELETE" });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || "删除款式资料失败");
+        }
+        styleCatalog = styleCatalog.filter((item) => item.id !== id);
+        renderStyleSelectors();
+        renderStyleCatalogPage();
+        setUploadStatus(status, "款式资料已停用。", "success");
+      } catch (error) {
+        setUploadStatus(status, error.message || "删除款式资料失败", "error");
+      }
     }
 
     function allPeople() {
@@ -3020,7 +3288,7 @@
       document.getElementById("paperReportNo").textContent = fields.reportNo.value;
       document.getElementById("paperFoundDate").textContent = formatDate(fields.foundDate.value);
       document.getElementById("paperBrand").textContent = fields.brandName.value;
-      document.getElementById("paperStyle").textContent = fields.styleNo.value;
+      document.getElementById("paperStyle").textContent = currentStyleNo();
       document.getElementById("paperColor").textContent = fields.colorName.value;
       document.getElementById("paperSeverity").textContent = fields.severity.value;
       document.getElementById("paperSource").textContent = fields.sourceDept.value;
@@ -3034,7 +3302,7 @@
       document.getElementById("archivePaperReportNo").textContent = fields.reportNo.value;
       document.getElementById("archivePaperFoundDate").textContent = formatDate(fields.foundDate.value);
       document.getElementById("archivePaperBrand").textContent = fields.brandName.value;
-      document.getElementById("archivePaperStyle").textContent = fields.styleNo.value;
+      document.getElementById("archivePaperStyle").textContent = currentStyleNo();
       document.getElementById("archivePaperColor").textContent = fields.colorName.value;
       document.getElementById("archivePaperSeverity").textContent = fields.severity.value;
       document.getElementById("archivePaperSource").textContent = fields.sourceDept.value;
@@ -3207,6 +3475,8 @@
     document.getElementById("peoplePageAddBtn").addEventListener("click", () => {
       addPersonFromInputs(document.getElementById("libraryDept"), document.getElementById("libraryPerson"));
     });
+    document.getElementById("styleCatalogAddBtn").addEventListener("click", addStyleCatalogItem);
+    fields.styleNo.addEventListener("change", () => renderStyleColors());
     document.getElementById("addMeasureBtn").addEventListener("click", addMeasure);
     document.getElementById("addMeasureInlineBtn").addEventListener("click", addMeasure);
     document.getElementById("newReportBtn").addEventListener("click", () => {
@@ -3272,9 +3542,10 @@
       const status = document.getElementById("saveReportStatus");
       const payload = {
         reportNo: fields.reportNo.value,
+        styleCatalogId: currentStyleCatalogId(),
         foundDate: fields.foundDate.value,
         brand: fields.brandName.value,
-        styleNo: fields.styleNo.value,
+        styleNo: currentStyleNo(),
         color: fields.colorName.value,
         severity: severityValue(fields.severity.value),
         sourceDepartment: fields.sourceDept.value,
@@ -3293,6 +3564,10 @@
         })),
         attachments: problemAttachments()
       };
+      if (!payload.styleCatalogId) {
+        setUploadStatus(status, "请先从 08 款式资料库选择有效的款号和颜色。", "error");
+        return;
+      }
 
       button.disabled = true;
       button.textContent = "正在保存";
@@ -3364,6 +3639,9 @@
     document.getElementById("saveReportBtn").addEventListener("click", saveReport);
 
     refreshDeptOptions();
+    renderStyleSelectors();
+    renderStyleCatalogPage();
+    loadStyleCatalog();
     fields.sourceDept.value = "压胶部";
     renderResponsibleDepartments();
     renderMeasures();
@@ -3383,7 +3661,7 @@
       if (initialHash === "#report-paper") {
         setTimeout(() => document.getElementById("reportPaper").scrollIntoView({ block: "start" }), 50);
       }
-    } else if (["#dashboard", "#tasks", "#review", "#archive", "#people", "#kpi"].includes(initialHash)) {
+    } else if (["#dashboard", "#tasks", "#review", "#archive", "#people", "#styles", "#kpi"].includes(initialHash)) {
       document.querySelector(`[data-tab="${initialHash.slice(1)}"]`).click();
     }
   </script>

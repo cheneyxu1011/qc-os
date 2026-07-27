@@ -2,7 +2,7 @@ import { addQcAttachmentViewUrls, type QcAttachmentRow } from "@/lib/s3/view-url
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 const REPORT_FIELDS =
-  "id,report_no,report_year,report_sequence,found_date,brand,style_no,color,severity,source_department_id,source_department_name,reporter_person_id,reporter_name,kpi_enabled,problem_description,root_cause,workflow_step,status,factory_style_id,factory_order_id,factory_production_batch_id,archived_at,locked_at,created_at,updated_at";
+  "id,report_no,report_year,report_sequence,style_catalog_id,found_date,brand,style_no,color,severity,source_department_id,source_department_name,reporter_person_id,reporter_name,kpi_enabled,problem_description,root_cause,workflow_step,status,factory_style_id,factory_order_id,factory_production_batch_id,archived_at,locked_at,created_at,updated_at";
 
 const ATTACHMENT_FIELDS =
   "id,report_id,action_id,attachment_type,s3_bucket,s3_key,original_file_name,content_type,file_size_bytes,uploaded_by_name,uploaded_at";
