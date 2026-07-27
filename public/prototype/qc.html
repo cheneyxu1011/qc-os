@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>车间质量改善 KPI 闭环系统</title>
+  <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js" defer></script>
   <style>
     :root {
       --ink: #17212b;
@@ -997,6 +998,56 @@
       height: 108px;
     }
 
+    .export-report-paper {
+      width: 1120px;
+      max-width: none;
+      background: #fff;
+    }
+
+    .print-root {
+      display: none;
+    }
+
+    body.exporting-report .print-root {
+      display: block;
+      position: fixed;
+      left: -20000px;
+      top: 0;
+      width: 1120px;
+      background: #fff;
+      z-index: -1;
+    }
+
+    @media print {
+      @page {
+        size: A4;
+        margin: 8mm;
+      }
+
+      body.printing-report {
+        background: #fff;
+      }
+
+      body.printing-report .app-shell,
+      body.printing-report .projector-exit {
+        display: none !important;
+      }
+
+      body.printing-report .print-root {
+        display: block !important;
+      }
+
+      body.printing-report .print-root .report-paper {
+        width: 100%;
+        border: 1px solid #222;
+        break-inside: auto;
+      }
+
+      body.printing-report .print-root .archive-report-paper {
+        cursor: default;
+      }
+    }
+
     .right-summary {
       display: grid;
       gap: 14px;
@@ -1948,8 +1999,8 @@
                 <div class="summary-box">
                   <h3>导出功能</h3>
                   <div class="summary-list">
-                    <div><span>图片导出</span><button class="btn" type="button" disabled title="下一步接入报告图片生成后开放">导出图片（待接入）</button></div>
-                    <div><span>PDF打印</span><button class="btn" onclick="window.print()">导出PDF</button></div>
+                    <div><span>图片导出</span><button class="btn" type="button" data-export-current-report="image">导出图片</button></div>
+                    <div><span>PDF打印</span><button class="btn" type="button" data-export-current-report="pdf">导出PDF</button></div>
                     <div><span>状态</span><span class="pill dark">归档后锁定</span></div>
                   </div>
                 </div>
@@ -1957,8 +2008,8 @@
             </div>
 
             <div class="export-row">
-              <button class="btn" type="button" disabled title="下一步接入报告图片生成后开放">导出报告图片（待接入）</button>
-              <button class="btn" onclick="window.print()">打印 / 导出PDF</button>
+              <button class="btn" type="button" data-export-current-report="image">导出报告图片</button>
+              <button class="btn" type="button" data-export-current-report="pdf">打印 / 导出PDF</button>
             </div>
 
             <div class="report-layout">
@@ -2427,6 +2478,7 @@
     </main>
   </div>
   <button class="btn projector-exit" id="exitProjectorBtn">退出投屏</button>
+  <div class="print-root" id="printRoot" aria-hidden="true"></div>
 
   <script>
     const navButtons = document.querySelectorAll(".nav button");
@@ -2501,7 +2553,7 @@
       sourceReview: document.getElementById("sourceReview"),
       reviewer: document.getElementById("reviewer"),
       approver: document.getElementById("approver"),
-      archiveApprover: document.getElementById("archiveApprover"),
+      archiveApprover: document.getElementById("archiveApprover") || document.getElementById("approver"),
       archiveStatus: document.getElementById("archiveStatus")
     };
 
@@ -3714,6 +3766,95 @@
       `;
     }
 
+    function exportReportName(reportElement, extension) {
+      const text = reportElement?.innerText || fields.reportNo.value || "QC-REPORT";
+      const reportNo = text.match(/[A-Z]{2,4}\d{4}-\d{3}/)?.[0] || fields.reportNo.value || "QC-REPORT";
+      return `${reportNo}-改善措施报告.${extension}`;
+    }
+
+    function prepareReportExport(reportElement) {
+      if (!reportElement) throw new Error("没有找到可导出的报告。");
+      const root = document.getElementById("printRoot");
+      root.innerHTML = "";
+      const clone = reportElement.cloneNode(true);
+      clone.removeAttribute("id");
+      clone.classList.remove("archive-report-paper");
+      clone.classList.add("export-report-paper");
+      root.appendChild(clone);
+      return { root, clone };
+    }
+
+    function cleanupReportExport() {
+      document.body.classList.remove("printing-report", "exporting-report");
+      const root = document.getElementById("printRoot");
+      if (root) root.innerHTML = "";
+    }
+
+    async function waitForReportImages(reportElement) {
+      const images = [...reportElement.querySelectorAll("img")];
+      await Promise.all(images.map((image) => {
+        if (image.complete) return Promise.resolve();
+        return new Promise((resolve) => {
+          image.onload = resolve;
+          image.onerror = resolve;
+        });
+      }));
+      if (document.fonts?.ready) await document.fonts.ready;
+    }
+
+    function printSingleReport(reportElement) {
+      try {
+        const { clone } = prepareReportExport(reportElement);
+        document.body.classList.add("printing-report");
+        waitForReportImages(clone).finally(() => {
+          setTimeout(() => window.print(), 80);
+        });
+      } catch (error) {
+        window.alert(error.message || "导出PDF失败");
+        cleanupReportExport();
+      }
+    }
+
+    async function exportReportImage(reportElement, triggerButton) {
+      const originalText = triggerButton?.textContent;
+      try {
+        if (!window.htmlToImage?.toPng) {
+          throw new Error("图片导出组件还未加载完成，请稍后再试。");
+        }
+        if (triggerButton) {
+          triggerButton.disabled = true;
+          triggerButton.textContent = "正在导出";
+        }
+        const { clone } = prepareReportExport(reportElement);
+        document.body.classList.add("exporting-report");
+        await waitForReportImages(clone);
+        const dataUrl = await window.htmlToImage.toPng(clone, {
+          backgroundColor: "#ffffff",
+          cacheBust: true,
+          pixelRatio: 2
+        });
+        const blob = await (await fetch(dataUrl)).blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.download = exportReportName(reportElement, "png");
+        link.href = objectUrl;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      } catch (error) {
+        window.alert(error.message || "导出图片失败");
+      } finally {
+        cleanupReportExport();
+        if (triggerButton) {
+          triggerButton.disabled = false;
+          triggerButton.textContent = originalText;
+        }
+      }
+    }
+
+    window.addEventListener("afterprint", cleanupReportExport);
+
     async function loadReviewReports() {
       const container = document.getElementById("reviewList");
       if (!container || location.protocol === "file:") return;
@@ -3859,7 +4000,8 @@
             </div>
             <div class="actions">
               <button class="btn primary archive-submit-btn" data-report-no="${escapeHtml(report.report_no)}" type="button" ${report.status === "archived" ? "disabled" : ""}>${report.status === "archived" ? "已归档锁定" : "确认归档并锁定KPI"}</button>
-              <button class="btn" onclick="window.print()" type="button">导出PDF</button>
+              <button class="btn archive-image-btn" type="button">导出图片</button>
+              <button class="btn archive-pdf-btn" type="button">导出PDF</button>
               <button class="btn" type="button" disabled title="主管退回补充资料需要独立状态流转，下一步接入">退回补充资料（待接入）</button>
             </div>
             <div class="upload-status" data-archive-status="${escapeHtml(report.report_no)}"></div>
@@ -3867,6 +4009,12 @@
         `).join("") || '<div class="readonly-note">当前没有待归档报告；部门复核通过后会显示在这里。</div>';
         container.querySelectorAll(".archive-submit-btn").forEach((button) => {
           button.addEventListener("click", () => submitArchive(button));
+        });
+        container.querySelectorAll(".archive-image-btn").forEach((button) => {
+          button.addEventListener("click", () => exportReportImage(button.closest(".task-card")?.querySelector(".report-paper"), button));
+        });
+        container.querySelectorAll(".archive-pdf-btn").forEach((button) => {
+          button.addEventListener("click", () => printSingleReport(button.closest(".task-card")?.querySelector(".report-paper")));
         });
       } catch (error) {
         container.innerHTML = `<div class="readonly-note">${escapeHtml(error.message || "读取归档报告失败")}</div>`;
@@ -4183,6 +4331,16 @@
     document.getElementById("historyExportBtn").addEventListener("click", exportHistory);
     document.getElementById("globalExportBtn").addEventListener("click", exportHistory);
     document.getElementById("archiveSampleExportBtn")?.addEventListener("click", exportHistory);
+    document.querySelectorAll("[data-export-current-report]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const report = document.getElementById("reportPaper");
+        if (button.dataset.exportCurrentReport === "image") {
+          exportReportImage(report, button);
+        } else {
+          printSingleReport(report);
+        }
+      });
+    });
     document.getElementById("reviewSourceFilter")?.addEventListener("change", loadReviewReports);
     document.getElementById("reviewPendingOnlyToggle")?.addEventListener("click", (event) => {
       reviewPendingOnly = !reviewPendingOnly;
