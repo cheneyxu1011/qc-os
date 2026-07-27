@@ -245,6 +245,22 @@
       background: #eef3f6;
     }
 
+    .upload-status {
+      margin-top: 8px;
+      min-height: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .upload-status.success {
+      color: var(--green);
+    }
+
+    .upload-status.error {
+      color: var(--red);
+    }
+
     .task-photo {
       width: 100%;
       max-height: 260px;
@@ -402,6 +418,7 @@
           <div class="thumbs" id="problemThumbs">
             <img src="assets/issue-photo-sewing-clean.png" alt="问题照片示例">
           </div>
+          <div class="upload-status" data-status-for="problemThumbs"></div>
           <div class="grid-2">
             <div class="field"><label>品牌</label><input value="迪赛特"></div>
             <div class="field"><label>款号</label><input value="JK57"></div>
@@ -452,6 +469,7 @@
             <span><strong>拍摄改善照片</strong>每条措施至少1张</span>
           </label>
           <div class="thumbs" id="taskThumbs1"></div>
+          <div class="upload-status" data-status-for="taskThumbs1"></div>
           <div class="field"><label>执行说明</label><textarea>已按标准止口返修，待压胶部复核。</textarea></div>
           <div class="btn-row">
             <button class="btn primary">标记已执行</button>
@@ -513,6 +531,7 @@
             <span><strong>补充复核照片</strong>可选</span>
           </label>
           <div class="thumbs" id="reviewThumbs"></div>
+          <div class="upload-status" data-status-for="reviewThumbs"></div>
           <div class="field"><label>复核意见</label><textarea>检查上下布配均匀，版面加量跟足腰节定位线。若仍有扭曲，退回继续改善。</textarea></div>
           <div class="btn-row">
             <button class="btn primary">复核通过</button>
@@ -579,16 +598,77 @@
       button.addEventListener("click", () => openTab(button.dataset.tab));
     });
 
+    const uploadTypeByTarget = {
+      problemThumbs: "problem-before",
+      taskThumbs1: "action-after",
+      reviewThumbs: "review-evidence"
+    };
+
+    async function uploadFileToS3(file, uploadType) {
+      if (location.protocol === "file:") {
+        return { skipped: true, key: "local-preview-only" };
+      }
+      const response = await fetch("/api/uploads/presign", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          reportNo: "XCJ2026-002",
+          type: uploadType,
+          fileName: file.name,
+          contentType: file.type || "image/jpeg",
+          year: "2026",
+          actionSequenceNo: uploadType === "action-after" ? "1" : ""
+        })
+      });
+      const presign = await response.json();
+      if (!response.ok) throw new Error(presign.error || "S3签名失败");
+
+      const formData = new FormData();
+      Object.entries(presign.fields).forEach(([key, value]) => formData.append(key, value));
+      formData.append("file", file);
+      const uploadResponse = await fetch(presign.url, { method: "POST", body: formData });
+      if (!uploadResponse.ok) throw new Error(`S3上传失败：${uploadResponse.status}`);
+      return presign;
+    }
+
+    function setUploadStatus(targetId, message, status = "") {
+      const element = document.querySelector(`[data-status-for="${targetId}"]`);
+      if (!element) return;
+      element.textContent = message;
+      element.className = `upload-status ${status}`.trim();
+    }
+
     document.querySelectorAll(".photo-input").forEach((input) => {
-      input.addEventListener("change", () => {
+      input.addEventListener("change", async () => {
         const target = document.getElementById(input.dataset.target);
         target.innerHTML = "";
-        [...input.files].slice(0, 8).forEach((file) => {
+        const files = [...input.files].slice(0, 8);
+        const previewImages = files.map((file) => {
           const img = document.createElement("img");
           img.src = URL.createObjectURL(file);
           img.alt = file.name;
           target.appendChild(img);
+          return img;
         });
+        if (!files.length) {
+          setUploadStatus(input.dataset.target, "");
+          return;
+        }
+
+        setUploadStatus(input.dataset.target, `正在上传 ${files.length} 张照片...`);
+        try {
+          const uploadType = uploadTypeByTarget[input.dataset.target] || "problem-before";
+          const results = await Promise.all(files.map((file) => uploadFileToS3(file, uploadType)));
+          results.forEach((result, index) => {
+            previewImages[index].dataset.s3Key = result.key;
+          });
+          const message = results.some((result) => result.skipped)
+            ? "本地预览模式：上线域名打开后会上传到 S3。"
+            : `已上传到 S3：${results.length} 张`;
+          setUploadStatus(input.dataset.target, message, "success");
+        } catch (error) {
+          setUploadStatus(input.dataset.target, error.message || "图片上传失败，请重试。", "error");
+        }
       });
     });
 

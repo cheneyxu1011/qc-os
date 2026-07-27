@@ -700,6 +700,22 @@
       background: #eef2f5;
     }
 
+    .upload-status {
+      margin-top: 8px;
+      min-height: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .upload-status.success {
+      color: var(--green);
+    }
+
+    .upload-status.error {
+      color: var(--red);
+    }
+
     .chip-list {
       display: flex;
       flex-wrap: wrap;
@@ -1773,6 +1789,7 @@
                         <span class="thumb-placeholder"></span>
                         <span class="thumb-placeholder"></span>
                       </div>
+                      <div class="upload-status" id="problemUploadStatus"></div>
                     </div>
                     <div class="field">
                       <label>问题描述</label>
@@ -3193,22 +3210,74 @@
     });
     styleFilter.addEventListener("change", applyStyleFilter);
 
-    document.getElementById("problemPhotoInput").addEventListener("change", (event) => {
+    async function uploadFileToS3(file, uploadType, actionSequenceNo = "") {
+      if (location.protocol === "file:") {
+        return { skipped: true, key: "local-preview-only" };
+      }
+      const year = (fields.foundDate.value || new Date().toISOString()).slice(0, 4);
+      const response = await fetch("/api/uploads/presign", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          reportNo: fields.reportNo.value,
+          type: uploadType,
+          fileName: file.name,
+          contentType: file.type || "image/jpeg",
+          year,
+          actionSequenceNo
+        })
+      });
+      const presign = await response.json();
+      if (!response.ok) throw new Error(presign.error || "S3签名失败");
+
+      const formData = new FormData();
+      Object.entries(presign.fields).forEach(([key, value]) => formData.append(key, value));
+      formData.append("file", file);
+      const uploadResponse = await fetch(presign.url, { method: "POST", body: formData });
+      if (!uploadResponse.ok) throw new Error(`S3上传失败：${uploadResponse.status}`);
+      return presign;
+    }
+
+    function setUploadStatus(element, message, status = "") {
+      if (!element) return;
+      element.textContent = message;
+      element.className = `upload-status ${status}`.trim();
+    }
+
+    document.getElementById("problemPhotoInput").addEventListener("change", async (event) => {
       const container = document.getElementById("problemThumbs");
+      const status = document.getElementById("problemUploadStatus");
       container.innerHTML = "";
       const files = [...event.target.files].slice(0, 6);
       const firstUrl = files.length ? URL.createObjectURL(files[0]) : "assets/issue-photo-sewing-clean.png";
       document.querySelectorAll("[data-problem-image]").forEach((image) => {
         image.src = firstUrl;
       });
-      files.forEach((file) => {
+      const previewImages = files.map((file) => {
         const img = document.createElement("img");
         img.src = URL.createObjectURL(file);
         img.alt = file.name;
         container.appendChild(img);
+        return img;
       });
       if (!event.target.files.length) {
         container.innerHTML = '<img src="assets/issue-photo-sewing-clean.png" alt="问题照片示例">';
+        setUploadStatus(status, "");
+        return;
+      }
+
+      setUploadStatus(status, `正在上传 ${files.length} 张问题照片...`);
+      try {
+        const results = await Promise.all(files.map((file) => uploadFileToS3(file, "problem-before")));
+        results.forEach((result, index) => {
+          previewImages[index].dataset.s3Key = result.key;
+        });
+        const message = results.some((result) => result.skipped)
+          ? "本地预览模式：上线域名打开后会上传到 S3。"
+          : `已上传到 S3：${results.length} 张`;
+        setUploadStatus(status, message, "success");
+      } catch (error) {
+        setUploadStatus(status, error.message || "图片上传失败，请重试。", "error");
       }
     });
 
