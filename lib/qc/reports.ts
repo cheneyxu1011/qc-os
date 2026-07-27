@@ -2,7 +2,7 @@ import { addQcAttachmentViewUrls, type QcAttachmentRow } from "@/lib/s3/view-url
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 const REPORT_FIELDS =
-  "id,report_no,report_year,report_sequence,style_catalog_id,found_date,brand,style_no,color,severity,source_department_id,source_department_name,reporter_person_id,reporter_name,default_reviewer_person_id,default_reviewer_name,intended_approver_person_id,intended_approver_name,kpi_enabled,problem_description,root_cause,workflow_step,status,factory_style_id,factory_order_id,factory_production_batch_id,archived_at,locked_at,created_at,updated_at";
+  "id,report_no,report_year,report_sequence,factory_id,factory_name,factory_code,report_prefix,style_catalog_id,found_date,brand,style_no,color,severity,source_department_id,source_department_name,reporter_person_id,reporter_name,default_reviewer_person_id,default_reviewer_name,intended_approver_person_id,intended_approver_name,kpi_enabled,problem_description,root_cause,workflow_step,status,factory_style_id,factory_order_id,factory_production_batch_id,archived_at,locked_at,created_at,updated_at";
 
 const ATTACHMENT_FIELDS =
   "id,report_id,action_id,attachment_type,s3_bucket,s3_key,original_file_name,content_type,file_size_bytes,uploaded_by_name,uploaded_at";
@@ -21,6 +21,8 @@ type ReportListFilters = {
   status?: string;
   styleNo?: string;
   department?: string;
+  factoryId?: string;
+  month?: string;
   limit?: number;
 };
 
@@ -54,7 +56,7 @@ function cleanFilter(value: string | undefined, maxLength = 100) {
 
 function clampLimit(value: number | undefined) {
   if (!Number.isFinite(value)) return 50;
-  return Math.min(100, Math.max(1, Math.trunc(value || 50)));
+  return Math.min(5000, Math.max(1, Math.trunc(value || 50)));
 }
 
 function throwIfError(error: unknown) {
@@ -75,10 +77,15 @@ export async function readQcReportList(filters: ReportListFilters) {
   const status = cleanFilter(filters.status, 40);
   const styleNo = cleanFilter(filters.styleNo, 200);
   const department = cleanFilter(filters.department, 80);
+  const factoryId = cleanFilter(filters.factoryId, 80);
+  const month = cleanFilter(filters.month, 7);
   const limit = clampLimit(filters.limit);
 
   if (status && !REPORT_STATUSES.has(status)) {
     throw new Error("报告状态筛选值不正确");
+  }
+  if (month && !/^\d{4}-\d{2}$/.test(month)) {
+    throw new Error("月份筛选值不正确");
   }
 
   let departmentReportIds: string[] | null = null;
@@ -101,6 +108,13 @@ export async function readQcReportList(filters: ReportListFilters) {
 
   if (status) reportQuery = reportQuery.eq("status", status);
   if (styleNo) reportQuery = reportQuery.ilike("style_no", `%${styleNo}%`);
+  if (factoryId) reportQuery = reportQuery.eq("factory_id", factoryId);
+  if (month) {
+    const [year, monthNumber] = month.split("-").map(Number);
+    const start = `${month}-01`;
+    const next = new Date(Date.UTC(year, monthNumber, 1)).toISOString().slice(0, 10);
+    reportQuery = reportQuery.gte("found_date", start).lt("found_date", next);
+  }
   if (departmentReportIds) reportQuery = reportQuery.in("id", departmentReportIds);
 
   const { data: reports, error: reportsError } = await reportQuery;
@@ -176,7 +190,7 @@ export async function readQcReportList(filters: ReportListFilters) {
 
 export async function readQcReportDetail(reportNo: string) {
   const cleanedReportNo = cleanFilter(reportNo, 30);
-  if (!/^XCJ\d{4}-\d{3,}$/.test(cleanedReportNo)) {
+  if (!/^[A-Z]{2,4}\d{4}-\d{3,}$/.test(cleanedReportNo)) {
     throw new Error("报告编号格式不正确");
   }
 

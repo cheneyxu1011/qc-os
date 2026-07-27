@@ -13,6 +13,7 @@
     "@aws-sdk/s3-presigned-post": "3.1095.0",
     "@aws-sdk/s3-request-presigner": "3.1095.0",
     "@supabase/supabase-js": "2.108.2",
+    "exceljs": "4.4.0",
     "next": "16.2.10",
     "react": "19.2.7",
     "react-dom": "19.2.7"

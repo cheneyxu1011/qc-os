@@ -27,6 +27,7 @@ type ReportAttachment = {
 
 type CreateReportPayload = {
   reportNo?: string;
+  factoryId: string;
   styleCatalogId?: string;
   foundDate: string;
   brand?: string;
@@ -50,17 +51,6 @@ function cleanText(value: unknown, maxLength = 1000) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
 
-function parseRequestedReportNumber(value: unknown) {
-  const reportNo = cleanText(value, 30);
-  const match = /^XCJ(\d{4})-(\d{3,})$/.exec(reportNo);
-  if (!match) return null;
-  return {
-    reportNo,
-    reportYear: Number(match[1]),
-    reportSequence: Number(match[2]),
-  };
-}
-
 function uniqueNames(values: unknown) {
   if (!Array.isArray(values)) return [];
   return [...new Set(values.map((value) => cleanText(value, 80)).filter(Boolean))];
@@ -77,6 +67,7 @@ function validatePayload(body: unknown): CreateReportPayload {
   const sourceDepartment = cleanText(input.sourceDepartment, 80);
   const reporter = cleanText(input.reporter, 80);
   const problemDescription = cleanText(input.problemDescription, 5000);
+  const factoryId = cleanText(input.factoryId, 80);
   const responsibleDepartments = uniqueNames(input.responsibleDepartments);
   const responsiblePeople = uniqueNames(input.responsiblePeople);
   const allowedSeverities = new Set([
@@ -89,6 +80,7 @@ function validatePayload(body: unknown): CreateReportPayload {
   const severity = cleanText(input.severity, 40);
 
   if (!isDate(foundDate)) throw new Error("发现日期不能为空");
+  if (!factoryId) throw new Error("请选择所属工厂");
   if (!sourceDepartment) throw new Error("请选择问题来源部门");
   if (!responsibleDepartments.length) throw new Error("请至少选择一个责任部门");
   if (!responsiblePeople.length) throw new Error("请至少选择一名部门人员");
@@ -120,7 +112,7 @@ function validatePayload(body: unknown): CreateReportPayload {
       })
     : [];
 
-  if (!actions.length) throw new Error("请至少填写一条纠正或预防措施");
+  if (!actions.length) throw new Error("请至少填写一条改善或预防措施");
 
   const attachments = Array.isArray(input.attachments)
     ? input.attachments
@@ -143,7 +135,8 @@ function validatePayload(body: unknown): CreateReportPayload {
     : [];
 
   return {
-    reportNo: cleanText(input.reportNo, 30) || undefined,
+    reportNo: cleanText(input.reportNo, 30).toUpperCase() || undefined,
+    factoryId,
     styleCatalogId: cleanText(input.styleCatalogId, 80) || undefined,
     foundDate,
     brand: cleanText(input.brand, 200) || undefined,
@@ -176,6 +169,8 @@ export async function GET(request: Request) {
       status: searchParams.get("status") || undefined,
       styleNo: searchParams.get("styleNo") || undefined,
       department: searchParams.get("department") || undefined,
+      factoryId: searchParams.get("factoryId") || undefined,
+      month: searchParams.get("month") || undefined,
       limit: limitValue,
     });
     return NextResponse.json(
@@ -264,16 +259,31 @@ export async function POST(request: Request) {
       throw new Error("所选款式资料不存在或已停用");
     }
 
-    const requestedNumber = parseRequestedReportNumber(payload.reportNo);
+    const { data: selectedFactory, error: selectedFactoryError } = await supabase
+      .from("qc_factories")
+      .select("id,report_prefix")
+      .eq("id", payload.factoryId)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (selectedFactoryError) throw selectedFactoryError;
+    if (!selectedFactory) throw new Error("所选工厂不存在或已停用");
+
     const reportYear = Number(payload.foundDate.slice(0, 4));
+    const requestedMatch = payload.reportNo
+      ? new RegExp(`^${selectedFactory.report_prefix}${reportYear}-(\\d{3,})$`).exec(payload.reportNo)
+      : null;
+    if (payload.reportNo && !requestedMatch) {
+      throw new Error("报告编号与所属工厂或发现年份不一致，请刷新后重试");
+    }
     const reportInsert = {
-      ...(requestedNumber && requestedNumber.reportYear === reportYear
+      factory_id: selectedFactory.id,
+      report_year: reportYear,
+      ...(requestedMatch
         ? {
-            report_no: requestedNumber.reportNo,
-            report_sequence: requestedNumber.reportSequence,
+            report_no: payload.reportNo,
+            report_sequence: Number(requestedMatch[1]),
           }
         : {}),
-      report_year: reportYear,
       style_catalog_id: selectedStyle?.id || null,
       found_date: payload.foundDate,
       brand: selectedStyle?.brand || payload.brand || null,

@@ -1520,7 +1520,7 @@
       </div>
       <nav class="nav" aria-label="页面导航">
         <button class="active" data-tab="dashboard" data-icon="01">现场双屏</button>
-        <button data-tab="report" data-icon="02">纠正报告</button>
+        <button data-tab="report" data-icon="02">改善报告</button>
         <button data-tab="tasks" data-icon="03">我的任务</button>
         <button data-tab="review" data-icon="04">部门复核</button>
         <button data-tab="archive" data-icon="05">归档审批</button>
@@ -1542,12 +1542,12 @@
     <main>
       <header class="topbar">
         <div>
-          <h1>车缝 / 压胶生产不良纠正措施闭环系统</h1>
+          <h1>车缝 / 压胶生产不良改善措施闭环系统</h1>
           <p>从问题反馈、责任执行、部门复核到主管归档，最终进入个人月KPI和款式历史复盘。</p>
         </div>
         <div class="actions">
           <button class="btn ghost" id="projectorBtn" title="选择其中一个车间独立投屏">投屏预览</button>
-          <button class="btn">导出Excel</button>
+          <button class="btn" id="globalExportBtn">导出Excel</button>
           <button class="btn primary" id="newReportBtn">新增报告</button>
         </div>
       </header>
@@ -1559,7 +1559,7 @@
               <h2>请选择这台显示器要打开的投屏内容</h2>
               <p>按“问题来源部门反馈给责任部门”自动分组，每个部门的大屏只看需要自己处理的未关闭问题。</p>
             </div>
-            <div class="choice-grid">
+            <div class="choice-grid" id="projectorChoiceGrid">
               <button class="choice-card sewing" data-projector-target="sewing">
                 <span>车缝组显示器</span>
                 <div>
@@ -1609,10 +1609,14 @@
               <option value="JX-2308">JX-2308</option>
               <option value="KW-7721">KW-7721</option>
             </select>
+            <label for="factoryFilter">工厂筛选</label>
+            <select id="factoryFilter">
+              <option value="all">全部工厂</option>
+            </select>
             <span class="pill red">逾期自动红色提醒</span>
           </div>
 
-          <div class="screen-grid">
+          <div class="screen-grid" id="screenGrid">
             <article class="screen" data-projector="sewing">
               <div class="screen-head sewing">
                 <div>
@@ -1748,7 +1752,7 @@
           <div class="panel">
             <div class="panel-head">
               <div>
-                <h2>纠正措施报告录入与闭环</h2>
+                <h2>改善措施报告录入与闭环</h2>
                 <p>先录入问题和措施，系统自动生成执行任务、复核流程和正式报告。</p>
               </div>
               <div class="toolbar">
@@ -1766,6 +1770,7 @@
               <div class="field"><label>颜色</label><select id="colorName"><option value="深灰" data-style-id="">深灰</option></select></div>
               <div class="field"><label>严重程度</label><select id="severity"><option>不可接受，需要返修</option><option>一般，需要改善</option><option>轻微，提醒改善</option></select></div>
               <div class="field"><label>问题来源</label><select id="sourceDept"><option>压胶部</option><option>车缝部</option><option>裁剪部</option><option>QC部</option><option>业务部</option><option>厂长</option></select></div>
+              <div class="field"><label>所属工厂</label><select id="factoryId"><option value="">加载工厂资料中</option></select></div>
               <div class="field span-2"><label>责任部门（可多选）</label><div class="chip-list" id="responsibleDepartments"></div></div>
               <div class="field"><label>部门人员</label><div class="chip-list" id="departmentPeoplePreview"></div></div>
               <div class="field"><label>是否计入KPI</label><select id="kpiFlag"><option>是，归档后计入</option><option>否，仅作培训记录</option></select></div>
@@ -1828,7 +1833,7 @@
 
                 <div class="subpanel">
                   <div class="subpanel-head">
-                    <h3>三、纠正与预防措施</h3>
+                    <h3>三、改善与预防措施</h3>
                     <button class="btn" id="addMeasureInlineBtn" type="button">新增序号</button>
                   </div>
                   <div class="task-table-wrap">
@@ -1939,7 +1944,7 @@
 
             <div class="report-layout">
               <div class="report-paper" id="reportPaper">
-                <h2>纠正措施报告</h2>
+                <h2>改善措施报告</h2>
                 <table class="report-table">
                   <tr>
                     <th>报告编号</th><td id="paperReportNo">XCJ2026-001</td>
@@ -1956,6 +1961,9 @@
                     <th>责任部门</th><td id="paperDept">车缝部</td>
                     <th>责任人</th><td id="paperPeople">夏红霞、朱小丽</td>
                   </tr>
+                  <tr>
+                    <th>所属工厂</th><td id="paperFactory" colspan="5">新长江工厂</td>
+                  </tr>
                   <tr class="section-row"><td colspan="6">一、问题描述</td></tr>
                   <tr>
                     <td colspan="6">
@@ -1970,7 +1978,7 @@
                   <tr>
                     <td colspan="6" id="paperRootCause">产线生产例缝胶条时，为保证下袋位置平服，员工未按标准线作业，造成止口松量不一致。版面工艺要求折位一致，实际操作中上下节松量失衡，所以造成扭曲。</td>
                   </tr>
-                  <tr class="section-row"><td colspan="6">三、纠正与预防措施</td></tr>
+                  <tr class="section-row"><td colspan="6">三、改善与预防措施</td></tr>
                   <tr>
                     <td colspan="6">
                       <table class="measure-table">
@@ -1983,7 +1991,7 @@
                   <tr>
                     <td colspan="6">
                       <span id="paperVerify">待责任人执行后填写改善照片、完成日期和复核意见。</span>
-                      <div class="readonly-note">录入阶段只形成纠正报告主体；效果验证内容在“我的任务”和“部门复核”完成后，进入“归档审批”生成完整正式报告。</div>
+                      <div class="readonly-note">录入阶段只形成改善报告主体；效果验证内容在“我的任务”和“部门复核”完成后，进入“归档审批”生成完整正式报告。</div>
                     </td>
                   </tr>
                   <tr>
@@ -2286,7 +2294,7 @@
                   </div>
                   <div class="compare-grid archive-approval-grid">
                     <div class="report-paper archive-report-paper" onclick="document.getElementById('reportPaper').scrollIntoView({ block: 'start' })">
-                      <h2>纠正措施报告</h2>
+                      <h2>改善措施报告</h2>
                       <table class="report-table">
                         <tr>
                           <th>报告编号</th><td id="archivePaperReportNo">XCJ2026-001</td>
@@ -2303,6 +2311,9 @@
                           <th>责任部门</th><td id="archivePaperDept">车缝部</td>
                           <th>责任人</th><td id="archivePaperPeople">夏红霞、朱小丽</td>
                         </tr>
+                        <tr>
+                          <th>所属工厂</th><td id="archivePaperFactory" colspan="5">新长江工厂</td>
+                        </tr>
                         <tr class="section-row"><td colspan="6">一、问题描述</td></tr>
                         <tr>
                           <td colspan="6">
@@ -2317,7 +2328,7 @@
                         <tr>
                           <td colspan="6" id="archivePaperRootCause">产线生产例缝胶条时，为保证下袋位置平服，员工未按标准线作业，造成止口松量不一致。版面工艺要求折位一致，实际操作中上下节松量失衡，所以造成扭曲。</td>
                         </tr>
-                        <tr class="section-row"><td colspan="6">三、纠正与预防措施</td></tr>
+                        <tr class="section-row"><td colspan="6">三、改善与预防措施</td></tr>
                         <tr>
                           <td colspan="6">
                             <table class="measure-table">
@@ -2470,7 +2481,29 @@
             <div class="metric"><span>部门总数</span><strong id="peoplePageDeptCount">6</strong><small>个</small></div>
             <div class="metric"><span>人员总数</span><strong id="peoplePagePeopleCount">8</strong><small>人</small></div>
             <div class="metric"><span>可选责任人</span><strong id="peoplePageAssignableCount">8</strong><small>人</small></div>
-            <div class="metric"><span>数据状态</span><strong>同步</strong></div>
+            <div class="metric"><span>工厂总数</span><strong id="peoplePageFactoryCount">6</strong><small>个</small></div>
+          </div>
+
+          <div class="panel" style="margin-top: 18px;">
+            <div class="panel-head">
+              <div>
+                <h2>工厂设置</h2>
+                <p>工厂决定报告编号前缀；每个工厂按年份独立递增。</p>
+              </div>
+              <button class="btn primary" id="factoryAddBtn" type="button">新增工厂</button>
+            </div>
+            <div class="form-grid">
+              <div class="field span-2"><label>工厂名称</label><input id="factoryNameInput" placeholder="例如：新长江工厂"></div>
+              <div class="field"><label>工厂代码</label><input id="factoryCodeInput" placeholder="例如：XCJ"></div>
+              <div class="field"><label>报告前缀</label><input id="factoryPrefixInput" placeholder="2-4位大写字母"></div>
+            </div>
+            <div class="upload-status" id="factoryStatus"></div>
+            <div class="subpanel-body">
+              <table class="data">
+                <thead><tr><th>工厂名称</th><th>工厂代码</th><th>报告前缀</th><th>下一个编号</th><th>操作</th></tr></thead>
+                <tbody id="factoryRows"></tbody>
+              </table>
+            </div>
           </div>
 
           <div class="panel">
@@ -2497,8 +2530,8 @@
             </div>
             <div class="subpanel-body">
               <div class="library-sync-list">
-                <div><b>纠正报告：</b>问题来源部门、责任部门多选、部门人员勾选、报告人。</div>
-                <div><b>纠正与预防措施：</b>每条措施的责任人多选，支持跨部门协助。</div>
+                <div><b>改善报告：</b>问题来源部门、责任部门多选、部门人员勾选、报告人。</div>
+                <div><b>改善与预防措施：</b>每条措施的责任人多选，支持跨部门协助。</div>
                 <div><b>我的任务 / 部门复核 / 归档报告：</b>责任人显示、KPI归集和归档报告责任人字段。</div>
                 <div><b>左侧统计：</b>部门总数、人员总数和部门列表同步更新。</div>
               </div>
@@ -2557,7 +2590,7 @@
             </div>
             <div class="subpanel-body">
               <div class="library-sync-list">
-                <div><b>02 纠正报告：</b>选择款号，自动显示品牌和该款号已有颜色。</div>
+                <div><b>02 改善报告：</b>选择款号，自动显示品牌和该款号已有颜色。</div>
                 <div><b>多颜色：</b>品牌和款号相同时，每次填写一个新颜色并点击“添加款式 / 颜色”。</div>
                 <div><b>01 现场投屏：</b>按款号筛选，并显示报告保存时的品牌、款号和颜色。</div>
                 <div><b>05 归档审批：</b>完整报告使用创建报告时保存的款式快照。</div>
@@ -2635,25 +2668,21 @@
                   <p>归档后可按款号、部门、责任人回看；报告锁定，允许补充评论。</p>
                 </div>
                 <div class="toolbar">
-                  <select>
-                    <option>全部款号</option>
-                    <option>JK57 / 迪赛特</option>
-                    <option>JX-2308</option>
-                    <option>KW-7721</option>
+                  <input id="historyMonthFilter" type="month" aria-label="按月筛选">
+                  <select id="historyFactoryFilter">
+                    <option value="">全部工厂</option>
                   </select>
-                  <button class="btn primary">导出款式Excel</button>
+                  <select id="historyStyleFilter">
+                    <option value="">全部款号</option>
+                  </select>
+                  <button class="btn primary" id="historyExportBtn">导出改善Excel</button>
                 </div>
               </div>
               <table class="data">
                 <thead>
-                  <tr><th>报告编号</th><th>款号</th><th>问题来源</th><th>责任部门</th><th>责任人</th><th>闭环状态</th><th>KPI影响</th></tr>
+                  <tr><th>报告编号</th><th>工厂</th><th>款号</th><th>问题来源</th><th>责任部门</th><th>责任人</th><th>闭环状态</th><th>操作</th></tr>
                 </thead>
-                <tbody>
-                  <tr><td>XCJ2026-001</td><td>JK57</td><td>压胶部</td><td>车缝部</td><td>夏红霞、朱小丽</td><td><span class="pill green">已归档</span></td><td>-5</td></tr>
-                  <tr><td>XCJ2026-004</td><td>JX-2308</td><td>压胶部</td><td>车缝部</td><td>张吉云</td><td><span class="pill blue">待复核</span></td><td>-1</td></tr>
-                  <tr><td>XCJ2026-006</td><td>JK57</td><td>车缝部</td><td>压胶部</td><td>李小华</td><td><span class="pill amber">待执行</span></td><td>-3</td></tr>
-                  <tr><td>XCJ2026-009</td><td>KW-7721</td><td>车缝部</td><td>压胶部</td><td>李小华</td><td><span class="pill red">逾期</span></td><td>-6</td></tr>
-                </tbody>
+                <tbody id="historyRows"><tr><td colspan="8">正在读取改善记录...</td></tr></tbody>
               </table>
             </div>
 
@@ -2685,6 +2714,8 @@
     const exitProjectorBtn = document.getElementById("exitProjectorBtn");
     const projectorChoiceButtons = document.querySelectorAll("[data-projector-target]");
     const styleFilter = document.getElementById("styleFilter");
+    const factoryFilter = document.getElementById("factoryFilter");
+    let factoryCatalog = [];
     const peopleDb = {
       "车缝部": ["夏红霞", "朱小丽"],
       "压胶部": ["李小华"],
@@ -2706,7 +2737,7 @@
     let reportCounter = 1;
     let measures = [
       {
-        type: "临时纠正",
+        type: "临时改善",
         content: "里布腰上节超过1CM松量的全部返修处理。",
         people: ["夏红霞", "朱小丽"],
         due: "2026-07-25",
@@ -2714,7 +2745,7 @@
         note: "系统已分配到责任人提醒项目栏"
       },
       {
-        type: "永久纠正",
+        type: "永久改善",
         content: "把下摆折位0.8CM改回1CM，减少上下节松量差。",
         people: ["夏红霞", "朱小丽"],
         due: "2026-07-07",
@@ -2739,6 +2770,7 @@
       colorName: document.getElementById("colorName"),
       severity: document.getElementById("severity"),
       sourceDept: document.getElementById("sourceDept"),
+      factoryId: document.getElementById("factoryId"),
       responsibleDepartments: document.getElementById("responsibleDepartments"),
       departmentPeoplePreview: document.getElementById("departmentPeoplePreview"),
       kpiFlag: document.getElementById("kpiFlag"),
@@ -2756,6 +2788,141 @@
       if (!value) return "";
       const parts = value.split("-");
       return parts.length === 3 ? `${Number(parts[0])}/${Number(parts[1])}/${Number(parts[2])}` : value;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function selectedFactory() {
+      return factoryCatalog.find((factory) => factory.id === fields.factoryId.value) || factoryCatalog[0];
+    }
+
+    function updateNextReportNumber() {
+      const factory = selectedFactory();
+      if (factory?.next_report_no) fields.reportNo.value = factory.next_report_no;
+      updateReportPreview();
+    }
+
+    function renderFactorySelectors() {
+      const current = fields.factoryId.value;
+      fields.factoryId.innerHTML = factoryCatalog.map((factory) =>
+        `<option value="${factory.id}">${escapeHtml(factory.name)} · ${escapeHtml(factory.report_prefix)}</option>`
+      ).join("");
+      fields.factoryId.value = factoryCatalog.some((factory) => factory.id === current)
+        ? current
+        : (factoryCatalog[0]?.id || "");
+
+      const projectorValue = factoryFilter.value;
+      const historyValue = document.getElementById("historyFactoryFilter").value;
+      const options = factoryCatalog.map((factory) =>
+        `<option value="${factory.id}">${escapeHtml(factory.name)}</option>`
+      ).join("");
+      factoryFilter.innerHTML = `<option value="all">全部工厂</option>${options}`;
+      document.getElementById("historyFactoryFilter").innerHTML = `<option value="">全部工厂</option>${options}`;
+      factoryFilter.value = factoryCatalog.some((factory) => factory.id === projectorValue) ? projectorValue : "all";
+      document.getElementById("historyFactoryFilter").value =
+        factoryCatalog.some((factory) => factory.id === historyValue) ? historyValue : "";
+      document.getElementById("peoplePageFactoryCount").textContent = factoryCatalog.length;
+      renderFactoryRows();
+      updateNextReportNumber();
+    }
+
+    function renderFactoryRows() {
+      const container = document.getElementById("factoryRows");
+      container.innerHTML = factoryCatalog.map((factory) => `
+        <tr data-factory-id="${factory.id}">
+          <td><input data-factory-field="name" value="${escapeHtml(factory.name)}"></td>
+          <td><input data-factory-field="code" value="${escapeHtml(factory.code)}"></td>
+          <td><input data-factory-field="reportPrefix" value="${escapeHtml(factory.report_prefix)}"></td>
+          <td>${escapeHtml(factory.next_report_no || "")}</td>
+          <td>
+            <button class="mini-action save-factory" type="button">保存</button>
+            <button class="mini-action danger delete-factory" type="button">删除</button>
+          </td>
+        </tr>
+      `).join("") || '<tr><td colspan="5">暂无工厂资料</td></tr>';
+      container.querySelectorAll(".save-factory").forEach((button) => {
+        button.addEventListener("click", () => saveFactoryRow(button.closest("tr")));
+      });
+      container.querySelectorAll(".delete-factory").forEach((button) => {
+        button.addEventListener("click", () => deleteFactoryRow(button.closest("tr")));
+      });
+    }
+
+    async function loadFactories() {
+      if (location.protocol === "file:") return;
+      const year = (fields.foundDate.value || new Date().toISOString()).slice(0, 4);
+      try {
+        const response = await fetch(`/api/qc/factories?year=${year}`);
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "读取工厂资料失败");
+        factoryCatalog = result.factories || [];
+        renderFactorySelectors();
+      } catch (error) {
+        setUploadStatus(document.getElementById("factoryStatus"), error.message || "读取工厂资料失败", "error");
+      }
+    }
+
+    async function addFactory() {
+      const payload = {
+        name: document.getElementById("factoryNameInput").value.trim(),
+        code: document.getElementById("factoryCodeInput").value.trim(),
+        reportPrefix: document.getElementById("factoryPrefixInput").value.trim()
+      };
+      const status = document.getElementById("factoryStatus");
+      try {
+        const response = await fetch("/api/qc/factories", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "新增工厂失败");
+        ["factoryNameInput", "factoryCodeInput", "factoryPrefixInput"].forEach((id) => {
+          document.getElementById(id).value = "";
+        });
+        await loadFactories();
+        setUploadStatus(status, "工厂资料已新增并同步到报告和投屏筛选。", "success");
+      } catch (error) {
+        setUploadStatus(status, error.message || "新增工厂失败", "error");
+      }
+    }
+
+    async function saveFactoryRow(row) {
+      const payload = {};
+      row.querySelectorAll("[data-factory-field]").forEach((input) => {
+        payload[input.dataset.factoryField] = input.value.trim();
+      });
+      const response = await fetch(`/api/qc/factories/${row.dataset.factoryId}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        setUploadStatus(document.getElementById("factoryStatus"), result.error || "更新工厂失败", "error");
+        return;
+      }
+      await loadFactories();
+      setUploadStatus(document.getElementById("factoryStatus"), "工厂资料已更新。", "success");
+    }
+
+    async function deleteFactoryRow(row) {
+      if (!window.confirm("确认删除这个尚未使用的工厂？")) return;
+      const response = await fetch(`/api/qc/factories/${row.dataset.factoryId}`, { method: "DELETE" });
+      const result = await response.json();
+      if (!response.ok) {
+        setUploadStatus(document.getElementById("factoryStatus"), result.error || "删除工厂失败", "error");
+        return;
+      }
+      await loadFactories();
+      setUploadStatus(document.getElementById("factoryStatus"), "工厂已删除。", "success");
     }
 
     function escapeHtml(value) {
@@ -2928,7 +3095,7 @@
         setUploadStatus(
           status,
           synchronized
-            ? `${payload.brand} / ${payload.styleNo} 已新增颜色“${payload.color}”，并同步到纠正报告。`
+            ? `${payload.brand} / ${payload.styleNo} 已新增颜色“${payload.color}”，并同步到改善报告。`
             : "资料已经写入数据库，但列表刷新失败，请刷新页面查看。",
           synchronized ? "success" : "error"
         );
@@ -3241,8 +3408,8 @@
           <td><b>${index + 1}</b></td>
           <td>
             <select data-measure-field="type">
-              <option ${measure.type === "临时纠正" ? "selected" : ""}>临时纠正</option>
-              <option ${measure.type === "永久纠正" ? "selected" : ""}>永久纠正</option>
+              <option ${measure.type === "临时改善" ? "selected" : ""}>临时改善</option>
+              <option ${measure.type === "永久改善" ? "selected" : ""}>永久改善</option>
               <option ${measure.type === "预防措施" ? "selected" : ""}>预防措施</option>
             </select>
           </td>
@@ -3362,6 +3529,7 @@
       document.getElementById("paperSource").textContent = fields.sourceDept.value;
       document.getElementById("paperDept").textContent = departments.join("、") || "未选择";
       document.getElementById("paperPeople").textContent = people.join("、") || "待措施分配";
+      document.getElementById("paperFactory").textContent = selectedFactory()?.name || "未选择";
       document.getElementById("paperProblem").textContent = fields.problemDesc.value;
       document.getElementById("paperRootCause").textContent = fields.rootCause.value;
       document.getElementById("paperReporter").textContent = fields.reporter.value;
@@ -3377,6 +3545,7 @@
       document.getElementById("archivePaperSource").textContent = fields.sourceDept.value;
       document.getElementById("archivePaperDept").textContent = departments.join("、") || "未选择";
       document.getElementById("archivePaperPeople").textContent = people.join("、") || "待措施分配";
+      document.getElementById("archivePaperFactory").textContent = selectedFactory()?.name || "未选择";
       document.getElementById("archivePaperProblem").textContent = fields.problemDesc.value;
       document.getElementById("archivePaperRootCause").textContent = fields.rootCause.value;
       document.getElementById("archivePaperReporter").textContent = fields.reporter.value;
@@ -3415,8 +3584,8 @@
 
     function addMeasure() {
       measures.push({
-        type: "临时纠正",
-        content: "填写新的纠正措施内容。",
+        type: "临时改善",
+        content: "填写新的改善措施内容。",
         people: defaultMeasurePeople(),
         due: "",
         status: "待执行",
@@ -3426,8 +3595,7 @@
     }
 
     function newReport() {
-      reportCounter += 1;
-      fields.reportNo.value = `XCJ2026-${String(reportCounter).padStart(3, "0")}`;
+      updateNextReportNumber();
       fields.problemDesc.value = "";
       fields.rootCause.value = "";
       fields.reviewer.value = fields.reporter.value;
@@ -3438,8 +3606,8 @@
       saveButton.textContent = "保存报告";
       setUploadStatus(document.getElementById("saveReportStatus"), "");
       measures = [{
-        type: "临时纠正",
-        content: "填写纠正措施内容。",
+        type: "临时改善",
+        content: "填写改善措施内容。",
         people: defaultMeasurePeople(),
         due: "",
         status: "待执行",
@@ -3451,8 +3619,11 @@
 
     function applyStyleFilter() {
       const selectedStyle = styleFilter.value;
+      const selectedFactory = factoryFilter.value;
       document.querySelectorAll(".issue-card[data-style]").forEach((card) => {
-        card.style.display = selectedStyle === "all" || card.dataset.style === selectedStyle ? "" : "none";
+        const styleMatches = selectedStyle === "all" || card.dataset.style === selectedStyle;
+        const factoryMatches = selectedFactory === "all" || card.dataset.factory === selectedFactory;
+        card.style.display = styleMatches && factoryMatches ? "" : "none";
       });
       document.querySelectorAll(".screen-list").forEach((list) => {
         const visibleCards = [...list.querySelectorAll(".issue-card[data-style]")].filter((card) => card.style.display !== "none");
@@ -3460,9 +3631,175 @@
       });
     }
 
+    const reportStatusNames = {
+      draft: "草稿",
+      submitted: "待责任确认",
+      executing: "执行中",
+      pending_review: "待复核",
+      review_rejected: "复核退回",
+      pending_archive: "待归档",
+      archived: "已归档"
+    };
+
+    function reportStatusPill(status) {
+      const color = status === "archived" ? "green" : status === "pending_review" ? "blue" : status === "review_rejected" ? "red" : "amber";
+      return `<span class="pill ${color}">${reportStatusNames[status] || status}</span>`;
+    }
+
+    function updateHistoryStyleOptions(reports) {
+      const select = document.getElementById("historyStyleFilter");
+      const current = select.value;
+      const styles = [...new Set(reports.map((report) => report.style_no).filter(Boolean))].sort();
+      select.innerHTML = `<option value="">全部款号</option>${styles.map((style) =>
+        `<option value="${escapeHtml(style)}">${escapeHtml(style)}</option>`
+      ).join("")}`;
+      if (styles.includes(current)) select.value = current;
+    }
+
+    async function loadHistoryReports() {
+      if (location.protocol === "file:") return;
+      const params = new URLSearchParams({ limit: "5000" });
+      const month = document.getElementById("historyMonthFilter").value;
+      const factoryId = document.getElementById("historyFactoryFilter").value;
+      const styleNo = document.getElementById("historyStyleFilter").value;
+      if (month) params.set("month", month);
+      if (factoryId) params.set("factoryId", factoryId);
+      if (styleNo) params.set("styleNo", styleNo);
+      const container = document.getElementById("historyRows");
+      try {
+        const response = await fetch(`/api/qc/reports?${params}`);
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "读取改善记录失败");
+        const reports = result.reports || [];
+        if (!styleNo) updateHistoryStyleOptions(reports);
+        container.innerHTML = reports.map((report) => `
+          <tr>
+            <td>${escapeHtml(report.report_no)}</td>
+            <td>${escapeHtml(report.factory_name)}</td>
+            <td>${escapeHtml(report.style_no || "")}</td>
+            <td>${escapeHtml(report.source_department_name)}</td>
+            <td>${escapeHtml((report.responsible_departments || []).map((item) => item.department_name).join("、"))}</td>
+            <td>${escapeHtml((report.responsible_people || []).map((item) => item.person_name).join("、"))}</td>
+            <td>${reportStatusPill(report.status)}</td>
+            <td>${report.status === "archived"
+              ? '<span class="pill green">已锁定</span>'
+              : `<button class="mini-action danger delete-history-report" data-report-no="${escapeHtml(report.report_no)}" type="button">删除</button>`}</td>
+          </tr>
+        `).join("") || '<tr><td colspan="8">当前筛选范围暂无改善记录</td></tr>';
+        container.querySelectorAll(".delete-history-report").forEach((button) => {
+          button.addEventListener("click", () => deleteHistoryReport(button.dataset.reportNo));
+        });
+        return reports;
+      } catch (error) {
+        container.innerHTML = `<tr><td colspan="8">${escapeHtml(error.message || "读取改善记录失败")}</td></tr>`;
+        return [];
+      }
+    }
+
+    async function deleteHistoryReport(reportNo) {
+      if (!window.confirm(`确认删除未归档报告 ${reportNo}？报告、措施和图片索引会一并删除。`)) return;
+      const response = await fetch(`/api/qc/reports/${encodeURIComponent(reportNo)}`, { method: "DELETE" });
+      const result = await response.json();
+      if (!response.ok) {
+        window.alert(result.error || "删除报告失败");
+        return;
+      }
+      await Promise.all([loadHistoryReports(), loadProjectorReports(), loadFactories()]);
+    }
+
+    function exportHistory() {
+      const params = new URLSearchParams();
+      const month = document.getElementById("historyMonthFilter").value;
+      const factoryId = document.getElementById("historyFactoryFilter").value;
+      const styleNo = document.getElementById("historyStyleFilter").value;
+      if (month) params.set("month", month);
+      if (factoryId) params.set("factoryId", factoryId);
+      if (styleNo) params.set("styleNo", styleNo);
+      window.location.href = `/api/qc/reports/export?${params}`;
+    }
+
+    function severityName(value) {
+      if (value === "customer_complaint") return "客户投诉";
+      if (value === "unacceptable") return "不可接受";
+      if (value === "serious") return "严重";
+      if (value === "minor") return "轻微";
+      return "一般";
+    }
+
+    async function loadProjectorReports() {
+      if (location.protocol === "file:") return;
+      try {
+        const response = await fetch("/api/qc/reports?limit=5000");
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "读取投屏问题失败");
+        const reports = (result.reports || []).filter((report) => report.status !== "archived");
+        const currentStyle = styleFilter.value;
+        const projectorStyles = [...new Set(reports.map((report) => report.style_no).filter(Boolean))].sort();
+        styleFilter.innerHTML = `<option value="all">全部未关闭问题</option>${projectorStyles.map((style) =>
+          `<option value="${escapeHtml(style)}">${escapeHtml(style)}</option>`
+        ).join("")}`;
+        styleFilter.value = projectorStyles.includes(currentStyle) ? currentStyle : "all";
+        const grouped = new Map();
+        reports.forEach((report) => {
+          (report.responsible_departments || []).forEach((department) => {
+            const list = grouped.get(department.department_name) || [];
+            list.push(report);
+            grouped.set(department.department_name, list);
+          });
+        });
+
+        document.getElementById("projectorChoiceGrid").innerHTML = [...grouped.entries()].map(([department, items]) => `
+          <button class="choice-card sewing" data-projector-target="${escapeHtml(department)}">
+            <span>${escapeHtml(department)}显示器</span>
+            <div><strong>待本部门改善 ${items.length} 项</strong><small>只显示其他部门反馈给本部门的未关闭问题。</small></div>
+          </button>
+        `).join("") || '<div class="readonly-note">当前没有未关闭问题</div>';
+
+        document.getElementById("screenGrid").innerHTML = [...grouped.entries()].map(([department, items]) => {
+          const sources = [...new Set(items.map((report) => report.source_department_name))].join("、");
+          return `
+            <article class="screen" data-projector="${escapeHtml(department)}">
+              <div class="screen-head sewing">
+                <div><h2>${escapeHtml(sources)}反馈给${escapeHtml(department)}</h2><p>${escapeHtml(department)}现场改善看板</p></div>
+                <span class="pill red">待改善 ${items.length}</span>
+              </div>
+              <div class="screen-list">
+                ${items.map((report) => {
+                  const image = report.problem_attachments?.[0]?.view_url || "assets/issue-photo-sewing-clean.png";
+                  const people = (report.responsible_people || []).map((item) => item.person_name).join("、");
+                  const dueDates = (report.actions || []).map((action) => action.due_date).filter(Boolean).sort();
+                  return `
+                    <div class="issue-card" data-style="${escapeHtml(report.style_no || "")}" data-factory="${escapeHtml(report.factory_id)}">
+                      <img src="${escapeHtml(image)}" alt="${escapeHtml(report.problem_description)}">
+                      <div>
+                        <div class="issue-title"><h3>${escapeHtml(report.problem_description)}</h3><span class="pill red">${severityName(report.severity)}</span></div>
+                        <div class="issue-meta">
+                          <span>报告编号：<b>${escapeHtml(report.report_no)}</b></span>
+                          <span>工厂：<b>${escapeHtml(report.factory_name)}</b></span>
+                          <span>款号：<b>${escapeHtml(report.style_no || "")}</b></span>
+                          <span>责任人：<b>${escapeHtml(people)}</b></span>
+                          <span>计划日期：<b>${escapeHtml(dueDates[0] || "待填写")}</b></span>
+                          <span>状态：<b>${escapeHtml(reportStatusNames[report.status] || report.status)}</b></span>
+                        </div>
+                        <p class="readonly-note">${escapeHtml(report.problem_description)}</p>
+                      </div>
+                    </div>`;
+                }).join("")}
+              </div>
+            </article>`;
+        }).join("");
+        applyStyleFilter();
+      } catch (error) {
+        document.getElementById("screenGrid").innerHTML = `<div class="readonly-note">${escapeHtml(error.message || "投屏问题读取失败")}</div>`;
+      }
+    }
+
     function exitProjector() {
       document.body.classList.remove("projector-selecting", "projector", "projector-sewing", "projector-taping", "projector-cutting-business");
       projectorBtn.textContent = "投屏预览";
+      document.querySelectorAll(".screen").forEach((screen) => {
+        screen.style.display = "";
+      });
       if (window.location.hash) {
         history.replaceState(null, "", window.location.pathname);
       }
@@ -3493,9 +3830,12 @@
         "cutting-business": "#cutting-business-screen"
       };
       document.body.classList.remove("projector-selecting", "projector-sewing", "projector-taping", "projector-cutting-business");
-      document.body.classList.add("projector", `projector-${target}`);
+      document.body.classList.add("projector");
+      document.querySelectorAll(".screen").forEach((screen) => {
+        screen.style.display = screen.dataset.projector === target ? "" : "none";
+      });
       if (updateHash) {
-        history.replaceState(null, "", hashMap[target] || "#sewing-screen");
+        history.replaceState(null, "", hashMap[target] || `#screen-${encodeURIComponent(target)}`);
       }
     }
 
@@ -3517,6 +3857,10 @@
       button.addEventListener("click", () => {
         openProjector(button.dataset.projectorTarget);
       });
+    });
+    document.getElementById("projectorChoiceGrid").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-projector-target]");
+      if (button) openProjector(button.dataset.projectorTarget);
     });
 
     exitProjectorBtn.addEventListener("click", exitProjector);
@@ -3544,6 +3888,7 @@
       fields.colorName,
       fields.severity,
       fields.sourceDept,
+      fields.factoryId,
       fields.kpiFlag,
       fields.problemDesc,
       fields.rootCause,
@@ -3562,6 +3907,7 @@
     document.getElementById("peoplePageAddBtn").addEventListener("click", () => {
       addPersonFromInputs(document.getElementById("libraryDept"), document.getElementById("libraryPerson"));
     });
+    document.getElementById("factoryAddBtn").addEventListener("click", addFactory);
     document.getElementById("styleCatalogAddBtn").addEventListener("click", addStyleCatalogItem);
     fields.styleNo.addEventListener("change", () => renderStyleColors());
     document.getElementById("addMeasureBtn").addEventListener("click", addMeasure);
@@ -3571,6 +3917,14 @@
       newReport();
     });
     styleFilter.addEventListener("change", applyStyleFilter);
+    factoryFilter.addEventListener("change", applyStyleFilter);
+    fields.factoryId.addEventListener("change", updateNextReportNumber);
+    fields.foundDate.addEventListener("change", loadFactories);
+    document.getElementById("historyMonthFilter").addEventListener("change", loadHistoryReports);
+    document.getElementById("historyFactoryFilter").addEventListener("change", loadHistoryReports);
+    document.getElementById("historyStyleFilter").addEventListener("change", loadHistoryReports);
+    document.getElementById("historyExportBtn").addEventListener("click", exportHistory);
+    document.getElementById("globalExportBtn").addEventListener("click", exportHistory);
 
     async function uploadFileToS3(file, uploadType, actionSequenceNo = "") {
       if (location.protocol === "file:") {
@@ -3609,7 +3963,7 @@
     }
 
     function actionTypeValue(label) {
-      if (label === "永久纠正") return "permanent_correction";
+      if (label === "永久改善") return "permanent_correction";
       if (label === "预防措施") return "preventive_action";
       return "temporary_correction";
     }
@@ -3629,6 +3983,7 @@
       const status = document.getElementById("saveReportStatus");
       const payload = {
         reportNo: fields.reportNo.value,
+        factoryId: fields.factoryId.value,
         styleCatalogId: currentStyleCatalogId(),
         foundDate: fields.foundDate.value,
         brand: fields.brandName.value,
@@ -3657,6 +4012,10 @@
         setUploadStatus(status, "请先从 08 款式资料库选择有效的款号和颜色。", "error");
         return;
       }
+      if (!payload.factoryId) {
+        setUploadStatus(status, "请先选择所属工厂。", "error");
+        return;
+      }
 
       button.disabled = true;
       button.textContent = "正在保存";
@@ -3673,6 +4032,7 @@
         button.textContent = "已保存";
         setUploadStatus(status, `报告 ${result.reportNo} 已保存，措施任务已分配。`, "success");
         updateReportPreview();
+        await Promise.all([loadHistoryReports(), loadProjectorReports(), loadFactories()]);
       } catch (error) {
         button.disabled = false;
         button.textContent = "重新保存";
@@ -3731,6 +4091,9 @@
     renderStyleSelectors();
     renderStyleCatalogPage();
     loadStyleCatalog();
+    loadFactories();
+    loadHistoryReports();
+    loadProjectorReports();
     fields.sourceDept.value = "压胶部";
     renderResponsibleDepartments();
     renderMeasures();

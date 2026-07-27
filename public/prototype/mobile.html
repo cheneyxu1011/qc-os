@@ -405,8 +405,8 @@
       <div class="card">
         <div class="card-head">
           <div>
-            <h2>拍照新增纠正报告</h2>
-            <p>问题来源部门现场拍照，系统生成 XCJ2026-002</p>
+            <h2>拍照新增改善报告</h2>
+            <p id="mobileReportHint">问题来源部门现场拍照，系统按工厂生成报告编号</p>
           </div>
           <span class="pill blue">新报告</span>
         </div>
@@ -429,8 +429,9 @@
           </div>
           <div class="grid-2">
             <div class="field"><label>问题来源</label><select><option>压胶部</option><option>车缝部</option><option>裁剪部</option><option>QC部</option><option>业务部</option></select></div>
-            <div class="field"><label>责任部门（可多选）</label><select multiple size="3"><option selected>车缝部</option><option>压胶部</option><option>裁剪部</option><option>QC部</option><option>业务部</option><option>厂长</option></select></div>
+            <div class="field"><label>所属工厂</label><select id="mobileFactoryId"><option value="">加载工厂资料中</option></select></div>
           </div>
+          <div class="field"><label>责任部门（可多选）</label><select multiple size="3"><option selected>车缝部</option><option>压胶部</option><option>裁剪部</option><option>QC部</option><option>业务部</option><option>厂长</option></select></div>
           <div class="field"><label>措施责任人（跨部门可选）</label><select multiple size="4"><option selected>夏红霞</option><option selected>朱小丽</option><option>李小华</option><option>朱玲玲</option><option>张吉云</option><option>张亚琴</option><option>顾瑶</option><option>顾永宏</option></select></div>
           <div class="field"><label>问题描述</label><textarea>左内里布上下分配不均匀，造成里布上节多布约1CM左右，扭曲。客人QC不接受，需要返修处理。</textarea></div>
           <div class="btn-row">
@@ -589,6 +590,8 @@
     const mobileBrandName = document.getElementById("mobileBrandName");
     const mobileStyleNo = document.getElementById("mobileStyleNo");
     const mobileColorName = document.getElementById("mobileColorName");
+    const mobileFactoryId = document.getElementById("mobileFactoryId");
+    let mobileFactories = [];
     let mobileStyleCatalog = [
       { id: "", brand: "迪赛特", style_no: "JK57", color: "深灰" }
     ];
@@ -666,6 +669,31 @@
 
     mobileStyleNo.addEventListener("change", () => renderMobileStyleColors());
 
+    function updateMobileReportHint() {
+      const factory = mobileFactories.find((item) => item.id === mobileFactoryId.value);
+      document.getElementById("mobileReportHint").textContent = factory
+        ? `问题来源部门现场拍照，系统生成 ${factory.next_report_no}`
+        : "问题来源部门现场拍照，系统按工厂生成报告编号";
+    }
+
+    async function loadMobileFactories() {
+      if (location.protocol === "file:") return;
+      try {
+        const response = await fetch(`/api/qc/factories?year=${new Date().getFullYear()}`);
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "读取工厂资料失败");
+        mobileFactories = result.factories || [];
+        mobileFactoryId.innerHTML = mobileFactories.map((factory) =>
+          `<option value="${escapeHtml(factory.id)}">${escapeHtml(factory.name)}</option>`
+        ).join("");
+        updateMobileReportHint();
+      } catch (error) {
+        setUploadStatus("problemThumbs", error.message || "工厂资料读取失败", "error");
+      }
+    }
+
+    mobileFactoryId.addEventListener("change", updateMobileReportHint);
+
     const uploadTypeByTarget = {
       problemThumbs: "problem-before",
       taskThumbs1: "action-after",
@@ -680,7 +708,7 @@
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          reportNo: "XCJ2026-002",
+          reportNo: mobileFactories.find((item) => item.id === mobileFactoryId.value)?.next_report_no || "XCJ2026-001",
           type: uploadType,
           fileName: file.name,
           contentType: file.type || "image/jpeg",
@@ -742,6 +770,7 @@
 
     const initial = location.hash.replace("#", "");
     loadMobileStyleCatalog();
+    loadMobileFactories();
     if (["report", "tasks", "review", "archive"].includes(initial)) openTab(initial);
     else requestAnimationFrame(() => window.scrollTo(0, 0));
   </script>
