@@ -317,6 +317,15 @@
       background: #fff5f4;
     }
 
+    .btn:disabled,
+    .btn[aria-disabled="true"] {
+      cursor: not-allowed;
+      opacity: .55;
+      background: #f3f6f8;
+      color: var(--muted);
+      border-color: var(--line);
+    }
+
     .content {
       padding: 24px 28px 34px;
     }
@@ -1939,7 +1948,7 @@
                 <div class="summary-box">
                   <h3>导出功能</h3>
                   <div class="summary-list">
-                    <div><span>图片导出</span><button class="btn">导出图片</button></div>
+                    <div><span>图片导出</span><button class="btn" type="button" disabled title="下一步接入报告图片生成后开放">导出图片（待接入）</button></div>
                     <div><span>PDF打印</span><button class="btn" onclick="window.print()">导出PDF</button></div>
                     <div><span>状态</span><span class="pill dark">归档后锁定</span></div>
                   </div>
@@ -1948,7 +1957,7 @@
             </div>
 
             <div class="export-row">
-              <button class="btn">导出报告图片</button>
+              <button class="btn" type="button" disabled title="下一步接入报告图片生成后开放">导出报告图片（待接入）</button>
               <button class="btn" onclick="window.print()">打印 / 导出PDF</button>
             </div>
 
@@ -2083,76 +2092,20 @@
                   <p>谁提出问题，谁复核改善是否到位；通过后流转给厂长/主管归档。</p>
                 </div>
                 <div class="toolbar">
-                  <select>
-                    <option>当前来源部门：压胶部</option>
-                    <option>车缝部</option>
-                    <option>裁剪部</option>
-                    <option>QC部</option>
-                    <option>业务部</option>
+                  <select id="reviewSourceFilter">
+                    <option value="">全部来源部门</option>
+                    <option value="压胶部">压胶部</option>
+                    <option value="车缝部">车缝部</option>
+                    <option value="裁剪部">裁剪部</option>
+                    <option value="QC部">QC部</option>
+                    <option value="业务部">业务部</option>
                   </select>
-                  <button class="btn">只看待复核</button>
+                  <button class="btn" id="reviewPendingOnlyToggle" type="button">只看待复核</button>
                 </div>
               </div>
 
               <div class="task-list" id="reviewList">
-                <article class="task-card">
-                  <div class="task-card-head">
-                    <div>
-                      <h3>左内里布止口不均，责任人已提交改善</h3>
-                      <div class="task-meta">
-                        <span>报告：<b>XCJ2026-001</b></span>
-                        <span>款号：<b>JK57</b></span>
-                        <span>责任部门：<b>车缝部</b></span>
-                        <span>责任人：<b>夏红霞、朱小丽</b></span>
-                      </div>
-                    </div>
-                    <span class="pill blue">待复核</span>
-                  </div>
-                  <div class="compare-grid">
-                    <div class="compare-photo">
-                      <b>改善前</b>
-                      <img src="assets/issue-photo-sewing-clean.png" alt="改善前照片" data-problem-image>
-                      <p class="readonly-note">问题描述：<b data-problem-text>左内里布上下分配不均匀，造成里布上节多布约1CM左右，扭曲。客人QC不接受，需要返修处理。</b></p>
-                    </div>
-                    <div class="compare-photo">
-                      <b>责任人改善后</b>
-                      <img src="assets/corrective-report-reference.png" alt="改善后照片">
-                      <p class="readonly-note">执行说明：<b>已按标准止口返修，待压胶部复核。</b></p>
-                    </div>
-                  </div>
-                  <div class="field">
-                    <label>复核意见</label>
-                    <textarea>检查上下布配均匀，版面加量跟足腰节定位线。若仍有扭曲，退回继续改善。</textarea>
-                  </div>
-                  <div class="actions">
-                    <button class="btn primary">复核通过，提交归档</button>
-                    <button class="btn">退回改善</button>
-                    <button class="btn">补充复核照片</button>
-                  </div>
-                </article>
-
-                <article class="task-card">
-                  <div class="task-card-head">
-                    <div>
-                      <h3>肩缝松量偏大，改善照片不足</h3>
-                      <div class="task-meta">
-                        <span>报告：<b>XCJ2026-004</b></span>
-                        <span>款号：<b>JX-2308</b></span>
-                        <span>责任部门：<b>车缝部</b></span>
-                        <span>责任人：<b>张吉云</b></span>
-                      </div>
-                    </div>
-                    <span class="pill amber">待补充</span>
-                  </div>
-                  <div class="field">
-                    <label>退回原因</label>
-                    <input value="改善照片未拍到肩缝压胶后状态，需要补充清晰照片。">
-                  </div>
-                  <div class="actions">
-                    <button class="btn">再次退回</button>
-                    <button class="btn primary">资料补齐后通过</button>
-                  </div>
-                </article>
+                <div class="readonly-note">正在读取待复核报告...</div>
               </div>
             </div>
 
@@ -2196,177 +2149,17 @@
                   <p>复核通过后由厂长/主管最终锁定报告和KPI；归档后只允许补充说明，不允许修改责任人。</p>
                 </div>
                 <div class="toolbar">
-                  <select>
-                    <option>全部待归档</option>
-                    <option>资料完整</option>
-                    <option>需补充资料</option>
-                    <option>已归档</option>
+                  <select id="archiveStatusFilter">
+                    <option value="all">全部归档记录</option>
+                    <option value="pending_archive">待归档</option>
+                    <option value="archived">已归档</option>
                   </select>
-                  <button class="btn">批量导出PDF</button>
+                  <button class="btn" id="batchPdfBtn" type="button" disabled title="批量 PDF 下一步接入后端生成">批量导出PDF</button>
                 </div>
               </div>
 
               <div class="task-list" id="archiveList">
-                <article class="task-card">
-                  <div class="task-card-head">
-                    <div>
-                      <h3>XCJ2026-001 左内里布止口不均</h3>
-                      <div class="task-meta">
-                        <span>款号：<b>JK57</b></span>
-                        <span>来源：<b>压胶部</b></span>
-                        <span>责任：<b>车缝部</b></span>
-                        <span>KPI影响：<b>-5</b></span>
-                      </div>
-                    </div>
-                    <span class="pill green">资料完整</span>
-                  </div>
-                  <div class="compare-grid archive-approval-grid">
-                    <div class="report-paper archive-report-paper" onclick="document.getElementById('reportPaper').scrollIntoView({ block: 'start' })">
-                      <h2>改善措施报告</h2>
-                      <table class="report-table">
-                        <tr>
-                          <th>报告编号</th><td id="archivePaperReportNo">XCJ2026-001</td>
-                          <th>发现日期</th><td id="archivePaperFoundDate">2026/7/5</td>
-                          <th>品牌</th><td id="archivePaperBrand">迪赛特</td>
-                        </tr>
-                        <tr>
-                          <th>款号</th><td id="archivePaperStyle">JK57</td>
-                          <th>颜色</th><td id="archivePaperColor">深灰</td>
-                          <th>严重程度</th><td id="archivePaperSeverity">不可接受，需要返修</td>
-                        </tr>
-                        <tr>
-                          <th>问题来源</th><td id="archivePaperSource">压胶部</td>
-                          <th>责任部门</th><td id="archivePaperDept">车缝部</td>
-                          <th>责任人</th><td id="archivePaperPeople">夏红霞、朱小丽</td>
-                        </tr>
-                        <tr>
-                          <th>所属工厂</th><td id="archivePaperFactory" colspan="5">新长江工厂</td>
-                        </tr>
-                        <tr class="section-row"><td colspan="6">一、问题描述</td></tr>
-                        <tr>
-                          <td colspan="6">
-                            <span id="archivePaperProblem" data-problem-text>左内里布上下分配不均匀，造成里布上节多布约1CM左右，扭曲。客人QC不接受，需要返修处理。</span>
-                            <div class="photo-row" id="archiveProblemPhotoRow">
-                              <img src="assets/issue-photo-sewing-clean.png" alt="归档报告问题照片" data-problem-image>
-                              <span class="pill amber">改善前</span>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr class="section-row"><td colspan="6">二、根本原因分析</td></tr>
-                        <tr>
-                          <td colspan="6" id="archivePaperRootCause">产线生产例缝胶条时，为保证下袋位置平服，员工未按标准线作业，造成止口松量不一致。版面工艺要求折位一致，实际操作中上下节松量失衡，所以造成扭曲。</td>
-                        </tr>
-                        <tr class="section-row"><td colspan="6">三、改善与预防措施</td></tr>
-                        <tr>
-                          <td colspan="6">
-                            <table class="measure-table">
-                              <thead><tr><th>序号</th><th>措施类型</th><th>措施内容</th><th>责任人</th><th>计划完成日期</th><th>状态</th></tr></thead>
-                              <tbody id="archivePaperMeasureRows"></tbody>
-                            </table>
-                          </td>
-                        </tr>
-                        <tr class="section-row"><td colspan="6">四、效果验证与确认</td></tr>
-                        <tr>
-                          <td colspan="6">
-                            <span id="archivePaperVerify">改善照片已上传；完成日期：2026/7/10；来源部门复核通过。复核意见：上下布配均匀，版面加量跟足腰节定位线。</span>
-                            <div class="photo-row">
-                              <img src="assets/corrective-report-reference.png" alt="归档报告改善后照片">
-                              <span class="pill green">改善后</span>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>报告人</th><td id="archivePaperReporter">李小华</td>
-                          <th>复核人</th><td id="archivePaperReviewer">李小华</td>
-                          <th>审批人</th><td id="archivePaperApprover">张亚琴</td>
-                        </tr>
-                        <tr class="section-row"><td colspan="6">五、备注</td></tr>
-                        <tr><td colspan="6" style="height: 48px;">KPI按报告责任人归集；逾期、未执行按措施任务追加扣分。归档后报告锁定，可导出图片或PDF打印。</td></tr>
-                      </table>
-                    </div>
-                    <div class="archive-check-grid">
-                      <div class="summary-box">
-                        <h3>归档前检查</h3>
-                        <div class="summary-list">
-                          <div><span>问题照片</span><span class="pill green">已上传</span></div>
-                          <div><span>改善照片</span><span class="pill green">已上传</span></div>
-                          <div><span>责任人执行确认</span><span class="pill green">已确认</span></div>
-                          <div><span>来源部门复核</span><span class="pill green">已通过</span></div>
-                          <div><span>KPI责任</span><span class="pill green">已计算</span></div>
-                        </div>
-                      </div>
-                      <div class="summary-box">
-                        <h3>归档结果</h3>
-                        <div class="summary-list">
-                          <div><span>锁定报告</span><b>是</b></div>
-                          <div><span>进入KPI</span><b>是，100分倒扣</b></div>
-                          <div><span>历史记录</span><b>按款号 JK57 归集</b></div>
-                          <div><span>后续权限</span><b>仅补充说明/评论</b></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="field">
-                    <label>审批人（默认厂长，可按所在工厂选择）</label>
-                    <select id="archiveApprover"><option>夏红霞</option><option>朱小丽</option><option>李小华</option><option selected>张亚琴</option><option>朱玲玲</option><option>张吉云</option><option>顾瑶</option><option>顾永宏</option></select>
-                  </div>
-                  <div class="field">
-                    <label>主管归档意见</label>
-                    <input value="资料完整，复核通过，归档并进入本月KPI。">
-                  </div>
-                  <div class="actions">
-                    <button class="btn primary">确认归档并锁定KPI</button>
-                    <button class="btn">导出PDF</button>
-                    <button class="btn">退回补充资料</button>
-                  </div>
-                </article>
-
-                <article class="task-card">
-                  <div class="task-card-head">
-                    <div>
-                      <h3>XCJ2026-004 肩缝松量偏大</h3>
-                      <div class="task-meta">
-                        <span>款号：<b>JX-2308</b></span>
-                        <span>来源：<b>压胶部</b></span>
-                        <span>责任：<b>车缝部</b></span>
-                        <span>KPI影响：<b>-1</b></span>
-                      </div>
-                    </div>
-                    <span class="pill amber">需补充</span>
-                  </div>
-                  <div class="field">
-                    <label>缺少资料</label>
-                    <input value="改善后照片不清晰，来源部门复核意见不足，暂不归档。">
-                  </div>
-                  <div class="actions">
-                    <button class="btn">退回部门复核</button>
-                    <button class="btn">提醒责任人补照片</button>
-                  </div>
-                </article>
-
-                <article class="task-card">
-                  <div class="task-card-head">
-                    <div>
-                      <h3>XCJ2026-009 袋口胶条贴合不牢</h3>
-                      <div class="task-meta">
-                        <span>款号：<b>KW-7721</b></span>
-                        <span>来源：<b>车缝部</b></span>
-                        <span>责任：<b>压胶部</b></span>
-                        <span>KPI影响：<b>-6</b></span>
-                      </div>
-                    </div>
-                    <span class="pill red">逾期归档</span>
-                  </div>
-                  <div class="field">
-                    <label>主管处理意见</label>
-                    <input value="已逾期，按严重问题和措施逾期追加扣分，归档后纳入月度复盘。">
-                  </div>
-                  <div class="actions">
-                    <button class="btn primary">确认归档并锁定KPI</button>
-                    <button class="btn">导出PDF</button>
-                    <button class="btn">撤回到复核</button>
-                  </div>
-                </article>
+                <div class="readonly-note">正在读取归档审批报告...</div>
               </div>
             </div>
 
@@ -2397,7 +2190,7 @@
                   <div><span>XCJ2026-001</span><span class="pill green">已锁定</span></div>
                   <div><span>XCJ2026-002</span><span class="pill green">已锁定</span></div>
                   <div><span>XCJ2026-003</span><span class="pill green">已锁定</span></div>
-                  <div><span>导出</span><button class="btn">归档Excel</button></div>
+                  <div><span>导出</span><button class="btn" id="archiveSampleExportBtn" type="button">归档Excel</button></div>
                 </div>
               </div>
             </aside>
@@ -2542,7 +2335,7 @@
                 <h2>100分倒扣规则</h2>
                 <p>KPI按报告责任人归集；措施逾期、未执行、重复发生追加扣分。</p>
               </div>
-              <button class="btn">编辑规则</button>
+              <button class="btn" type="button" disabled title="KPI规则暂按系统基线固定，后续做主管配置页">编辑规则（待配置）</button>
             </div>
             <div class="subpanel-body">
               <div class="rule-grid">
@@ -2561,7 +2354,7 @@
                   <h2>个人月KPI责任汇总</h2>
                   <p>主管归档锁定后的报告才进入最终扣分或评分。</p>
                 </div>
-                <button class="btn primary">导出月KPI</button>
+                <button class="btn primary" type="button" disabled title="下一步新增月KPI专用导出接口后开放">导出月KPI（待接入）</button>
               </div>
               <table class="data">
                 <thead>
@@ -3612,6 +3405,7 @@
 
     let taskReports = [];
     let taskOverdueOnly = false;
+    let reviewPendingOnly = false;
 
     function localDateValue(date = new Date()) {
       const offset = date.getTimezoneOffset() * 60000;
@@ -3925,7 +3719,11 @@
       if (!container || location.protocol === "file:") return;
       container.innerHTML = '<div class="readonly-note">正在读取待复核报告...</div>';
       try {
-        const reports = await readReportsByStatus(["pending_review", "review_rejected"]);
+        const statuses = reviewPendingOnly ? ["pending_review"] : ["pending_review", "review_rejected"];
+        const sourceFilter = document.getElementById("reviewSourceFilter")?.value || "";
+        const reports = (await readReportsByStatus(statuses)).filter((report) =>
+          !sourceFilter || report.source_department_name === sourceFilter
+        );
         container.innerHTML = reports.map((report) => {
           const afterImages = actionAfterAttachments(report);
           return `
@@ -3961,7 +3759,7 @@
               <div class="actions">
                 <button class="btn primary review-submit-btn" data-report-no="${escapeHtml(report.report_no)}" data-result="approved" data-reviewer="${escapeHtml(report.default_reviewer_name || report.reporter_name || "")}" type="button">复核通过，提交归档</button>
                 <button class="btn review-submit-btn" data-report-no="${escapeHtml(report.report_no)}" data-result="rejected" data-reviewer="${escapeHtml(report.default_reviewer_name || report.reporter_name || "")}" type="button">退回改善</button>
-                <button class="btn" type="button">补充复核照片</button>
+                <button class="btn" type="button" disabled title="复核证据照片需要新增附件流程，下一步接入">补充复核照片（待接入）</button>
               </div>
               <div class="upload-status" data-review-status="${escapeHtml(report.report_no)}"></div>
             </article>`;
@@ -4006,7 +3804,13 @@
       if (!container || location.protocol === "file:") return;
       container.innerHTML = '<div class="readonly-note">正在读取归档审批报告...</div>';
       try {
-        const reports = await readReportsByStatus(["pending_archive", "archived"]);
+        const archiveFilter = document.getElementById("archiveStatusFilter")?.value || "all";
+        const archiveStatuses = archiveFilter === "pending_archive"
+          ? ["pending_archive"]
+          : archiveFilter === "archived"
+            ? ["archived"]
+            : ["pending_archive", "archived"];
+        const reports = await readReportsByStatus(archiveStatuses);
         container.innerHTML = reports.map((report) => `
           <article class="task-card" data-archive-report="${escapeHtml(report.report_no)}">
             <div class="task-card-head">
@@ -4056,7 +3860,7 @@
             <div class="actions">
               <button class="btn primary archive-submit-btn" data-report-no="${escapeHtml(report.report_no)}" type="button" ${report.status === "archived" ? "disabled" : ""}>${report.status === "archived" ? "已归档锁定" : "确认归档并锁定KPI"}</button>
               <button class="btn" onclick="window.print()" type="button">导出PDF</button>
-              <button class="btn" type="button">退回补充资料</button>
+              <button class="btn" type="button" disabled title="主管退回补充资料需要独立状态流转，下一步接入">退回补充资料（待接入）</button>
             </div>
             <div class="upload-status" data-archive-status="${escapeHtml(report.report_no)}"></div>
           </article>
@@ -4378,6 +4182,14 @@
     document.getElementById("historyStyleFilter").addEventListener("change", loadHistoryReports);
     document.getElementById("historyExportBtn").addEventListener("click", exportHistory);
     document.getElementById("globalExportBtn").addEventListener("click", exportHistory);
+    document.getElementById("archiveSampleExportBtn")?.addEventListener("click", exportHistory);
+    document.getElementById("reviewSourceFilter")?.addEventListener("change", loadReviewReports);
+    document.getElementById("reviewPendingOnlyToggle")?.addEventListener("click", (event) => {
+      reviewPendingOnly = !reviewPendingOnly;
+      event.currentTarget.textContent = reviewPendingOnly ? "显示退回记录" : "只看待复核";
+      loadReviewReports();
+    });
+    document.getElementById("archiveStatusFilter")?.addEventListener("change", loadArchiveReports);
 
     async function uploadFileToS3(file, uploadType, actionSequenceNo = "") {
       if (location.protocol === "file:") {
