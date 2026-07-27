@@ -2513,17 +2513,19 @@
             <div class="panel-head">
               <div>
                 <h2>款式资料库</h2>
-                <p>统一维护品牌、款号和颜色；纠正报告选择款号后自动带出，不再重复手工输入。</p>
+                <p>统一维护品牌、款号和颜色；同一款号可以连续添加多个颜色。</p>
               </div>
-              <button class="btn primary" id="styleCatalogAddBtn" type="button">新增款式资料</button>
             </div>
             <div class="form-grid">
               <div class="field"><label>品牌</label><input id="styleCatalogBrand" placeholder="例如：迪赛特"></div>
               <div class="field"><label>款号</label><input id="styleCatalogStyleNo" placeholder="例如：JK57"></div>
               <div class="field"><label>颜色</label><input id="styleCatalogColor" placeholder="例如：深灰"></div>
-              <div class="field"><label>同步说明</label><input value="当前手动维护，后续由 Factory OS 同步" readonly></div>
+              <div class="field">
+                <label>新增操作</label>
+                <button class="btn primary" id="styleCatalogAddBtn" type="button">添加款式 / 颜色</button>
+              </div>
             </div>
-            <div class="upload-status" id="styleCatalogStatus"></div>
+            <div class="upload-status" id="styleCatalogStatus" aria-live="polite"></div>
             <div style="overflow-x:auto;">
               <table class="data">
                 <thead>
@@ -2551,6 +2553,7 @@
             <div class="subpanel-body">
               <div class="library-sync-list">
                 <div><b>02 纠正报告：</b>选择款号，自动显示品牌和该款号已有颜色。</div>
+                <div><b>多颜色：</b>品牌和款号相同时，每次填写一个新颜色并点击“添加款式 / 颜色”。</div>
                 <div><b>01 现场投屏：</b>按款号筛选，并显示报告保存时的品牌、款号和颜色。</div>
                 <div><b>05 归档审批：</b>完整报告使用创建报告时保存的款式快照。</div>
                 <div><b>06 月 KPI：</b>按款号汇总部门与个人质量表现。</div>
@@ -2819,8 +2822,9 @@
           <td>${item.updated_at ? formatDate(item.updated_at.slice(0, 10)) : "当前预览"}</td>
           <td>
             <div class="toolbar">
-              <button class="btn save-style-row" type="button" ${item.source === "factory_os" ? "disabled" : ""}>保存</button>
-              <button class="btn danger delete-style-row" type="button" ${item.source === "factory_os" ? "disabled" : ""}>删除</button>
+              <button class="btn add-style-color" type="button">新增颜色</button>
+              <button class="btn save-style-row" type="button" ${item.source === "factory_os" ? "disabled" : ""}>保存修改</button>
+              <button class="btn danger delete-style-row" type="button" ${item.source === "factory_os" ? "disabled" : ""}>停用</button>
             </div>
           </td>
         </tr>
@@ -2829,16 +2833,34 @@
       container.querySelectorAll(".save-style-row").forEach((button) => {
         button.addEventListener("click", () => saveStyleCatalogRow(button.closest("tr")));
       });
+      container.querySelectorAll(".add-style-color").forEach((button) => {
+        button.addEventListener("click", () => prepareAdditionalStyleColor(button.closest("tr")));
+      });
       container.querySelectorAll(".delete-style-row").forEach((button) => {
         button.addEventListener("click", () => deleteStyleCatalogRow(button.closest("tr")));
       });
+    }
+
+    function prepareAdditionalStyleColor(row) {
+      const brandInput = document.getElementById("styleCatalogBrand");
+      const styleInput = document.getElementById("styleCatalogStyleNo");
+      const colorInput = document.getElementById("styleCatalogColor");
+      brandInput.value = row.querySelector('[data-style-field="brand"]').value.trim();
+      styleInput.value = row.querySelector('[data-style-field="styleNo"]').value.trim();
+      colorInput.value = "";
+      colorInput.focus();
+      colorInput.scrollIntoView({ behavior: "smooth", block: "center" });
+      setUploadStatus(
+        document.getElementById("styleCatalogStatus"),
+        `正在为 ${styleInput.value} 添加新颜色，请填写颜色后点击“添加款式 / 颜色”。`
+      );
     }
 
     async function loadStyleCatalog() {
       if (location.protocol === "file:") {
         renderStyleSelectors();
         renderStyleCatalogPage();
-        return;
+        return true;
       }
       try {
         const response = await fetch("/api/qc/styles");
@@ -2847,8 +2869,10 @@
         styleCatalog = result.styles || [];
         renderStyleSelectors();
         renderStyleCatalogPage();
+        return true;
       } catch (error) {
         setUploadStatus(document.getElementById("styleCatalogStatus"), error.message || "款式资料读取失败", "error");
+        return false;
       }
     }
 
@@ -2857,6 +2881,7 @@
       const styleInput = document.getElementById("styleCatalogStyleNo");
       const colorInput = document.getElementById("styleCatalogColor");
       const status = document.getElementById("styleCatalogStatus");
+      const button = document.getElementById("styleCatalogAddBtn");
       const payload = {
         brand: brandInput.value.trim(),
         styleNo: styleInput.value.trim(),
@@ -2866,6 +2891,8 @@
         setUploadStatus(status, "请完整填写品牌、款号和颜色。", "error");
         return;
       }
+      button.disabled = true;
+      button.textContent = "正在添加";
       try {
         if (location.protocol === "file:") {
           styleCatalog.push({
@@ -2886,14 +2913,23 @@
           if (!response.ok) throw new Error(result.error || "新增款式资料失败");
           styleCatalog.push(result.style);
         }
-        brandInput.value = "";
-        styleInput.value = "";
         colorInput.value = "";
         renderStyleSelectors();
         renderStyleCatalogPage();
-        setUploadStatus(status, "款式资料已新增，并同步到纠正报告。", "success");
+        const synchronized = location.protocol === "file:" || await loadStyleCatalog();
+        colorInput.focus();
+        setUploadStatus(
+          status,
+          synchronized
+            ? `${payload.brand} / ${payload.styleNo} 已新增颜色“${payload.color}”，并同步到纠正报告。`
+            : "资料已经写入数据库，但列表刷新失败，请刷新页面查看。",
+          synchronized ? "success" : "error"
+        );
       } catch (error) {
         setUploadStatus(status, error.message || "新增款式资料失败", "error");
+      } finally {
+        button.disabled = false;
+        button.textContent = "添加款式 / 颜色";
       }
     }
 
@@ -2921,7 +2957,12 @@
         }
         renderStyleSelectors();
         renderStyleCatalogPage();
-        setUploadStatus(status, "款式资料已更新；历史报告快照不受影响。", "success");
+        const synchronized = location.protocol === "file:" || await loadStyleCatalog();
+        setUploadStatus(
+          status,
+          synchronized ? "款式资料已更新；历史报告快照不受影响。" : "资料已经更新，但列表刷新失败，请刷新页面查看。",
+          synchronized ? "success" : "error"
+        );
       } catch (error) {
         setUploadStatus(status, error.message || "更新款式资料失败", "error");
       }
@@ -2940,7 +2981,12 @@
         styleCatalog = styleCatalog.filter((item) => item.id !== id);
         renderStyleSelectors();
         renderStyleCatalogPage();
-        setUploadStatus(status, "款式资料已停用。", "success");
+        const synchronized = location.protocol === "file:" || await loadStyleCatalog();
+        setUploadStatus(
+          status,
+          synchronized ? "款式资料已停用。" : "资料已经停用，但列表刷新失败，请刷新页面查看。",
+          synchronized ? "success" : "error"
+        );
       } catch (error) {
         setUploadStatus(status, error.message || "删除款式资料失败", "error");
       }
