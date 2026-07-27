@@ -127,8 +127,16 @@ export async function POST(request: Request, context: RouteContext) {
       }
     }
 
-    const nextStatus = result === "approved" ? "pending_archive" : "review_rejected";
+    const nextStatus = result === "approved" ? "pending_archive" : "executing";
     const nextStep = result === "approved" ? 4 : 2;
+    if (result === "rejected") {
+      const { error: reopenError } = await supabase
+        .from("qc_corrective_actions")
+        .update({ status: "pending" })
+        .eq("report_id", report.id)
+        .neq("action_type", "notification_only");
+      if (reopenError) throw reopenError;
+    }
     const { error: updateError } = await supabase
       .from("qc_reports")
       .update({ status: nextStatus, workflow_step: nextStep })
@@ -144,6 +152,7 @@ export async function POST(request: Request, context: RouteContext) {
         report_no: cleanedReportNo,
         review_comment: reviewComment,
         review_evidence_count: attachments.length,
+        reopened_reviewable_actions: result === "rejected",
       },
     });
 

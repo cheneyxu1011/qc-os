@@ -360,6 +360,207 @@
       line-height: 1.5;
     }
 
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .toolbar select {
+      flex: 1;
+    }
+
+    .toolbar .btn {
+      flex: 0 0 auto;
+      padding: 0 14px;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .choice {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 40px;
+      padding: 8px 9px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fafc;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .choice input {
+      width: 18px;
+      min-height: 18px;
+      margin: 0;
+      accent-color: var(--blue);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 4px 0 0;
+    }
+
+    .section-title h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .action-editor,
+    .evidence-row {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #f8fafc;
+    }
+
+    .action-editor-head,
+    .evidence-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .photo-gallery {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .photo-gallery img {
+      width: 100%;
+      height: 150px;
+      object-fit: contain;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f3f6f8;
+      cursor: zoom-in;
+    }
+
+    .empty {
+      padding: 28px 16px;
+      border: 1px dashed #aab6c2;
+      border-radius: 10px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+      background: #f8fafc;
+    }
+
+    .toast-stack {
+      position: fixed;
+      top: calc(12px + env(safe-area-inset-top));
+      left: 12px;
+      right: 12px;
+      z-index: 80;
+      display: grid;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      padding: 12px 14px;
+      border-radius: 9px;
+      background: #17212b;
+      color: #fff;
+      box-shadow: var(--shadow);
+      font-size: 13px;
+      font-weight: 700;
+      animation: toast-in .18s ease-out;
+    }
+
+    .toast.success { background: var(--green); }
+    .toast.error { background: var(--red); }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    dialog {
+      width: min(92vw, 460px);
+      max-height: 82vh;
+      padding: 0;
+      border: 0;
+      border-radius: 12px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .28);
+      overflow: hidden;
+    }
+
+    dialog::backdrop {
+      background: rgba(15, 23, 32, .58);
+    }
+
+    .dialog-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .dialog-head h3 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .dialog-body {
+      max-height: 68vh;
+      overflow: auto;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .record-row {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+    }
+
+    .record-row p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .lightbox {
+      width: 100vw;
+      height: 100vh;
+      max-width: none;
+      max-height: none;
+      border-radius: 0;
+      background: rgba(0,0,0,.92);
+    }
+
+    .lightbox img {
+      width: 100%;
+      height: calc(100vh - 64px);
+      object-fit: contain;
+    }
+
+    .lightbox .dialog-head {
+      color: #fff;
+      border-color: rgba(255,255,255,.2);
+    }
+
     @media (min-width: 760px) {
       body {
         max-width: 480px;
@@ -374,32 +575,23 @@
     <h1>质量改善移动端</h1>
     <p>现场拍照提报、责任人改善上传、来源部门复核、主管归档</p>
     <div class="role-row">
-      <select aria-label="当前角色">
+      <select id="mobileRole" aria-label="当前角色">
         <option>当前角色：责任人</option>
         <option>问题来源部门</option>
         <option>QC部</option>
         <option>业务部</option>
         <option>厂长/主管</option>
       </select>
-      <select aria-label="当前人员">
-        <option>夏红霞</option>
-        <option>朱小丽</option>
-        <option>李小华</option>
-        <option>张亚琴</option>
-        <option>朱玲玲</option>
-        <option>张吉云</option>
-        <option>顾瑶</option>
-        <option>顾永宏</option>
-      </select>
+      <select id="mobileCurrentPerson" aria-label="当前人员"><option>加载人员中</option></select>
     </div>
   </header>
 
   <main>
     <section class="page active" id="report">
       <div class="metric-row">
-        <div class="metric"><span>今日提报</span><b>2</b></div>
-        <div class="metric"><span>待执行</span><b>3</b></div>
-        <div class="metric"><span>待复核</span><b>4</b></div>
+        <div class="metric"><span>今日提报</span><b id="mobileTodayReports">0</b></div>
+        <div class="metric"><span>我的待执行</span><b id="mobileOpenTasks">0</b></div>
+        <div class="metric"><span>待复核</span><b id="mobilePendingReviews">0</b></div>
       </div>
 
       <div class="card">
@@ -408,35 +600,44 @@
             <h2>拍照新增改善报告</h2>
             <p id="mobileReportHint">问题来源部门现场拍照，系统按工厂生成报告编号</p>
           </div>
-          <span class="pill blue">新报告</span>
+          <button class="btn" id="mobileDraftsButton" type="button">草稿箱</button>
         </div>
         <div class="card-body">
           <label class="upload">
             <input class="photo-input" data-target="problemThumbs" type="file" accept="image/*" capture="environment" multiple hidden>
             <span><strong>拍摄/上传问题照片</strong>可多张，作为改善前留底</span>
           </label>
-          <div class="thumbs" id="problemThumbs">
-            <img src="assets/issue-photo-sewing-clean.png" alt="问题照片示例">
-          </div>
+          <div class="thumbs" id="problemThumbs"></div>
           <div class="upload-status" data-status-for="problemThumbs"></div>
+          <div class="grid-2">
+            <div class="field"><label>报告人</label><input id="mobileReporter" readonly></div>
+            <div class="field"><label>发现日期</label><input id="mobileFoundDate" type="date"></div>
+          </div>
           <div class="grid-2">
             <div class="field"><label>品牌（自动带出）</label><input id="mobileBrandName" value="迪赛特" readonly></div>
             <div class="field"><label>款号</label><select id="mobileStyleNo"><option value="迪赛特::JK57" data-brand="迪赛特" data-style="JK57">JK57 · 迪赛特</option></select></div>
           </div>
           <div class="grid-2">
             <div class="field"><label>颜色</label><select id="mobileColorName"><option value="深灰" data-style-id="">深灰</option></select></div>
-            <div class="field"><label>严重程度</label><select><option>不可接受，需要返修</option><option>严重问题</option><option>一般问题</option></select></div>
+            <div class="field"><label>严重程度</label><select id="mobileSeverity"><option value="unacceptable">不可接受，需要返修</option><option value="serious">严重，需要改善</option><option value="general">一般，需要改善</option><option value="minor">轻微，提醒改善</option><option value="customer_complaint">客户投诉</option></select></div>
           </div>
           <div class="grid-2">
-            <div class="field"><label>问题来源</label><select><option>压胶部</option><option>车缝部</option><option>裁剪部</option><option>QC部</option><option>业务部</option></select></div>
+            <div class="field"><label>问题来源</label><select id="mobileSourceDepartment"></select></div>
             <div class="field"><label>所属工厂</label><select id="mobileFactoryId"><option value="">加载工厂资料中</option></select></div>
           </div>
-          <div class="field"><label>责任部门（可多选）</label><select multiple size="3"><option selected>车缝部</option><option>压胶部</option><option>裁剪部</option><option>QC部</option><option>业务部</option><option>厂长</option></select></div>
-          <div class="field"><label>措施责任人（跨部门可选）</label><select multiple size="4"><option selected>夏红霞</option><option selected>朱小丽</option><option>李小华</option><option>朱玲玲</option><option>张吉云</option><option>张亚琴</option><option>顾瑶</option><option>顾永宏</option></select></div>
-          <div class="field"><label>问题描述</label><textarea>左内里布上下分配不均匀，造成里布上节多布约1CM左右，扭曲。客人QC不接受，需要返修处理。</textarea></div>
+          <div class="field"><label>责任部门（可多选）</label><div class="choice-grid" id="mobileResponsibleDepartments"></div></div>
+          <div class="field"><label>部门人员（只通知勾选人员）</label><div class="choice-grid" id="mobileResponsiblePeople"></div></div>
+          <div class="field"><label>问题描述</label><textarea id="mobileProblemDescription" placeholder="填写现场发现的问题"></textarea></div>
+          <div class="field"><label>根本原因分析</label><textarea id="mobileRootCause" placeholder="填写造成问题的根本原因"></textarea></div>
+          <div class="section-title">
+            <h3>改善与预防措施</h3>
+            <button class="btn" id="mobileAddAction" type="button">新增序号</button>
+          </div>
+          <div id="mobileActionEditors"></div>
+          <div class="field"><label>是否计入KPI</label><select id="mobileKpiEnabled"><option value="true">是，归档后计入</option><option value="false">否，仅作培训记录</option></select></div>
           <div class="btn-row">
-            <button class="btn">保存草稿</button>
-            <button class="btn primary">提交并分配</button>
+            <button class="btn" id="mobileSaveDraft" type="button">保存至草稿</button>
+            <button class="btn primary" id="mobileSubmitReport" type="button">提交并分配</button>
           </div>
         </div>
       </div>
@@ -444,136 +645,32 @@
 
     <section class="page" id="tasks">
       <div class="metric-row">
-        <div class="metric"><span>我的任务</span><b>3</b></div>
-        <div class="metric"><span>今日到期</span><b>1</b></div>
-        <div class="metric"><span>逾期</span><b>1</b></div>
+        <div class="metric"><span>我的任务</span><b id="mobileTaskCount">0</b></div>
+        <div class="metric"><span>今日到期</span><b id="mobileTaskDueToday">0</b></div>
+        <div class="metric"><span>逾期</span><b id="mobileTaskOverdue">0</b></div>
       </div>
-
-      <div class="card">
-        <div class="card-head">
-          <div>
-            <h2>返修处理：止口不均</h2>
-            <p>XCJ2026-001 · JK57 · 来源：压胶部</p>
-          </div>
-          <span class="pill red">已逾期</span>
-        </div>
-        <div class="card-body">
-          <img class="task-photo" src="assets/issue-photo-sewing-clean.png" alt="问题照片">
-          <div class="meta">
-            <span>问题描述：<b>左内里布上下分配不均匀，造成里布上节多布约1CM左右，扭曲。客人QC不接受，需要返修处理。</b></span>
-            <span>措施内容：<b>里布腰上节超过1CM松量的全部返修处理。</b></span>
-            <span>责任人：<b>夏红霞、朱小丽</b></span>
-            <span>计划完成：<b>2026/7/25</b></span>
-          </div>
-          <label class="upload">
-            <input class="photo-input" data-target="taskThumbs1" type="file" accept="image/*" capture="environment" multiple hidden>
-            <span><strong>拍摄改善照片</strong>每条措施至少1张</span>
-          </label>
-          <div class="thumbs" id="taskThumbs1"></div>
-          <div class="upload-status" data-status-for="taskThumbs1"></div>
-          <div class="field"><label>执行说明</label><textarea>已按标准止口返修，待压胶部复核。</textarea></div>
-          <div class="btn-row">
-            <button class="btn primary">标记已执行</button>
-            <button class="btn">查看报告</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-head">
-          <div>
-            <h3>首件确认与巡检</h3>
-            <p>长期执行 · QC部/业务部协同</p>
-          </div>
-          <span class="pill blue">长期</span>
-        </div>
-        <div class="card-body">
-          <div class="field"><label>本次巡检记录</label><textarea>首件确认正常，继续跟进量产稳定性。</textarea></div>
-          <button class="btn primary">提交巡检记录</button>
-        </div>
-      </div>
+      <div class="toolbar"><span class="notice">只显示当前人员被分配的措施</span><button class="btn" id="mobileReloadTasks" type="button">刷新</button></div>
+      <div id="mobileTaskList"><div class="empty">正在读取任务...</div></div>
     </section>
 
     <section class="page" id="review">
       <div class="metric-row">
-        <div class="metric"><span>待复核</span><b>4</b></div>
-        <div class="metric"><span>退回</span><b>1</b></div>
-        <div class="metric"><span>已通过</span><b>6</b></div>
+        <div class="metric"><span>待复核</span><b id="mobileReviewCount">0</b></div>
+        <div class="metric"><span>当前来源部门</span><b id="mobileReviewDepartmentCount">0</b></div>
+        <div class="metric"><span>已完成措施</span><b id="mobileReviewActionCount">0</b></div>
       </div>
-
-      <div class="card">
-        <div class="card-head">
-          <div>
-            <h2>来源部门复核</h2>
-            <p>谁提出问题，谁复核改善是否合格</p>
-          </div>
-          <span class="pill blue">待复核</span>
-        </div>
-        <div class="card-body">
-          <div class="grid-2">
-            <div>
-              <label class="field"><label>改善前</label></label>
-              <img class="task-photo" src="assets/issue-photo-sewing-clean.png" alt="改善前">
-              <div class="notice">问题描述：左内里布上下分配不均匀，造成里布上节多布约1CM左右，扭曲。</div>
-            </div>
-            <div>
-              <label class="field"><label>改善后</label></label>
-              <img class="task-photo" src="assets/issue-photo-sewing-clean.png" alt="改善后">
-              <div class="notice">执行说明：已按标准止口返修，待压胶部复核。</div>
-            </div>
-          </div>
-          <div class="meta">
-            <span>报告：<b>XCJ2026-001</b></span>
-            <span>责任部门：<b>车缝部</b></span>
-            <span>责任人：<b>夏红霞、朱小丽</b></span>
-          </div>
-          <label class="upload">
-            <input class="photo-input" data-target="reviewThumbs" type="file" accept="image/*" capture="environment" multiple hidden>
-            <span><strong>补充复核照片</strong>可选</span>
-          </label>
-          <div class="thumbs" id="reviewThumbs"></div>
-          <div class="upload-status" data-status-for="reviewThumbs"></div>
-          <div class="field"><label>复核意见</label><textarea>检查上下布配均匀，版面加量跟足腰节定位线。若仍有扭曲，退回继续改善。</textarea></div>
-          <div class="btn-row">
-            <button class="btn primary">复核通过</button>
-            <button class="btn danger">退回改善</button>
-          </div>
-        </div>
-      </div>
+      <div id="mobileReviewList"><div class="empty">正在读取待复核报告...</div></div>
     </section>
 
     <section class="page" id="archive">
       <div class="metric-row">
-        <div class="metric"><span>待归档</span><b>3</b></div>
-        <div class="metric"><span>资料完整</span><b>2</b></div>
-        <div class="metric"><span>已归档</span><b>15</b></div>
+        <div class="metric"><span>待归档</span><b id="mobileArchiveCount">0</b></div>
+        <div class="metric"><span>资料完整</span><b id="mobileArchiveComplete">0</b></div>
+        <div class="metric"><span>本月已归档</span><b id="mobileArchivedMonth">0</b></div>
       </div>
 
       <div class="notice">归档后报告锁定，责任人和KPI不可修改；业务/QC仍可补充说明。</div>
-
-      <div class="card">
-        <div class="card-head">
-          <div>
-            <h2>XCJ2026-001 待归档</h2>
-            <p>JK57 · 来源压胶部 · 责任车缝部 · KPI影响 -5</p>
-          </div>
-          <span class="pill green">资料完整</span>
-        </div>
-        <div class="card-body">
-          <div class="meta">
-            <span>问题照片：<b>已上传</b></span>
-            <span>改善照片：<b>已上传</b></span>
-            <span>责任签名：<b>已确认</b></span>
-            <span>来源复核：<b>已通过</b></span>
-            <span>KPI责任：<b>已计算</b></span>
-          </div>
-          <div class="field"><label>主管归档意见</label><textarea>资料完整，复核通过，归档并进入本月KPI。</textarea></div>
-          <div class="btn-row">
-            <button class="btn primary">归档并锁定KPI</button>
-            <button class="btn warn">退回补充</button>
-          </div>
-        </div>
-      </div>
+      <div id="mobileArchiveList" style="margin-top:12px"><div class="empty">正在读取待归档报告...</div></div>
     </section>
   </main>
 
@@ -584,7 +681,19 @@
     <button data-tab="archive">归档</button>
   </nav>
 
-  <script>
+  <div class="toast-stack" id="mobileToasts"></div>
+
+  <dialog id="mobileRecordsDialog">
+    <div class="dialog-head"><h3 id="mobileDialogTitle">草稿箱</h3><button class="btn" id="mobileDialogClose" type="button">关闭</button></div>
+    <div class="dialog-body" id="mobileDialogBody"></div>
+  </dialog>
+
+  <dialog class="lightbox" id="mobileLightbox">
+    <div class="dialog-head"><strong>照片查看</strong><button class="btn" id="mobileLightboxClose" type="button">关闭</button></div>
+    <img id="mobileLightboxImage" alt="放大照片">
+  </dialog>
+
+  <script type="text/plain" id="legacy-mobile-script">
     const navButtons = document.querySelectorAll(".bottom-nav button");
     const pages = document.querySelectorAll(".page");
     const mobileBrandName = document.getElementById("mobileBrandName");
@@ -773,6 +882,684 @@
     loadMobileFactories();
     if (["report", "tasks", "review", "archive"].includes(initial)) openTab(initial);
     else requestAnimationFrame(() => window.scrollTo(0, 0));
+  </script>
+  <script>
+    (() => {
+      const state = {
+        departments: [],
+        people: [],
+        factories: [],
+        styles: [],
+        reports: [],
+        actions: [],
+        currentDraftId: null
+      };
+
+      const byId = (id) => document.getElementById(id);
+      const today = () => {
+        const now = new Date();
+        return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+      };
+      const escapeHtml = (value) => String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+      const formatDate = (value) => {
+        const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+        return match ? `${Number(match[1])}/${Number(match[2])}/${Number(match[3])}` : "";
+      };
+      const currentPerson = () => byId("mobileCurrentPerson").value;
+      const currentPersonRecord = () => state.people.find((person) => person.name === currentPerson());
+      const selectedValues = (containerId) => [...byId(containerId).querySelectorAll('input[type="checkbox"]:checked')].map((input) => input.value);
+      const statusLabel = {
+        submitted: "待责任确认",
+        executing: "执行中",
+        pending_review: "待复核",
+        review_rejected: "已退回",
+        pending_archive: "待归档",
+        archived: "已归档"
+      };
+      const actionTypeLabel = {
+        temporary_correction: "临时改善",
+        permanent_correction: "永久改善",
+        preventive_action: "预防措施",
+        notification_only: "仅通知"
+      };
+
+      function toast(message, type = "success") {
+        const item = document.createElement("div");
+        item.className = `toast ${type}`;
+        item.textContent = message;
+        byId("mobileToasts").appendChild(item);
+        setTimeout(() => item.remove(), 2600);
+      }
+
+      async function api(url, options = {}) {
+        const response = await fetch(url, options);
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "操作失败，请稍后重试");
+        return result;
+      }
+
+      function setStatus(targetId, message, type = "") {
+        const element = document.querySelector(`[data-status-for="${targetId}"]`);
+        if (!element) return;
+        element.textContent = message;
+        element.className = `upload-status ${type}`.trim();
+      }
+
+      function imageHtml(attachments, emptyText = "暂无照片") {
+        if (!attachments?.length) return `<div class="empty">${escapeHtml(emptyText)}</div>`;
+        return `<div class="photo-gallery">${attachments.map((item) => {
+          const src = item.view_url || item.viewUrl || item.src || "";
+          return `<img src="${escapeHtml(src)}" alt="${escapeHtml(item.original_file_name || item.originalFileName || "照片")}" data-lightbox-src="${escapeHtml(src)}">`;
+        }).join("")}</div>`;
+      }
+
+      function problemAttachments(report) {
+        return report.problem_attachments || report.attachments?.filter((item) => item.attachment_type === "problem_before") || [];
+      }
+
+      function attachmentData(targetId) {
+        return [...byId(targetId).querySelectorAll("img[data-s3-key]")].map((image) => ({
+          s3Key: image.dataset.s3Key,
+          originalFileName: image.dataset.fileName || image.alt,
+          contentType: image.dataset.contentType || "image/jpeg",
+          fileSizeBytes: Number(image.dataset.fileSize || 0)
+        })).filter((item) => item.s3Key);
+      }
+
+      function appendUploadedImage(targetId, file, upload) {
+        const image = document.createElement("img");
+        image.src = URL.createObjectURL(file);
+        image.alt = file.name;
+        image.dataset.s3Key = upload.key;
+        image.dataset.fileName = file.name;
+        image.dataset.contentType = file.type || "image/jpeg";
+        image.dataset.fileSize = String(file.size);
+        image.dataset.lightboxSrc = image.src;
+        byId(targetId).appendChild(image);
+      }
+
+      async function uploadOne(file, { reportNo, type, year, actionSequenceNo }) {
+        const presign = await api("/api/uploads/presign", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            reportNo,
+            type,
+            fileName: file.name,
+            contentType: file.type || "image/jpeg",
+            year: String(year || new Date().getFullYear()),
+            actionSequenceNo: Number.isFinite(Number(actionSequenceNo)) ? Number(actionSequenceNo) : undefined
+          })
+        });
+        const form = new FormData();
+        Object.entries(presign.fields).forEach(([key, value]) => form.append(key, value));
+        form.append("file", file);
+        const uploadResponse = await fetch(presign.url, { method: "POST", body: form });
+        if (!uploadResponse.ok) throw new Error(`照片上传失败（${uploadResponse.status}）`);
+        return presign;
+      }
+
+      async function handlePhotoInput(input) {
+        const files = [...(input.files || [])].slice(0, 12);
+        if (!files.length) return;
+        const factory = state.factories.find((item) => item.id === byId("mobileFactoryId").value);
+        const reportNo = input.dataset.reportNo || factory?.next_report_no;
+        if (!reportNo) {
+          toast("请先选择所属工厂", "error");
+          input.value = "";
+          return;
+        }
+        const targetId = input.dataset.target;
+        setStatus(targetId, `正在上传 ${files.length} 张照片...`);
+        let success = 0;
+        let failed = 0;
+        for (const file of files) {
+          try {
+            const result = await uploadOne(file, {
+              reportNo,
+              type: input.dataset.uploadType || "problem-before",
+              year: input.dataset.reportYear || reportNo.match(/\d{4}/)?.[0],
+              actionSequenceNo: input.dataset.actionSequence
+            });
+            appendUploadedImage(targetId, file, result);
+            success += 1;
+          } catch {
+            failed += 1;
+          }
+        }
+        input.value = "";
+        const total = attachmentData(targetId).length;
+        setStatus(targetId, failed ? `已上传：${total} 张；失败：${failed} 张，请重试` : `已上传：${total} 张`, failed ? "error" : "success");
+        toast(failed ? `成功 ${success} 张，失败 ${failed} 张` : `已上传 ${success} 张`, failed ? "error" : "success");
+      }
+
+      function flattenPeople(departments) {
+        const people = new Map();
+        departments.forEach((department) => department.people.forEach((person) => {
+          const current = people.get(person.id) || { ...person, departments: [] };
+          current.departments.push({ id: department.id, name: department.name });
+          people.set(person.id, current);
+        }));
+        return [...people.values()].sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
+      }
+
+      function renderMasterData() {
+        byId("mobileCurrentPerson").innerHTML = state.people.map((person) => `<option>${escapeHtml(person.name)}</option>`).join("");
+        const preferred = localStorage.getItem("qc-mobile-person");
+        if (state.people.some((person) => person.name === preferred)) byId("mobileCurrentPerson").value = preferred;
+        byId("mobileReporter").value = currentPerson();
+        byId("mobileSourceDepartment").innerHTML = state.departments.map((department) => `<option>${escapeHtml(department.name)}</option>`).join("");
+        byId("mobileResponsibleDepartments").innerHTML = state.departments.map((department) => `
+          <label class="choice"><input type="checkbox" value="${escapeHtml(department.name)}">${escapeHtml(department.name)}</label>
+        `).join("");
+        renderResponsiblePeople();
+        renderStyleSelectors();
+        byId("mobileFactoryId").innerHTML = state.factories.map((factory) => `<option value="${escapeHtml(factory.id)}">${escapeHtml(factory.name)}</option>`).join("");
+        updateReportHint();
+      }
+
+      function renderResponsiblePeople(selected = selectedValues("mobileResponsiblePeople")) {
+        const departments = selectedValues("mobileResponsibleDepartments");
+        const available = state.people.filter((person) => person.departments.some((department) => departments.includes(department.name)));
+        byId("mobileResponsiblePeople").innerHTML = available.length ? available.map((person) => `
+          <label class="choice"><input type="checkbox" value="${escapeHtml(person.name)}" ${selected.includes(person.name) ? "checked" : ""}>${escapeHtml(person.name)}</label>
+        `).join("") : '<div class="empty" style="grid-column:1/-1">先选择责任部门</div>';
+      }
+
+      function renderStyleSelectors(preferredStyle = "", preferredColor = "") {
+        const groups = new Map();
+        state.styles.forEach((item) => {
+          const key = `${item.brand}::${item.style_no}`;
+          if (!groups.has(key)) groups.set(key, item);
+        });
+        byId("mobileStyleNo").innerHTML = [...groups.entries()].map(([key, item]) => `
+          <option value="${escapeHtml(key)}" data-brand="${escapeHtml(item.brand)}" data-style="${escapeHtml(item.style_no)}">${escapeHtml(item.style_no)} · ${escapeHtml(item.brand)}</option>
+        `).join("");
+        if (groups.has(preferredStyle)) byId("mobileStyleNo").value = preferredStyle;
+        renderStyleColors(preferredColor);
+      }
+
+      function renderStyleColors(preferred = "") {
+        const option = byId("mobileStyleNo").selectedOptions[0];
+        const brand = option?.dataset.brand || "";
+        const styleNo = option?.dataset.style || "";
+        const colors = state.styles.filter((item) => item.brand === brand && item.style_no === styleNo);
+        byId("mobileBrandName").value = brand;
+        byId("mobileColorName").innerHTML = colors.map((item) => `<option value="${escapeHtml(item.color)}" data-style-id="${escapeHtml(item.id)}">${escapeHtml(item.color)}</option>`).join("");
+        if (colors.some((item) => item.color === preferred)) byId("mobileColorName").value = preferred;
+      }
+
+      function updateReportHint() {
+        const factory = state.factories.find((item) => item.id === byId("mobileFactoryId").value);
+        byId("mobileReportHint").textContent = factory ? `系统将生成 ${factory.next_report_no}` : "问题来源部门现场拍照，系统按工厂生成报告编号";
+      }
+
+      function addAction(initial = {}) {
+        state.actions.push({
+          id: crypto.randomUUID(),
+          type: initial.type || "temporary_correction",
+          content: initial.content || "",
+          people: initial.people || [],
+          dueDate: initial.dueDate || "",
+          reminderNote: initial.reminderNote || ""
+        });
+        renderActions();
+      }
+
+      function renderActions() {
+        byId("mobileActionEditors").innerHTML = state.actions.map((action, index) => `
+          <div class="action-editor" data-action-id="${action.id}">
+            <div class="action-editor-head"><b>第 ${index + 1} 项</b><button class="btn danger" data-delete-action="${action.id}" type="button">删除</button></div>
+            <div class="field"><label>措施类型</label><select data-action-field="type">
+              ${Object.entries(actionTypeLabel).map(([value, label]) => `<option value="${value}" ${action.type === value ? "selected" : ""}>${label}</option>`).join("")}
+            </select></div>
+            <div class="field"><label>措施内容</label><textarea data-action-field="content" placeholder="填写需要执行或知悉的事项">${escapeHtml(action.content)}</textarea></div>
+            <div class="field"><label>责任人（可跨部门）</label><div class="choice-grid">
+              ${state.people.map((person) => `<label class="choice"><input type="checkbox" data-action-person value="${escapeHtml(person.name)}" ${action.people.includes(person.name) ? "checked" : ""}>${escapeHtml(person.name)}</label>`).join("")}
+            </div></div>
+            <div class="field"><label>计划完成日期</label><input type="date" data-action-field="dueDate" value="${escapeHtml(action.dueDate)}"></div>
+            <div class="field"><label>提醒说明（可选）</label><input data-action-field="reminderNote" value="${escapeHtml(action.reminderNote)}" placeholder="例如：当天确认收到"></div>
+          </div>
+        `).join("");
+      }
+
+      function updateActionFromElement(element) {
+        const editor = element.closest("[data-action-id]");
+        const action = state.actions.find((item) => item.id === editor?.dataset.actionId);
+        if (!action) return;
+        if (element.dataset.actionPerson !== undefined) {
+          action.people = [...editor.querySelectorAll("[data-action-person]:checked")].map((input) => input.value);
+        } else if (element.dataset.actionField) {
+          action[element.dataset.actionField] = element.value;
+        }
+      }
+
+      function reportPayload() {
+        const styleOption = byId("mobileStyleNo").selectedOptions[0];
+        const colorOption = byId("mobileColorName").selectedOptions[0];
+        return {
+          ...(state.currentDraftId ? { draftId: state.currentDraftId } : {}),
+          factoryId: byId("mobileFactoryId").value,
+          styleCatalogId: colorOption?.dataset.styleId || "",
+          foundDate: byId("mobileFoundDate").value,
+          brand: byId("mobileBrandName").value,
+          styleNo: styleOption?.dataset.style || "",
+          color: byId("mobileColorName").value,
+          severity: byId("mobileSeverity").value,
+          sourceDepartment: byId("mobileSourceDepartment").value,
+          responsibleDepartments: selectedValues("mobileResponsibleDepartments"),
+          responsiblePeople: selectedValues("mobileResponsiblePeople"),
+          kpiEnabled: byId("mobileKpiEnabled").value === "true",
+          reporter: byId("mobileReporter").value,
+          reviewer: byId("mobileReporter").value,
+          approver: state.departments.find((department) => department.name === "厂长")?.people?.[0]?.name || byId("mobileReporter").value,
+          problemDescription: byId("mobileProblemDescription").value.trim(),
+          rootCause: byId("mobileRootCause").value.trim(),
+          actions: state.actions.map(({ type, content, people, dueDate, reminderNote }) => ({ type, content, people, dueDate, reminderNote })),
+          attachments: attachmentData("problemThumbs").map((item) => ({ ...item, attachmentType: "problem_before" }))
+        };
+      }
+
+      function validateFormalReport(payload) {
+        if (!payload.factoryId) return "请选择所属工厂";
+        if (!payload.styleCatalogId) return "请选择款号和颜色";
+        if (!payload.responsibleDepartments.length) return "请至少选择一个责任部门";
+        if (!payload.responsiblePeople.length) return "请勾选需要通知的部门人员";
+        if (!payload.problemDescription) return "请填写问题描述";
+        if (!payload.rootCause) return "请填写根本原因分析";
+        if (!payload.attachments.length) return "请至少上传一张问题照片";
+        if (!payload.actions.length) return "请至少新增一条措施";
+        const invalidIndex = payload.actions.findIndex((action) => !action.content.trim() || !action.people.length);
+        return invalidIndex >= 0 ? `请完整填写第 ${invalidIndex + 1} 条措施和责任人` : "";
+      }
+
+      async function saveDraft() {
+        try {
+          const payload = reportPayload();
+          const result = await api("/api/qc/drafts", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ id: state.currentDraftId, reporter: payload.reporter, draftData: payload })
+          });
+          state.currentDraftId = result.draft.id;
+          toast("草稿已保存");
+        } catch (error) {
+          toast(error.message, "error");
+        }
+      }
+
+      async function submitReport() {
+        const payload = reportPayload();
+        const validation = validateFormalReport(payload);
+        if (validation) return toast(validation, "error");
+        const button = byId("mobileSubmitReport");
+        button.disabled = true;
+        try {
+          const result = await api("/api/qc/reports", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          toast(`报告 ${result.reportNo} 已提交并分配`);
+          resetReportForm();
+          await loadAllReports();
+          await loadFactories();
+        } catch (error) {
+          toast(error.message, "error");
+        } finally {
+          button.disabled = false;
+        }
+      }
+
+      function resetReportForm() {
+        state.currentDraftId = null;
+        byId("mobileProblemDescription").value = "";
+        byId("mobileRootCause").value = "";
+        byId("problemThumbs").innerHTML = "";
+        setStatus("problemThumbs", "");
+        byId("mobileResponsibleDepartments").querySelectorAll("input").forEach((input) => { input.checked = false; });
+        renderResponsiblePeople([]);
+        state.actions = [];
+        addAction();
+      }
+
+      async function openDrafts() {
+        const dialog = byId("mobileRecordsDialog");
+        byId("mobileDialogTitle").textContent = `${currentPerson()}的草稿箱`;
+        byId("mobileDialogBody").innerHTML = '<div class="empty">正在读取草稿...</div>';
+        dialog.showModal();
+        try {
+          const result = await api(`/api/qc/drafts?reporter=${encodeURIComponent(currentPerson())}`);
+          byId("mobileDialogBody").innerHTML = result.drafts.length ? result.drafts.map((draft) => `
+            <div class="record-row">
+              <b>${escapeHtml(draft.draft_data?.styleNo || "未选款号")} · ${escapeHtml(draft.draft_data?.problemDescription || "未填写问题描述")}</b>
+              <p>最后保存：${escapeHtml(formatDate(draft.updated_at))}</p>
+              <div class="btn-row"><button class="btn primary" data-load-draft="${draft.id}" type="button">继续填写</button><button class="btn danger" data-delete-draft="${draft.id}" type="button">删除</button></div>
+            </div>
+          `).join("") : '<div class="empty">当前报告人暂无草稿</div>';
+          byId("mobileDialogBody").querySelectorAll("[data-load-draft]").forEach((button) => button.addEventListener("click", () => {
+            const draft = result.drafts.find((item) => item.id === button.dataset.loadDraft);
+            applyDraft(draft);
+          }));
+          byId("mobileDialogBody").querySelectorAll("[data-delete-draft]").forEach((button) => button.addEventListener("click", async () => {
+            try {
+              await api(`/api/qc/drafts/${button.dataset.deleteDraft}?reporter=${encodeURIComponent(currentPerson())}`, { method: "DELETE" });
+              toast("草稿已删除");
+              openDrafts();
+            } catch (error) {
+              toast(error.message, "error");
+            }
+          }));
+        } catch (error) {
+          byId("mobileDialogBody").innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;
+        }
+      }
+
+      function applyDraft(draft) {
+        const data = draft.draft_data || {};
+        state.currentDraftId = draft.id;
+        byId("mobileFoundDate").value = data.foundDate || today();
+        byId("mobileFactoryId").value = data.factoryId || byId("mobileFactoryId").value;
+        renderStyleSelectors(`${data.brand || ""}::${data.styleNo || ""}`, data.color || "");
+        byId("mobileSeverity").value = data.severity || "general";
+        byId("mobileSourceDepartment").value = data.sourceDepartment || byId("mobileSourceDepartment").value;
+        byId("mobileResponsibleDepartments").querySelectorAll("input").forEach((input) => { input.checked = (data.responsibleDepartments || []).includes(input.value); });
+        renderResponsiblePeople(data.responsiblePeople || []);
+        byId("mobileProblemDescription").value = data.problemDescription || "";
+        byId("mobileRootCause").value = data.rootCause || "";
+        byId("mobileKpiEnabled").value = data.kpiEnabled === false ? "false" : "true";
+        state.actions = (data.actions || []).map((action) => ({ id: crypto.randomUUID(), ...action }));
+        if (!state.actions.length) state.actions.push({ id: crypto.randomUUID(), type: "temporary_correction", content: "", people: [], dueDate: "", reminderNote: "" });
+        renderActions();
+        byId("problemThumbs").innerHTML = (data.attachments || []).map((item) => `
+          <img src="${escapeHtml(item.viewUrl || item.view_url || "")}" alt="${escapeHtml(item.originalFileName || "问题照片")}" data-s3-key="${escapeHtml(item.s3Key || "")}" data-file-name="${escapeHtml(item.originalFileName || "")}" data-content-type="${escapeHtml(item.contentType || "")}" data-file-size="${escapeHtml(item.fileSizeBytes || 0)}" data-lightbox-src="${escapeHtml(item.viewUrl || item.view_url || "")}">
+        `).join("");
+        updateReportHint();
+        byId("mobileRecordsDialog").close();
+        toast("草稿已载入");
+      }
+
+      function taskRowsForPerson(personName) {
+        return state.reports.flatMap((report) => (report.actions || []).filter((action) =>
+          (action.assignees || []).some((person) => person.person_name === personName)
+        ).map((action) => ({ report, action }))).filter(({ report }) => report.status !== "archived");
+      }
+
+      function renderTasks() {
+        const rows = taskRowsForPerson(currentPerson());
+        const open = rows.filter(({ action }) => action.status !== "executed");
+        const dueToday = open.filter(({ action }) => action.due_date === today()).length;
+        const overdue = open.filter(({ action }) => action.due_date && action.due_date < today()).length;
+        byId("mobileTaskCount").textContent = String(open.length);
+        byId("mobileTaskDueToday").textContent = String(dueToday);
+        byId("mobileTaskOverdue").textContent = String(overdue);
+        byId("mobileOpenTasks").textContent = String(open.length);
+        byId("mobileTaskList").innerHTML = rows.length ? rows.map(({ report, action }) => {
+          const completed = action.status === "executed";
+          const notification = action.action_type === "notification_only";
+          const targetId = `task-upload-${action.id}`;
+          const dueClass = !completed && action.due_date && action.due_date < today() ? "red" : completed ? "green" : "amber";
+          const dueText = completed ? "已执行" : action.due_date && action.due_date < today() ? "已逾期" : notification ? "待确认" : "待执行";
+          return `
+            <article class="card">
+              <div class="card-head"><div><h2>${escapeHtml(action.action_content)}</h2><p>${escapeHtml(report.report_no)} · ${escapeHtml(report.style_no || "")} · 来源：${escapeHtml(report.source_department_name)}</p></div><span class="pill ${dueClass}">${dueText}</span></div>
+              <div class="card-body">
+                ${imageHtml(problemAttachments(report), "暂无问题照片")}
+                <div class="notice">问题描述：${escapeHtml(report.problem_description)}</div>
+                <div class="meta"><span>措施类型：<b>${escapeHtml(actionTypeLabel[action.action_type] || action.action_type)}</b></span><span>共同责任人：<b>${escapeHtml((action.assignees || []).map((item) => item.person_name).join("、"))}</b></span><span>计划完成：<b>${escapeHtml(formatDate(action.due_date) || "未填写")}</b></span></div>
+                ${completed ? `
+                  <div class="notice">实际完成人：${escapeHtml(action.executed_by_name || "未记录")}<br>完成日期：${escapeHtml(formatDate(action.completed_at) || "未记录")}<br>执行说明：${escapeHtml(action.execution_note || "未填写")}</div>
+                  ${notification ? "" : imageHtml(action.attachments || [], "暂无改善照片")}
+                ` : notification ? `
+                  <div class="field"><label>确认说明（可选）</label><textarea data-execution-note="${action.id}" placeholder="例如：已知悉并安排跟进"></textarea></div>
+                  <button class="btn primary" data-complete-action="${action.id}" data-notification="true" type="button">确认已知</button>
+                ` : `
+                  <label class="upload"><input class="photo-input" data-target="${targetId}" data-report-no="${escapeHtml(report.report_no)}" data-report-year="${escapeHtml(report.report_year)}" data-action-sequence="${escapeHtml(action.sequence_no)}" data-upload-type="action-after" type="file" accept="image/*" capture="environment" multiple hidden><span><strong>拍摄改善照片</strong>可多张，每条措施至少1张</span></label>
+                  <div class="thumbs" id="${targetId}"></div><div class="upload-status" data-status-for="${targetId}"></div>
+                  <div class="field"><label>执行说明</label><textarea data-execution-note="${action.id}" placeholder="填写本次改善执行说明"></textarea></div>
+                  <button class="btn primary" data-complete-action="${action.id}" data-target="${targetId}" type="button">标记已执行</button>
+                `}
+              </div>
+            </article>`;
+        }).join("") : '<div class="empty">当前人员暂无措施任务</div>';
+      }
+
+      async function completeAction(button) {
+        const actionId = button.dataset.completeAction;
+        const note = document.querySelector(`[data-execution-note="${actionId}"]`)?.value.trim() || "";
+        const notification = button.dataset.notification === "true";
+        const attachments = button.dataset.target ? attachmentData(button.dataset.target) : [];
+        if (!notification && !note) return toast("请填写执行说明", "error");
+        if (!notification && !attachments.length) return toast("请至少上传一张改善照片", "error");
+        button.disabled = true;
+        try {
+          await api(`/api/qc/actions/${actionId}/complete`, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ actorName: currentPerson(), executionNote: note, attachments })
+          });
+          toast(notification ? "已确认收到通知" : "改善任务已提交");
+          await loadAllReports();
+        } catch (error) {
+          toast(error.message, "error");
+        } finally {
+          button.disabled = false;
+        }
+      }
+
+      function reviewReportsForPerson() {
+        const person = currentPersonRecord();
+        const departments = person?.departments.map((department) => department.name) || [];
+        return state.reports.filter((report) =>
+          ["pending_review", "review_rejected"].includes(report.status) &&
+          (departments.includes(report.source_department_name) || report.default_reviewer_name === currentPerson())
+        );
+      }
+
+      function renderReviews() {
+        const reports = reviewReportsForPerson();
+        byId("mobileReviewCount").textContent = String(reports.length);
+        byId("mobilePendingReviews").textContent = String(state.reports.filter((report) => report.status === "pending_review").length);
+        byId("mobileReviewDepartmentCount").textContent = String(new Set(reports.map((report) => report.source_department_name)).size);
+        byId("mobileReviewActionCount").textContent = String(reports.reduce((sum, report) => sum + (report.actions || []).filter((action) => action.action_type !== "notification_only").length, 0));
+        byId("mobileReviewList").innerHTML = reports.length ? reports.map((report) => {
+          const reviewable = (report.actions || []).filter((action) => action.action_type !== "notification_only");
+          const notifications = (report.actions || []).filter((action) => action.action_type === "notification_only");
+          const targetId = `review-upload-${report.id}`;
+          return `
+            <article class="card">
+              <div class="card-head"><div><h2>${escapeHtml(report.report_no)} 来源部门复核</h2><p>${escapeHtml(report.style_no || "")} · 来源：${escapeHtml(report.source_department_name)}</p></div><span class="pill blue">待复核</span></div>
+              <div class="card-body">
+                <b>改善前问题证据</b>${imageHtml(problemAttachments(report), "暂无问题照片")}
+                <div class="notice">问题描述：${escapeHtml(report.problem_description)}</div>
+                ${reviewable.map((action) => `
+                  <div class="evidence-row"><div class="evidence-head"><b>第 ${action.sequence_no} 项 · ${escapeHtml(actionTypeLabel[action.action_type] || "")}</b><span class="pill green">已执行</span></div><div>${escapeHtml(action.action_content)}</div><div class="meta"><span>完成人：<b>${escapeHtml(action.executed_by_name || "未记录")}</b></span><span>完成日期：<b>${escapeHtml(formatDate(action.completed_at) || "未记录")}</b></span><span>执行说明：<b>${escapeHtml(action.execution_note || "未填写")}</b></span></div>${imageHtml(action.attachments || [], "本项暂无改善照片")}</div>
+                `).join("")}
+                ${notifications.length ? `<div class="notice">仅通知已确认：${escapeHtml(notifications.map((action) => `第${action.sequence_no}项 ${action.executed_by_name || "待确认"}`).join("；"))}，不进入效果复核。</div>` : ""}
+                <label class="upload"><input class="photo-input" data-target="${targetId}" data-report-no="${escapeHtml(report.report_no)}" data-report-year="${escapeHtml(report.report_year)}" data-upload-type="review-evidence" type="file" accept="image/*" capture="environment" multiple hidden><span><strong>补充复核照片</strong>可选，可上传多张</span></label>
+                <div class="thumbs" id="${targetId}"></div><div class="upload-status" data-status-for="${targetId}"></div>
+                <div class="field"><label>复核意见</label><textarea data-review-comment="${escapeHtml(report.report_no)}" placeholder="只填写复核意见，不修改原问题和执行说明"></textarea></div>
+                <div class="btn-row"><button class="btn primary" data-review-report="${escapeHtml(report.report_no)}" data-review-result="approved" data-target="${targetId}" type="button">复核通过</button><button class="btn danger" data-review-report="${escapeHtml(report.report_no)}" data-review-result="rejected" data-target="${targetId}" type="button">退回改善</button></div>
+              </div>
+            </article>`;
+        }).join("") : '<div class="empty">当前人员没有需要复核的报告</div>';
+      }
+
+      async function submitReview(button) {
+        const reportNo = button.dataset.reviewReport;
+        const comment = document.querySelector(`[data-review-comment="${reportNo}"]`)?.value.trim() || "";
+        if (!comment) return toast("请填写复核意见", "error");
+        button.disabled = true;
+        try {
+          await api(`/api/qc/reports/${encodeURIComponent(reportNo)}/review`, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ result: button.dataset.reviewResult, comment, reviewer: currentPerson(), attachments: attachmentData(button.dataset.target) })
+          });
+          toast(button.dataset.reviewResult === "approved" ? "复核已通过，已提交归档" : "已退回责任人继续改善");
+          await loadAllReports();
+        } catch (error) {
+          toast(error.message, "error");
+        } finally {
+          button.disabled = false;
+        }
+      }
+
+      function renderArchives() {
+        const pending = state.reports.filter((report) => report.status === "pending_archive");
+        const month = today().slice(0, 7);
+        const archivedMonth = state.reports.filter((report) => report.status === "archived" && String(report.archived_at || report.found_date).startsWith(month)).length;
+        byId("mobileArchiveCount").textContent = String(pending.length);
+        byId("mobileArchiveComplete").textContent = String(pending.length);
+        byId("mobileArchivedMonth").textContent = String(archivedMonth);
+        byId("mobileArchiveList").innerHTML = pending.length ? pending.map((report) => `
+          <article class="card">
+            <div class="card-head"><div><h2>${escapeHtml(report.report_no)} 待归档</h2><p>${escapeHtml(report.style_no || "")} · 来源：${escapeHtml(report.source_department_name)} · 责任：${escapeHtml((report.responsible_departments || []).map((item) => item.department_name).join("、"))}</p></div><span class="pill green">资料完整</span></div>
+            <div class="card-body">
+              ${imageHtml(problemAttachments(report), "暂无问题照片")}
+              <div class="notice">问题描述：${escapeHtml(report.problem_description)}</div>
+              <div class="meta"><span>改善措施：<b>${report.actions?.length || 0} 项</b></span><span>实际完成人：<b>${escapeHtml((report.actions || []).map((action) => action.executed_by_name).filter(Boolean).join("、") || "仅通知自动流转")}</b></span><span>KPI：<b>${report.kpi_enabled ? "归档后计入" : "仅作培训记录"}</b></span></div>
+              <div class="field"><label>主管归档意见</label><textarea data-archive-comment="${escapeHtml(report.report_no)}" placeholder="填写归档意见；退回时必须说明需补充的资料"></textarea></div>
+              <div class="btn-row"><button class="btn primary" data-archive-report="${escapeHtml(report.report_no)}" data-archive-action="archive" type="button">归档并锁定KPI</button><button class="btn warn" data-archive-report="${escapeHtml(report.report_no)}" data-archive-action="return" type="button">退回补充</button></div>
+            </div>
+          </article>
+        `).join("") : '<div class="empty">当前没有待归档报告</div>';
+      }
+
+      async function submitArchive(button) {
+        const reportNo = button.dataset.archiveReport;
+        const action = button.dataset.archiveAction;
+        const comment = document.querySelector(`[data-archive-comment="${reportNo}"]`)?.value.trim() || "";
+        if (action === "return" && !comment) return toast("请填写需要补充的资料", "error");
+        button.disabled = true;
+        try {
+          await api(`/api/qc/reports/${encodeURIComponent(reportNo)}/archive`, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ action, approver: currentPerson(), comment })
+          });
+          toast(action === "archive" ? "报告已归档并同步月KPI" : "已退回补充资料");
+          await loadAllReports();
+        } catch (error) {
+          toast(error.message, "error");
+        } finally {
+          button.disabled = false;
+        }
+      }
+
+      function renderMetrics() {
+        byId("mobileTodayReports").textContent = String(state.reports.filter((report) => report.found_date === today()).length);
+      }
+
+      function renderOperationalViews() {
+        byId("mobileReporter").value = currentPerson();
+        renderTasks();
+        renderReviews();
+        renderArchives();
+        renderMetrics();
+      }
+
+      async function loadAllReports() {
+        try {
+          const result = await api("/api/qc/reports?limit=5000");
+          state.reports = result.reports || [];
+          renderOperationalViews();
+        } catch (error) {
+          toast(error.message, "error");
+        }
+      }
+
+      async function loadFactories() {
+        const result = await api(`/api/qc/factories?year=${new Date().getFullYear()}`);
+        const selected = byId("mobileFactoryId").value;
+        state.factories = result.factories || [];
+        byId("mobileFactoryId").innerHTML = state.factories.map((factory) => `<option value="${escapeHtml(factory.id)}">${escapeHtml(factory.name)}</option>`).join("");
+        if (state.factories.some((factory) => factory.id === selected)) byId("mobileFactoryId").value = selected;
+        updateReportHint();
+      }
+
+      async function initialize() {
+        byId("mobileFoundDate").value = today();
+        try {
+          const [peopleResult, styleResult, factoryResult, reportResult] = await Promise.all([
+            api("/api/qc/people"),
+            api("/api/qc/styles"),
+            api(`/api/qc/factories?year=${new Date().getFullYear()}`),
+            api("/api/qc/reports?limit=5000")
+          ]);
+          state.departments = peopleResult.departments || [];
+          state.people = flattenPeople(state.departments);
+          state.styles = styleResult.styles || [];
+          state.factories = factoryResult.factories || [];
+          state.reports = reportResult.reports || [];
+          renderMasterData();
+          addAction();
+          renderOperationalViews();
+        } catch (error) {
+          toast(error.message, "error");
+        }
+        const initial = location.hash.replace("#", "");
+        openTab(["report", "tasks", "review", "archive"].includes(initial) ? initial : "report");
+      }
+
+      function openTab(id) {
+        document.querySelectorAll(".bottom-nav button").forEach((button) => button.classList.toggle("active", button.dataset.tab === id));
+        document.querySelectorAll(".page").forEach((page) => page.classList.toggle("active", page.id === id));
+        if (location.hash !== `#${id}`) history.replaceState(null, "", `#${id}`);
+        window.scrollTo(0, 0);
+      }
+
+      document.querySelectorAll(".bottom-nav button").forEach((button) => button.addEventListener("click", () => openTab(button.dataset.tab)));
+      byId("mobileCurrentPerson").addEventListener("change", () => {
+        localStorage.setItem("qc-mobile-person", currentPerson());
+        byId("mobileReporter").value = currentPerson();
+        renderOperationalViews();
+      });
+      byId("mobileStyleNo").addEventListener("change", () => renderStyleColors());
+      byId("mobileFactoryId").addEventListener("change", updateReportHint);
+      byId("mobileResponsibleDepartments").addEventListener("change", () => renderResponsiblePeople());
+      byId("mobileAddAction").addEventListener("click", () => addAction());
+      byId("mobileActionEditors").addEventListener("input", (event) => updateActionFromElement(event.target));
+      byId("mobileActionEditors").addEventListener("change", (event) => updateActionFromElement(event.target));
+      byId("mobileActionEditors").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-delete-action]");
+        if (!button) return;
+        state.actions = state.actions.filter((action) => action.id !== button.dataset.deleteAction);
+        renderActions();
+      });
+      byId("mobileSaveDraft").addEventListener("click", saveDraft);
+      byId("mobileSubmitReport").addEventListener("click", submitReport);
+      byId("mobileDraftsButton").addEventListener("click", openDrafts);
+      byId("mobileReloadTasks").addEventListener("click", loadAllReports);
+      byId("mobileDialogClose").addEventListener("click", () => byId("mobileRecordsDialog").close());
+      byId("mobileLightboxClose").addEventListener("click", () => byId("mobileLightbox").close());
+
+      document.addEventListener("change", (event) => {
+        const input = event.target.closest(".photo-input");
+        if (input) handlePhotoInput(input);
+      });
+      document.addEventListener("click", (event) => {
+        const image = event.target.closest("img[data-lightbox-src]");
+        if (image) {
+          byId("mobileLightboxImage").src = image.dataset.lightboxSrc || image.src;
+          byId("mobileLightbox").showModal();
+          return;
+        }
+        const completeButton = event.target.closest("[data-complete-action]");
+        if (completeButton) return completeAction(completeButton);
+        const reviewButton = event.target.closest("[data-review-report]");
+        if (reviewButton) return submitReview(reviewButton);
+        const archiveButton = event.target.closest("[data-archive-report]");
+        if (archiveButton) return submitArchive(archiveButton);
+      });
+
+      initialize();
+    })();
   </script>
 </body>
 </html>
