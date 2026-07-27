@@ -7,6 +7,12 @@ Current deployment strategy:
 - The validated workshop prototype is served from `/prototype/qc.html`.
 - The mobile capture prototype is served from `/prototype/mobile.html`.
 - Root `/` redirects to `/prototype/qc.html` for the first workshop trial.
+- Current Vercel production URL: `https://qc-os.vercel.app/prototype/qc.html`.
+- Planned production domain: `https://qc-os.vanwellfgroup.com`.
+- DNS record needed for the planned domain:
+  - Type: `CNAME`
+  - Name: `qc-os`
+  - Value: `111751b2c1b95b55.vercel-dns-016.com.`
 
 Future integrations:
 
@@ -19,8 +25,8 @@ Future integrations:
 ## Local Development
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 Open:
@@ -32,4 +38,3 @@ http://localhost:3000
 ## Environment
 
 Copy `.env.example` to `.env.local` and fill in values when connecting real services.
-
