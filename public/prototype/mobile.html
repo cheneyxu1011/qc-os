@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>质量改善移动端</title>
+  <style>
+    :root {
+      --ink: #17212b;
+      --muted: #667789;
+      --line: #d9e1ea;
+      --bg: #f3f6f8;
+      --card: #fff;
+      --blue: #1769aa;
+      --teal: #007f7a;
+      --red: #b3261e;
+      --amber: #b86b00;
+      --green: #1e7a3b;
+      --shadow: 0 12px 30px rgba(23, 33, 43, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      letter-spacing: 0;
+      padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    }
+
+    html {
+      scroll-behavior: auto;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+      background: linear-gradient(135deg, #142235, #1769aa);
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .app-header h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.25;
+    }
+
+    .app-header p {
+      margin: 5px 0 0;
+      font-size: 12px;
+      color: rgba(255,255,255,.78);
+    }
+
+    .role-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    select, input, textarea {
+      width: 100%;
+      min-width: 0;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 10px;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    main {
+      padding: 14px;
+    }
+
+    .role-row > *,
+    .metric-row > *,
+    .grid-2 > *,
+    .btn-row > * {
+      min-width: 0;
+    }
+
+    .app-header,
+    main,
+    .bottom-nav {
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .metric {
+      padding: 12px 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--card);
+      box-shadow: 0 6px 18px rgba(23, 33, 43, .04);
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .metric b {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--card);
+      box-shadow: 0 8px 24px rgba(23, 33, 43, .05);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .card-head {
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .card-head h2,
+    .card-head h3 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.35;
+    }
+
+    .card-head p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .card-body {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 26px;
+      padding: 0 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .pill.red { background: #fde8e6; color: var(--red); }
+    .pill.amber { background: #fff2d9; color: var(--amber); }
+    .pill.green { background: #e8f5ec; color: var(--green); }
+    .pill.blue { background: #e8f2fb; color: var(--blue); }
+    .pill.dark { background: #edf0f4; color: #2f3a45; }
+
+    .upload {
+      min-height: 138px;
+      border: 1px dashed #9aa6b2;
+      border-radius: 12px;
+      background: #f8fafc;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 14px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .upload strong {
+      display: block;
+      color: var(--ink);
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .thumbs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .thumbs img {
+      width: 74px;
+      height: 92px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #eef3f6;
+    }
+
+    .task-photo {
+      width: 100%;
+      max-height: 260px;
+      object-fit: contain;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #f4f7fa;
+    }
+
+    .meta {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .meta b {
+      color: var(--ink);
+    }
+
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-row.single {
+      grid-template-columns: 1fr;
+    }
+
+    .btn {
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--ink);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .btn.warn {
+      border-color: var(--amber);
+      background: #fff8ea;
+      color: var(--amber);
+    }
+
+    .btn.danger {
+      border-color: var(--red);
+      background: #fff2f1;
+      color: var(--red);
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 20;
+      padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+      background: rgba(255,255,255,.96);
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      backdrop-filter: blur(12px);
+    }
+
+    .bottom-nav button {
+      min-height: 50px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .bottom-nav button.active {
+      background: #e8f2fb;
+      color: var(--blue);
+    }
+
+    .notice {
+      padding: 11px 12px;
+      border-radius: 10px;
+      background: #eaf4fb;
+      color: #0b4f7e;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    @media (min-width: 760px) {
+      body {
+        max-width: 480px;
+        margin: 0 auto;
+        background: #dfe7ef;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <h1>质量改善移动端</h1>
+    <p>现场拍照提报、责任人改善上传、来源部门复核、主管归档</p>
+    <div class="role-row">
+      <select aria-label="当前角色">
+        <option>当前角色：责任人</option>
+        <option>问题来源部门</option>
+        <option>QC部</option>
+        <option>业务部</option>
+        <option>厂长/主管</option>
+      </select>
+      <select aria-label="当前人员">
+        <option>夏红霞</option>
+        <option>朱小丽</option>
+        <option>李小华</option>
+        <option>张亚琴</option>
+        <option>朱玲玲</option>
+        <option>张吉云</option>
+        <option>顾瑶</option>
+        <option>顾永宏</option>
+      </select>
+    </div>
+  </header>
+
+  <main>
+    <section class="page active" id="report">
+      <div class="metric-row">
+        <div class="metric"><span>今日提报</span><b>2</b></div>
+        <div class="metric"><span>待执行</span><b>3</b></div>
+        <div class="metric"><span>待复核</span><b>4</b></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>拍照新增纠正报告</h2>
+            <p>问题来源部门现场拍照，系统生成 XCJ2026-002</p>
+          </div>
+          <span class="pill blue">新报告</span>
+        </div>
+        <div class="card-body">
+          <label class="upload">
+            <input class="photo-input" data-target="problemThumbs" type="file" accept="image/*" capture="environment" multiple hidden>
+            <span><strong>拍摄/上传问题照片</strong>可多张，作为改善前留底</span>
+          </label>
+          <div class="thumbs" id="problemThumbs">
+            <img src="assets/issue-photo-sewing-clean.png" alt="问题照片示例">
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>品牌</label><input value="迪赛特"></div>
+            <div class="field"><label>款号</label><input value="JK57"></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>颜色</label><input value="深灰"></div>
+            <div class="field"><label>严重程度</label><select><option>不可接受，需要返修</option><option>严重问题</option><option>一般问题</option></select></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>问题来源</label><select><option>压胶部</option><option>车缝部</option><option>裁剪部</option><option>QC部</option><option>业务部</option></select></div>
+            <div class="field"><label>责任部门（可多选）</label><select multiple size="3"><option selected>车缝部</option><option>压胶部</option><option>裁剪部</option><option>QC部</option><option>业务部</option><option>厂长</option></select></div>
+          </div>
+          <div class="field"><label>措施责任人（跨部门可选）</label><select multiple size="4"><option selected>夏红霞</option><option selected>朱小丽</option><option>李小华</option><option>朱玲玲</option><option>张吉云</option><option>张亚琴</option><option>顾瑶</option><option>顾永宏</option></select></div>
+          <div class="field"><label>问题描述</label><textarea>左内里布上下分配不均匀，造成里布上节多布约1CM左右，扭曲。客人QC不接受，需要返修处理。</textarea></div>
+          <div class="btn-row">
+            <button class="btn">保存草稿</button>
+            <button class="btn primary">提交并分配</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="tasks">
+      <div class="metric-row">
+        <div class="metric"><span>我的任务</span><b>3</b></div>
+        <div class="metric"><span>今日到期</span><b>1</b></div>
+        <div class="metric"><span>逾期</span><b>1</b></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>返修处理：止口不均</h2>
+            <p>XCJ2026-001 · JK57 · 来源：压胶部</p>
+          </div>
+          <span class="pill red">已逾期</span>
+        </div>
+        <div class="card-body">
+          <img class="task-photo" src="assets/issue-photo-sewing-clean.png" alt="问题照片">
+          <div class="meta">
+            <span>问题描述：<b>左内里布上下分配不均匀，造成里布上节多布约1CM左右，扭曲。客人QC不接受，需要返修处理。</b></span>
+            <span>措施内容：<b>里布腰上节超过1CM松量的全部返修处理。</b></span>
+            <span>责任人：<b>夏红霞、朱小丽</b></span>
+            <span>计划完成：<b>2026/7/25</b></span>
+          </div>
+          <label class="upload">
+            <input class="photo-input" data-target="taskThumbs1" type="file" accept="image/*" capture="environment" multiple hidden>
+            <span><strong>拍摄改善照片</strong>每条措施至少1张</span>
+          </label>
+          <div class="thumbs" id="taskThumbs1"></div>
+          <div class="field"><label>执行说明</label><textarea>已按标准止口返修，待压胶部复核。</textarea></div>
+          <div class="btn-row">
+            <button class="btn primary">标记已执行</button>
+            <button class="btn">查看报告</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h3>首件确认与巡检</h3>
+            <p>长期执行 · QC部/业务部协同</p>
+          </div>
+          <span class="pill blue">长期</span>
+        </div>
+        <div class="card-body">
+          <div class="field"><label>本次巡检记录</label><textarea>首件确认正常，继续跟进量产稳定性。</textarea></div>
+          <button class="btn primary">提交巡检记录</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="review">
+      <div class="metric-row">
+        <div class="metric"><span>待复核</span><b>4</b></div>
+        <div class="metric"><span>退回</span><b>1</b></div>
+        <div class="metric"><span>已通过</span><b>6</b></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>来源部门复核</h2>
+            <p>谁提出问题，谁复核改善是否合格</p>
+          </div>
+          <span class="pill blue">待复核</span>
+        </div>
+        <div class="card-body">
+          <div class="grid-2">
+            <div>
+              <label class="field"><label>改善前</label></label>
+              <img class="task-photo" src="assets/issue-photo-sewing-clean.png" alt="改善前">
+              <div class="notice">问题描述：左内里布上下分配不均匀，造成里布上节多布约1CM左右，扭曲。</div>
+            </div>
+            <div>
+              <label class="field"><label>改善后</label></label>
+              <img class="task-photo" src="assets/issue-photo-sewing-clean.png" alt="改善后">
+              <div class="notice">执行说明：已按标准止口返修，待压胶部复核。</div>
+            </div>
+          </div>
+          <div class="meta">
+            <span>报告：<b>XCJ2026-001</b></span>
+            <span>责任部门：<b>车缝部</b></span>
+            <span>责任人：<b>夏红霞、朱小丽</b></span>
+          </div>
+          <label class="upload">
+            <input class="photo-input" data-target="reviewThumbs" type="file" accept="image/*" capture="environment" multiple hidden>
+            <span><strong>补充复核照片</strong>可选</span>
+          </label>
+          <div class="thumbs" id="reviewThumbs"></div>
+          <div class="field"><label>复核意见</label><textarea>检查上下布配均匀，版面加量跟足腰节定位线。若仍有扭曲，退回继续改善。</textarea></div>
+          <div class="btn-row">
+            <button class="btn primary">复核通过</button>
+            <button class="btn danger">退回改善</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="archive">
+      <div class="metric-row">
+        <div class="metric"><span>待归档</span><b>3</b></div>
+        <div class="metric"><span>资料完整</span><b>2</b></div>
+        <div class="metric"><span>已归档</span><b>15</b></div>
+      </div>
+
+      <div class="notice">归档后报告锁定，责任人和KPI不可修改；业务/QC仍可补充说明。</div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>XCJ2026-001 待归档</h2>
+            <p>JK57 · 来源压胶部 · 责任车缝部 · KPI影响 -5</p>
+          </div>
+          <span class="pill green">资料完整</span>
+        </div>
+        <div class="card-body">
+          <div class="meta">
+            <span>问题照片：<b>已上传</b></span>
+            <span>改善照片：<b>已上传</b></span>
+            <span>责任签名：<b>已确认</b></span>
+            <span>来源复核：<b>已通过</b></span>
+            <span>KPI责任：<b>已计算</b></span>
+          </div>
+          <div class="field"><label>主管归档意见</label><textarea>资料完整，复核通过，归档并进入本月KPI。</textarea></div>
+          <div class="btn-row">
+            <button class="btn primary">归档并锁定KPI</button>
+            <button class="btn warn">退回补充</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="移动端导航">
+    <button class="active" data-tab="report">拍照提报</button>
+    <button data-tab="tasks">我的任务</button>
+    <button data-tab="review">待复核</button>
+    <button data-tab="archive">归档</button>
+  </nav>
+
+  <script>
+    const navButtons = document.querySelectorAll(".bottom-nav button");
+    const pages = document.querySelectorAll(".page");
+
+    function openTab(id) {
+      navButtons.forEach((button) => button.classList.toggle("active", button.dataset.tab === id));
+      pages.forEach((page) => page.classList.toggle("active", page.id === id));
+      if (location.hash !== `#${id}`) history.replaceState(null, "", `#${id}`);
+      requestAnimationFrame(() => window.scrollTo(0, 0));
+    }
+
+    navButtons.forEach((button) => {
+      button.addEventListener("click", () => openTab(button.dataset.tab));
+    });
+
+    document.querySelectorAll(".photo-input").forEach((input) => {
+      input.addEventListener("change", () => {
+        const target = document.getElementById(input.dataset.target);
+        target.innerHTML = "";
+        [...input.files].slice(0, 8).forEach((file) => {
+          const img = document.createElement("img");
+          img.src = URL.createObjectURL(file);
+          img.alt = file.name;
+          target.appendChild(img);
+        });
+      });
+    });
+
+    const initial = location.hash.replace("#", "");
+    if (["report", "tasks", "review", "archive"].includes(initial)) openTab(initial);
+    else requestAnimationFrame(() => window.scrollTo(0, 0));
+  </script>
+</body>
+</html>

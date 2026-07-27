@@ -1,0 +1,3240 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>车缝 / 压胶质量改善 KPI 闭环系统</title>
+  <style>
+    :root {
+      --ink: #17212b;
+      --muted: #687586;
+      --line: #d7dde5;
+      --panel: #ffffff;
+      --bg: #f3f6f8;
+      --blue: #1769aa;
+      --blue-soft: #e8f2fb;
+      --teal: #007f7a;
+      --teal-soft: #e5f5f3;
+      --amber: #b86b00;
+      --amber-soft: #fff2d9;
+      --red: #b3261e;
+      --red-soft: #fde8e6;
+      --green: #1e7a3b;
+      --green-soft: #e8f5ec;
+      --slate: #2f3a45;
+      --shadow: 0 16px 36px rgba(23, 33, 43, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 236px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      background: #142235;
+      color: #fff;
+      padding: 22px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .brand {
+      border-bottom: 1px solid rgba(255,255,255,.14);
+      padding-bottom: 18px;
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 22px;
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+
+    .brand span {
+      color: rgba(255,255,255,.72);
+      font-size: 13px;
+    }
+
+    .nav {
+      display: grid;
+      gap: 8px;
+    }
+
+    .nav button {
+      width: 100%;
+      height: 44px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: rgba(255,255,255,.76);
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .nav button::before {
+      content: attr(data-icon);
+      width: 22px;
+      text-align: center;
+      color: rgba(255,255,255,.88);
+    }
+
+    .nav button.active,
+    .nav button:hover {
+      color: #fff;
+      background: rgba(255,255,255,.12);
+    }
+
+    .side-note {
+      margin-top: auto;
+      padding: 14px;
+      border-radius: 8px;
+      background: rgba(255,255,255,.1);
+      color: rgba(255,255,255,.82);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .people-library-card {
+      margin-top: auto;
+      padding: 14px;
+      border-radius: 8px;
+      background: rgba(255,255,255,.1);
+      color: rgba(255,255,255,.86);
+      display: grid;
+      gap: 12px;
+    }
+
+    .people-library-card h3 {
+      margin: 0;
+      font-size: 15px;
+      color: #fff;
+    }
+
+    .people-library-stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .people-library-stats div {
+      border-radius: 8px;
+      background: rgba(255,255,255,.1);
+      padding: 9px;
+    }
+
+    .people-library-stats b {
+      display: block;
+      font-size: 22px;
+      line-height: 1.1;
+      color: #fff;
+    }
+
+    .people-library-stats span,
+    .people-library-list {
+      color: rgba(255,255,255,.7);
+      font-size: 12px;
+    }
+
+    .people-library-list {
+      line-height: 1.6;
+      word-break: keep-all;
+    }
+
+    .people-library-card button {
+      min-height: 34px;
+      border: 1px solid rgba(255,255,255,.26);
+      border-radius: 8px;
+      background: rgba(255,255,255,.12);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .people-page-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      padding: 18px;
+    }
+
+    .dept-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .dept-card-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      align-items: end;
+      gap: 10px;
+      border-bottom: 1px dashed var(--line);
+      padding-bottom: 10px;
+    }
+
+    .dept-card h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .library-input,
+    .person-row input {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 10px;
+      font: inherit;
+      background: #fff;
+    }
+
+    .person-table {
+      display: grid;
+      gap: 8px;
+    }
+
+    .person-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .mini-action {
+      min-height: 36px;
+      padding: 0 10px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      cursor: pointer;
+      color: var(--ink);
+    }
+
+    .mini-action.danger {
+      color: var(--red);
+      background: #fff5f4;
+      border-color: #ffd5d2;
+    }
+
+    .library-sync-list {
+      display: grid;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    main {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      min-height: 72px;
+      padding: 16px 28px;
+      background: rgba(255,255,255,.92);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.25;
+    }
+
+    .topbar p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      min-height: 38px;
+      padding: 0 14px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .btn.primary {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .btn.ghost {
+      background: transparent;
+    }
+
+    .btn.danger {
+      border-color: #ffd5d2;
+      color: var(--red);
+      background: #fff5f4;
+    }
+
+    .content {
+      padding: 24px 28px 34px;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .flow-strip {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .flow-step {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 13px;
+      min-height: 86px;
+      display: grid;
+      align-content: start;
+      gap: 7px;
+      box-shadow: 0 8px 20px rgba(23, 33, 43, .04);
+    }
+
+    .flow-step b {
+      color: var(--blue);
+      font-size: 13px;
+    }
+
+    .flow-step span {
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .flow-step small {
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 8px 20px rgba(23, 33, 43, .04);
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .metric strong {
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .metric small {
+      margin-left: 8px;
+      color: var(--muted);
+    }
+
+    .screen-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .projector-filters {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+      padding: 14px 16px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .projector-filters label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .projector-filters select {
+      width: auto;
+      min-width: 170px;
+    }
+
+    .screen {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .screen-head {
+      min-height: 82px;
+      padding: 18px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+    }
+
+    .screen-head.sewing {
+      background: linear-gradient(135deg, #1769aa, #007f7a);
+    }
+
+    .screen-head.taping {
+      background: linear-gradient(135deg, #7a4f00, #b3261e);
+    }
+
+    .screen-head h2 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.25;
+    }
+
+    .screen-head p {
+      margin: 5px 0 0;
+      font-size: 13px;
+      color: rgba(255,255,255,.82);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .pill.red { background: var(--red-soft); color: var(--red); }
+    .pill.amber { background: var(--amber-soft); color: var(--amber); }
+    .pill.green { background: var(--green-soft); color: var(--green); }
+    .pill.blue { background: var(--blue-soft); color: var(--blue); }
+    .pill.teal { background: var(--teal-soft); color: var(--teal); }
+    .pill.dark { background: #edf0f4; color: var(--slate); }
+
+    .screen-list {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .issue-card {
+      display: grid;
+      grid-template-columns: 104px minmax(0, 1fr);
+      gap: 14px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .issue-card img {
+      width: 104px;
+      height: 124px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: #eef2f5;
+    }
+
+    .issue-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .issue-title h3 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.35;
+    }
+
+    .issue-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .issue-meta b {
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .progress {
+      height: 8px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #e7ecf1;
+      margin-top: 11px;
+    }
+
+    .progress i {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--teal), var(--blue));
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 17px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .panel-head p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px 10px;
+      color: var(--ink);
+      background: #fff;
+      min-height: 38px;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      padding: 18px;
+    }
+
+    .span-2 { grid-column: span 2; }
+    .span-4 { grid-column: span 4; }
+
+    .workflow-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 18px;
+      padding: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .subpanel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .subpanel + .subpanel {
+      margin-top: 16px;
+    }
+
+    .subpanel-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #f7f9fb;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .subpanel-head h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .subpanel-body {
+      padding: 16px;
+    }
+
+    .description-grid {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .upload-zone {
+      min-height: 178px;
+      border: 1px dashed #9aa6b2;
+      border-radius: 8px;
+      background: #f8fafb;
+      padding: 14px;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: 10px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .upload-zone strong {
+      color: var(--ink);
+      font-size: 16px;
+    }
+
+    .thumbs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .thumbs img,
+    .thumbs .thumb-placeholder {
+      width: 58px;
+      height: 72px;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      background: #eef2f5;
+    }
+
+    .chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      min-height: 46px;
+      background: #fff;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: #edf3f8;
+      color: #263646;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .chip input {
+      width: auto;
+      min-height: auto;
+      margin: 0;
+    }
+
+    .people-manager {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .task-table-wrap {
+      overflow-x: auto;
+    }
+
+    .task-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 930px;
+      font-size: 14px;
+    }
+
+    .task-table th,
+    .task-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    .task-table th {
+      background: #f7f9fb;
+      color: #415063;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .task-table input,
+    .task-table select,
+    .task-table textarea {
+      min-width: 130px;
+    }
+
+    .task-table textarea {
+      min-width: 240px;
+      min-height: 62px;
+    }
+
+    .verify-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      background: #fbfcfd;
+    }
+
+    .verify-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .status-steps {
+      display: grid;
+      gap: 12px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed var(--line);
+    }
+
+    .step i {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: #dfe7ef;
+      color: #415063;
+      display: grid;
+      place-items: center;
+      font-style: normal;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .step.done i {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .step.active i {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .export-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+      padding: 0 18px 18px;
+    }
+
+    .report-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 292px;
+      gap: 18px;
+      padding: 18px;
+    }
+
+    .report-layout > .report-paper:only-child {
+      grid-column: 1 / -1;
+    }
+
+    .report-paper {
+      background: #fff;
+      border: 1px solid #222;
+      padding: 0;
+    }
+
+    .report-paper h2 {
+      text-align: center;
+      margin: 20px 0 18px;
+      font-size: 24px;
+    }
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 14px;
+    }
+
+    .report-table th,
+    .report-table td {
+      border: 1px solid #222;
+      padding: 9px 10px;
+      vertical-align: top;
+      line-height: 1.6;
+    }
+
+    .report-table th {
+      width: 110px;
+      background: #f4f7fa;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .section-row td {
+      background: #d9e8f2;
+      color: #004f86;
+      font-weight: 700;
+      padding: 5px 8px;
+    }
+
+    .measure-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .measure-table th,
+    .measure-table td {
+      border: 1px solid #333;
+      padding: 7px;
+      text-align: center;
+    }
+
+    .measure-table td:nth-child(3) {
+      text-align: left;
+    }
+
+    .photo-row {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .photo-row img {
+      width: 112px;
+      height: 142px;
+      object-fit: cover;
+      border: 1px solid #bbb;
+    }
+
+    .readonly-note {
+      margin: 0;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #f6f9fb;
+      border: 1px dashed var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .readonly-note b {
+      color: var(--ink);
+    }
+
+    .archive-report-paper {
+      cursor: pointer;
+    }
+
+    .archive-report-paper h2 {
+      margin: 16px 0 14px;
+      font-size: 22px;
+    }
+
+    .archive-report-paper .report-table {
+      font-size: 14px;
+    }
+
+    .archive-report-paper .report-table th,
+    .archive-report-paper .report-table td {
+      padding: 7px 8px;
+    }
+
+    .archive-report-paper .measure-table {
+      font-size: 13px;
+    }
+
+    .archive-report-paper .photo-row img {
+      width: 86px;
+      height: 108px;
+    }
+
+    .right-summary {
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .summary-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #fbfcfd;
+    }
+
+    .summary-box h3 {
+      margin: 0 0 12px;
+      font-size: 16px;
+    }
+
+    .summary-list {
+      display: grid;
+      gap: 10px;
+      font-size: 14px;
+    }
+
+    .summary-list div {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px dashed var(--line);
+      padding-bottom: 8px;
+    }
+
+    table.data {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    table.data th,
+    table.data td {
+      border-bottom: 1px solid var(--line);
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    table.data th {
+      background: #f7f9fb;
+      color: #415063;
+      font-size: 13px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 18px;
+    }
+
+    .score {
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .bar-list {
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 86px minmax(0, 1fr) 48px;
+      gap: 10px;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    .bar {
+      height: 12px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #e8edf2;
+    }
+
+    .bar i {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--teal), var(--blue));
+    }
+
+    .rule-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .rule-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfd;
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .rule-card b {
+      font-size: 22px;
+      color: var(--red);
+    }
+
+    .archive-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .task-board {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 18px;
+    }
+
+    #archive .task-board {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    #archive .right-summary {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .task-list {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+    }
+
+    .task-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .task-card-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .task-card h3 {
+      margin: 0 0 7px;
+      font-size: 18px;
+      line-height: 1.35;
+    }
+
+    .task-meta {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .task-meta b {
+      color: var(--ink);
+    }
+
+    .task-actions {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .archive-approval-grid {
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .archive-check-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .compare-photo {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfcfd;
+      display: grid;
+      gap: 10px;
+    }
+
+    .compare-photo img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: #eef2f5;
+    }
+
+    .projector-choice {
+      display: none;
+    }
+
+    .projector-selecting .app-shell {
+      display: block;
+    }
+
+    .projector-selecting .sidebar,
+    .projector-selecting .topbar,
+    .projector-selecting .metric-grid,
+    .projector-selecting .screen-grid,
+    .projector-selecting .page:not(#dashboard) {
+      display: none;
+    }
+
+    .projector-selecting .content {
+      padding: 0;
+    }
+
+    .projector-selecting #dashboard {
+      display: block;
+    }
+
+    .projector-selecting .projector-choice {
+      min-height: 100vh;
+      padding: 42px;
+      display: grid;
+      align-content: center;
+      gap: 28px;
+      background: #eef3f6;
+    }
+
+    .choice-title {
+      max-width: 980px;
+    }
+
+    .choice-title h2 {
+      margin: 0 0 10px;
+      font-size: 38px;
+      line-height: 1.2;
+    }
+
+    .choice-title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    .choice-card {
+      min-height: 300px;
+      border: 0;
+      border-radius: 8px;
+      color: #fff;
+      padding: 34px;
+      cursor: pointer;
+      text-align: left;
+      box-shadow: var(--shadow);
+      display: grid;
+      align-content: space-between;
+      gap: 24px;
+    }
+
+    .choice-card.sewing {
+      background: linear-gradient(135deg, #1769aa, #007f7a);
+    }
+
+    .choice-card.taping {
+      background: linear-gradient(135deg, #7a4f00, #b3261e);
+    }
+
+    .choice-card.cutting {
+      background: linear-gradient(135deg, #2f5f47, #1769aa);
+    }
+
+    .choice-card span {
+      width: fit-content;
+      min-height: 34px;
+      padding: 0 13px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.18);
+      display: inline-flex;
+      align-items: center;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .choice-card strong {
+      display: block;
+      font-size: 36px;
+      line-height: 1.18;
+      margin-bottom: 12px;
+    }
+
+    .choice-card small {
+      display: block;
+      color: rgba(255,255,255,.84);
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    .projector-exit {
+      display: none;
+      position: fixed;
+      right: 24px;
+      bottom: 22px;
+      z-index: 50;
+      border: 1px solid rgba(255,255,255,.42);
+      background: rgba(20, 34, 53, .86);
+      color: #fff;
+      box-shadow: 0 12px 30px rgba(0,0,0,.18);
+    }
+
+    .projector .projector-exit,
+    .projector-selecting .projector-exit {
+      display: inline-flex;
+    }
+
+    .projector .app-shell {
+      display: block;
+    }
+
+    .projector .sidebar,
+    .projector .topbar,
+    .projector .metric-grid,
+    .projector .flow-strip {
+      display: none;
+    }
+
+    .projector .content {
+      padding: 0;
+    }
+
+    .projector .page {
+      display: none;
+    }
+
+    .projector #dashboard {
+      display: block;
+    }
+
+    .projector .screen-grid {
+      min-height: 100vh;
+      gap: 0;
+      grid-template-columns: 1fr;
+    }
+
+    .projector .projector-filters {
+      margin: 0;
+      border-radius: 0;
+      border-left: 0;
+      border-right: 0;
+      padding: 10px 24px;
+      min-height: 58px;
+      background: #f8fafc;
+    }
+
+    .projector .projector-filters .pill {
+      display: none;
+    }
+
+    .projector .projector-filters select {
+      min-height: 34px;
+      font-size: 15px;
+    }
+
+    .projector .screen {
+      border-radius: 0;
+      border: 0;
+      box-shadow: none;
+      min-height: 100vh;
+    }
+
+    .projector-sewing .screen:not([data-projector="sewing"]),
+    .projector-taping .screen:not([data-projector="taping"]),
+    .projector-cutting-business .screen:not([data-projector="cutting-business"]) {
+      display: none;
+    }
+
+    .projector .screen-head {
+      min-height: 92px;
+      padding: 20px 30px;
+    }
+
+    .projector .screen-head h2 {
+      font-size: 31px;
+    }
+
+    .projector .screen-head p {
+      font-size: 13px;
+    }
+
+    .projector .screen-list {
+      padding: 22px 24px;
+      gap: 20px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .projector .screen-list.single-card {
+      grid-template-columns: 1fr;
+    }
+
+    .projector .issue-card {
+      grid-template-columns: minmax(0, 1.35fr) minmax(240px, .85fr);
+      gap: 18px;
+      padding: 14px;
+      min-height: 360px;
+      align-items: stretch;
+    }
+
+    .projector .screen-list.single-card .issue-card:not([style*="display: none"]) {
+      grid-template-columns: minmax(0, 1.55fr) minmax(280px, .7fr);
+      min-height: calc(100vh - 190px);
+    }
+
+    .projector .issue-card img {
+      width: 100%;
+      height: 100%;
+      min-height: 330px;
+      object-fit: contain;
+      background: #f1f5f8;
+    }
+
+    .projector .issue-title h3 {
+      font-size: 22px;
+      line-height: 1.35;
+    }
+
+    .projector .issue-meta {
+      grid-template-columns: 1fr;
+      font-size: 15px;
+      gap: 9px;
+    }
+
+    .projector .pill {
+      min-height: 30px;
+      padding: 0 12px;
+      font-size: 13px;
+    }
+
+    .projector .progress {
+      height: 5px;
+      opacity: .65;
+    }
+
+    @media (max-width: 980px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        padding: 14px;
+      }
+      .brand, .side-note, .people-library-card { display: none; }
+      .nav {
+        display: flex;
+        overflow-x: auto;
+      }
+      .nav button {
+        width: auto;
+        flex: 0 0 auto;
+      }
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 16px;
+      }
+      .content { padding: 16px; }
+      .metric-grid,
+      .flow-strip,
+      .screen-grid,
+      .choice-grid,
+      .kpi-grid,
+      .rule-grid,
+      .archive-grid,
+      .task-board,
+      .task-meta,
+      .task-actions,
+      .compare-grid,
+      .workflow-grid,
+      .description-grid,
+      .verify-grid,
+      .report-layout,
+      .people-page-grid,
+      .archive-check-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .span-2, .span-4 { grid-column: auto; }
+    }
+
+    @media (max-width: 620px) {
+      .issue-card {
+        grid-template-columns: 88px minmax(0, 1fr);
+      }
+      .issue-card img {
+        width: 88px;
+        height: 108px;
+      }
+      .issue-title {
+        display: grid;
+      }
+      .issue-meta {
+        grid-template-columns: 1fr;
+      }
+      .report-table,
+      table.data {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <strong>质量改善 KPI</strong>
+        <span>车缝组 × 压胶组互评闭环系统</span>
+      </div>
+      <nav class="nav" aria-label="页面导航">
+        <button class="active" data-tab="dashboard" data-icon="01">现场双屏</button>
+        <button data-tab="report" data-icon="02">纠正报告</button>
+        <button data-tab="tasks" data-icon="03">我的任务</button>
+        <button data-tab="review" data-icon="04">部门复核</button>
+        <button data-tab="archive" data-icon="05">归档审批</button>
+        <button data-tab="kpi" data-icon="06">月KPI汇总</button>
+        <button data-tab="people" data-icon="07">人员库</button>
+      </nav>
+      <div class="people-library-card">
+        <h3>人员库</h3>
+        <div class="people-library-stats">
+          <div><b id="sideDeptCount">6</b><span>部门</span></div>
+          <div><b id="sidePeopleCount">8</b><span>人员</span></div>
+        </div>
+        <div class="people-library-list" id="sideDeptList">车缝部、压胶部、裁剪部、厂长、QC部、业务部</div>
+        <button type="button" id="sidePeopleManageBtn">维护人员库</button>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div>
+          <h1>车缝 / 压胶生产不良纠正措施闭环系统</h1>
+          <p>从问题反馈、责任执行、部门复核到主管归档，最终进入个人月KPI和款式历史复盘。</p>
+        </div>
+        <div class="actions">
+          <button class="btn ghost" id="projectorBtn" title="选择其中一个车间独立投屏">投屏预览</button>
+          <button class="btn">导出Excel</button>
+          <button class="btn primary" id="newReportBtn">新增报告</button>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="page active" id="dashboard">
+          <div class="projector-choice" aria-label="投屏方向选择">
+            <div class="choice-title">
+              <h2>请选择这台显示器要打开的投屏内容</h2>
+              <p>按“问题来源部门反馈给责任部门”自动分组，每个部门的大屏只看需要自己处理的未关闭问题。</p>
+            </div>
+            <div class="choice-grid">
+              <button class="choice-card sewing" data-projector-target="sewing">
+                <span>车缝组显示器</span>
+                <div>
+                  <strong>压胶反馈给车缝</strong>
+                  <small>只显示车缝相关问题：线位、止口、扭曲、松紧、返修状态和责任人。</small>
+                </div>
+              </button>
+              <button class="choice-card taping" data-projector-target="taping">
+                <span>压胶组显示器</span>
+                <div>
+                  <strong>车缝反馈给压胶</strong>
+                  <small>只显示压胶相关问题：偏位、宽度、牢度、翘边、返修时效和责任人。</small>
+                </div>
+              </button>
+              <button class="choice-card cutting" data-projector-target="cutting-business">
+                <span>业务组显示器</span>
+                <div>
+                  <strong>裁剪反馈给业务</strong>
+                  <small>后续新增部门后，系统按来源部门和责任部门自动生成对应投屏栏位。</small>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric"><span>本月问题总数</span><strong>18</strong><small>件</small></div>
+            <div class="metric"><span>待责任确认</span><strong>5</strong><small>件</small></div>
+            <div class="metric"><span>逾期未关闭</span><strong>2</strong><small>件</small></div>
+            <div class="metric"><span>改善完成率</span><strong>86%</strong></div>
+          </div>
+
+          <div class="flow-strip" aria-label="系统闭环流程">
+            <div class="flow-step"><b>01</b><span>新增报告</span><small>来源部门提交问题和照片</small></div>
+            <div class="flow-step"><b>02</b><span>分配责任</span><small>责任部门与责任人多选</small></div>
+            <div class="flow-step"><b>03</b><span>执行任务</span><small>责任人上传改善照片</small></div>
+            <div class="flow-step"><b>04</b><span>部门复核</span><small>谁提出问题谁复核</small></div>
+            <div class="flow-step"><b>05</b><span>主管归档</span><small>锁定报告和KPI</small></div>
+            <div class="flow-step"><b>06</b><span>月KPI</span><small>100分倒扣和款式复盘</small></div>
+          </div>
+
+          <div class="projector-filters">
+            <label for="styleFilter">投屏款号筛选</label>
+            <select id="styleFilter">
+              <option value="all">全部未关闭问题</option>
+              <option value="JK57">JK57 / 迪赛特</option>
+              <option value="395">395 / 萨洛蒙</option>
+              <option value="JX-2308">JX-2308</option>
+              <option value="KW-7721">KW-7721</option>
+            </select>
+            <span class="pill red">逾期自动红色提醒</span>
+          </div>
+
+          <div class="screen-grid">
+            <article class="screen" data-projector="sewing">
+              <div class="screen-head sewing">
+                <div>
+                  <h2>压胶反馈给车缝</h2>
+                  <p>车缝组显示器：关注线位、止口、扭曲、松紧等问题</p>
+                </div>
+                <span class="pill red">待改善 3</span>
+              </div>
+              <div class="screen-list">
+                <div class="issue-card" data-style="JK57">
+                  <img src="assets/issue-photo-sewing-clean.png" alt="左内里布止口不均问题照片" data-problem-image>
+                  <div>
+                    <div class="issue-title">
+                      <h3>左内里布止口不均，造成中下节扭曲</h3>
+                      <span class="pill red">严重</span>
+                    </div>
+                    <div class="issue-meta">
+                      <span>报告编号：<b>XCJ2026-001</b></span>
+                      <span>款号：<b>迪赛特JK57</b></span>
+                      <span>责任人：<b>夏红霞、朱小丽</b></span>
+                      <span>完成日期：<b>7月25日前</b></span>
+                      <span>状态：<b>已执行，待验证</b></span>
+                      <span>目的：<b>质量改善闭环</b></span>
+                    </div>
+                    <div class="progress" aria-label="处理进度"><i style="width:76%"></i></div>
+                  </div>
+                </div>
+
+                <div class="issue-card" data-style="JX-2308">
+                  <img src="assets/issue-photo-sewing-clean.png" alt="肩缝松量问题照片">
+                  <div>
+                    <div class="issue-title">
+                      <h3>肩缝松量偏大，压胶后出现局部起皱</h3>
+                      <span class="pill amber">一般</span>
+                    </div>
+                    <div class="issue-meta">
+                      <span>报告编号：<b>XCJ2026-004</b></span>
+                      <span>款号：<b>JX-2308</b></span>
+                      <span>责任人：<b>张吉云</b></span>
+                      <span>完成日期：<b>7月28日前</b></span>
+                      <span>状态：<b>处理中</b></span>
+                      <span>目的：<b>质量改善闭环</b></span>
+                    </div>
+                    <div class="progress"><i style="width:48%"></i></div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="screen" data-projector="taping">
+              <div class="screen-head taping">
+                <div>
+                  <h2>车缝反馈给压胶</h2>
+                  <p>压胶组显示器：关注偏位、宽度、牢度、返修时效等问题</p>
+                </div>
+                <span class="pill amber">待确认 2</span>
+              </div>
+              <div class="screen-list">
+                <div class="issue-card" data-style="JK57">
+                  <img src="assets/issue-photo-sewing-clean.png" alt="压胶宽度问题照片">
+                  <div>
+                    <div class="issue-title">
+                      <h3>下节压胶宽度不足，返修后仍有局部偏位</h3>
+                      <span class="pill amber">一般</span>
+                    </div>
+                    <div class="issue-meta">
+                      <span>报告编号：<b>XCJ2026-006</b></span>
+                      <span>款号：<b>迪赛特JK57</b></span>
+                      <span>责任人：<b>李小华</b></span>
+                      <span>完成日期：<b>7月26日前</b></span>
+                      <span>状态：<b>待执行确认</b></span>
+                      <span>目的：<b>质量改善闭环</b></span>
+                    </div>
+                    <div class="progress"><i style="width:34%"></i></div>
+                  </div>
+                </div>
+
+                <div class="issue-card" data-style="KW-7721">
+                  <img src="assets/issue-photo-sewing-clean.png" alt="胶条贴合问题照片">
+                  <div>
+                    <div class="issue-title">
+                      <h3>袋口胶条贴合不牢，水洗测试后翘边</h3>
+                      <span class="pill red">严重</span>
+                    </div>
+                    <div class="issue-meta">
+                      <span>报告编号：<b>XCJ2026-009</b></span>
+                      <span>款号：<b>KW-7721</b></span>
+                      <span>责任人：<b>李小华</b></span>
+                      <span>完成日期：<b>7月24日前</b></span>
+                      <span>状态：<b>已逾期</b></span>
+                      <span>目的：<b>质量改善闭环</b></span>
+                    </div>
+                    <div class="progress"><i style="width:22%; background: var(--red)"></i></div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="screen" data-projector="cutting-business">
+              <div class="screen-head taping">
+                <div>
+                  <h2>裁剪反馈给业务</h2>
+                  <p>业务组显示器：关注客户要求、面料异常、资料确认和跨部门协同</p>
+                </div>
+                <span class="pill amber">待改善 1</span>
+              </div>
+              <div class="screen-list">
+                <div class="issue-card" data-style="395">
+                  <img src="assets/issue-photo-sewing-clean.png" alt="裁剪反馈业务问题照片" data-problem-image>
+                  <div>
+                    <div class="issue-title">
+                      <h3>发布机器打开灯光之后发现了抽丝</h3>
+                      <span class="pill red">严重</span>
+                    </div>
+                    <div class="issue-meta">
+                      <span>报告编号：<b>XCJ2026-002</b></span>
+                      <span>款号：<b>395</b></span>
+                      <span>来源部门：<b>裁剪部</b></span>
+                      <span>责任部门：<b>业务部</b></span>
+                      <span>责任人：<b>顾瑶、顾永宏</b></span>
+                      <span>状态：<b>待执行</b></span>
+                    </div>
+                    <p class="readonly-note">问题描述：发布机器打开灯光之后发现了抽丝，需业务确认客户接受标准并同步处理意见。</p>
+                    <div class="progress"><i style="width:18%; background: var(--amber)"></i></div>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="page" id="report">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>纠正措施报告录入与闭环</h2>
+                <p>先录入问题和措施，系统自动生成执行任务、复核流程和正式报告。</p>
+              </div>
+              <div class="toolbar">
+                <button class="btn" id="addMeasureBtn">新增措施</button>
+                <button class="btn primary">保存报告</button>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="field"><label>报告编号</label><input id="reportNo" value="XCJ2026-001" readonly></div>
+              <div class="field"><label>发现日期</label><input id="foundDate" type="date" value="2026-07-05"></div>
+              <div class="field"><label>品牌</label><input id="brandName" value="迪赛特"></div>
+              <div class="field"><label>款号</label><input id="styleNo" value="JK57"></div>
+              <div class="field"><label>颜色</label><input id="colorName" value="深灰"></div>
+              <div class="field"><label>严重程度</label><select id="severity"><option>不可接受，需要返修</option><option>一般，需要改善</option><option>轻微，提醒改善</option></select></div>
+              <div class="field"><label>问题来源</label><select id="sourceDept"><option>压胶部</option><option>车缝部</option><option>裁剪部</option><option>QC部</option><option>业务部</option><option>厂长</option></select></div>
+              <div class="field span-2"><label>责任部门（可多选）</label><div class="chip-list" id="responsibleDepartments"></div></div>
+              <div class="field"><label>部门人员</label><div class="chip-list" id="departmentPeoplePreview"></div></div>
+              <div class="field"><label>是否计入KPI</label><select id="kpiFlag"><option>是，归档后计入</option><option>否，仅作培训记录</option></select></div>
+              <div class="field"><label>报告人</label><select id="reporter"><option>李小华</option><option>朱玲玲</option><option>张吉云</option><option>顾瑶</option><option>顾永宏</option></select></div>
+            </div>
+
+            <div class="workflow-grid">
+              <div>
+                <div class="subpanel">
+                  <div class="subpanel-head">
+                    <h3>一、问题描述</h3>
+                    <span class="pill blue">可上传多张问题照片</span>
+                  </div>
+                  <div class="subpanel-body description-grid">
+                    <div>
+                      <label class="upload-zone">
+                        <input id="problemPhotoInput" type="file" multiple accept="image/*" hidden>
+                        <strong>上传问题照片</strong>
+                        <span>支持多张，作为改善前留底</span>
+                      </label>
+                      <div class="thumbs" id="problemThumbs">
+                        <img src="assets/issue-photo-sewing-clean.png" alt="问题照片示例">
+                        <span class="thumb-placeholder"></span>
+                        <span class="thumb-placeholder"></span>
+                      </div>
+                    </div>
+                    <div class="field">
+                      <label>问题描述</label>
+                      <textarea id="problemDesc">左内里布上下分配不均匀，造成里布上节多布约1CM左右，扭曲。客人QC不接受，需要返修处理。</textarea>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="subpanel">
+                  <div class="subpanel-head">
+                    <h3>二、根本原因分析</h3>
+                  </div>
+                  <div class="subpanel-body">
+                    <textarea id="rootCause">产线生产例缝胶条时，为保证下袋位置平服，员工未按标准线作业，造成止口松量不一致。版面工艺要求折位一致，实际操作中上下节松量失衡，所以造成扭曲。</textarea>
+                  </div>
+                </div>
+
+                <div class="subpanel">
+                  <div class="subpanel-head">
+                    <h3>业务 / QC补充标注</h3>
+                    <span class="pill dark">只补充观点，不修改主数据</span>
+                  </div>
+                  <div class="subpanel-body verify-grid">
+                    <div class="field">
+                      <label>业务部评论</label>
+                      <textarea>业务部可补充客户关注点、交期影响、客户验货意见，但不能修改责任人和KPI。</textarea>
+                    </div>
+                    <div class="field">
+                      <label>QC补充验证</label>
+                      <textarea>QC部可补充抽查结果、返修确认、复发风险说明，作为主管归档参考。</textarea>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="subpanel">
+                  <div class="subpanel-head">
+                    <h3>三、纠正与预防措施</h3>
+                    <button class="btn" id="addMeasureInlineBtn" type="button">新增序号</button>
+                  </div>
+                  <div class="task-table-wrap">
+                    <table class="task-table" id="measureEditTable">
+                      <thead>
+                        <tr>
+                          <th>序号</th>
+                          <th>措施类型</th>
+                          <th>措施内容</th>
+                          <th>责任人</th>
+                          <th>计划完成日期</th>
+                          <th>提醒任务</th>
+                          <th>状态</th>
+                          <th>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody id="measureRows"></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="subpanel">
+                  <div class="subpanel-head">
+                    <h3>四、效果验证与确认</h3>
+                    <span class="pill amber">责任人执行 + 提出部门复核</span>
+                  </div>
+                  <div class="subpanel-body">
+                    <div class="verify-grid" id="verifyCards"></div>
+                    <div class="verify-card" style="margin-top: 14px;">
+                      <div class="field">
+                        <label>提出部门复核确认</label>
+                        <select id="sourceReview">
+                          <option>待复核</option>
+                          <option>已复核，改善合格</option>
+                          <option>复核不合格，退回改善</option>
+                        </select>
+                      </div>
+                      <div class="field">
+                        <label>复核意见</label>
+                        <textarea id="reviewNote">由问题来源部门确认改善是否有效；例如压胶部提出问题，则压胶部复核车缝改善结果。</textarea>
+                      </div>
+                      <div class="verify-grid">
+                        <div class="field"><label>复核人</label><select id="reviewer"><option>李小华</option><option>朱玲玲</option><option>张吉云</option></select></div>
+                        <div class="field"><label>归档确认</label><select id="archiveStatus"><option>待归档</option><option>已归档，进入月KPI</option></select></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <aside class="right-summary">
+                <div class="summary-box">
+                  <h3>闭环状态</h3>
+                  <div class="status-steps">
+                    <div class="step done"><i>1</i><b>已创建</b><span class="pill green">完成</span></div>
+                    <div class="step active"><i>2</i><b>待责任确认</b><span class="pill amber">待确认</span></div>
+                    <div class="step"><i>3</i><b>待执行</b><span class="pill amber" id="taskCount">3项任务</span></div>
+                    <div class="step"><i>4</i><b>提出部门复核</b><span class="pill blue">待复核</span></div>
+                    <div class="step"><i>5</i><b>归档 / KPI</b><span class="pill dark">未锁定</span></div>
+                  </div>
+                </div>
+                <div class="summary-box">
+                  <h3>归档显示方式</h3>
+                  <div class="summary-list">
+                    <div><span>归档后</span><b>报告锁定</b></div>
+                    <div><span>允许</span><b>补充说明/评论</b></div>
+                    <div><span>不允许</span><b>改责任人/改KPI</b></div>
+                    <div><span>撤回</span><b>厂长/主管权限</b></div>
+                    <div><span>历史</span><b>进入款式改善记录</b></div>
+                  </div>
+                </div>
+                <div class="summary-box">
+                  <h3>KPI责任提取</h3>
+                  <div class="summary-list">
+                    <div><span>报告编号</span><b id="summaryReportNo">XCJ2026-001</b></div>
+                    <div><span>问题来源</span><b id="summarySource">压胶部</b></div>
+                    <div><span>责任部门</span><b id="summaryDept">车缝部</b></div>
+                    <div><span>责任人</span><b id="summaryPeople">夏红霞、朱小丽</b></div>
+                    <div><span>KPI规则</span><b>报告归集，任务逾期追加</b></div>
+                  </div>
+                </div>
+                <div class="summary-box">
+                  <h3>角色权限</h3>
+                  <div class="summary-list">
+                    <div><span>责任人</span><b>执行/上传照片</b></div>
+                    <div><span>来源部门</span><b>提交/复核</b></div>
+                    <div><span>QC部</span><b>监督/补充验证</b></div>
+                    <div><span>业务部</span><b>查看/评论标注</b></div>
+                    <div><span>厂长主管</span><b>归档/锁定KPI</b></div>
+                  </div>
+                </div>
+                <div class="summary-box">
+                  <h3>导出功能</h3>
+                  <div class="summary-list">
+                    <div><span>图片导出</span><button class="btn">导出图片</button></div>
+                    <div><span>PDF打印</span><button class="btn" onclick="window.print()">导出PDF</button></div>
+                    <div><span>状态</span><span class="pill dark">归档后锁定</span></div>
+                  </div>
+                </div>
+              </aside>
+            </div>
+
+            <div class="export-row">
+              <button class="btn">导出报告图片</button>
+              <button class="btn" onclick="window.print()">打印 / 导出PDF</button>
+            </div>
+
+            <div class="report-layout">
+              <div class="report-paper" id="reportPaper">
+                <h2>纠正措施报告</h2>
+                <table class="report-table">
+                  <tr>
+                    <th>报告编号</th><td id="paperReportNo">XCJ2026-001</td>
+                    <th>发现日期</th><td id="paperFoundDate">2026/7/5</td>
+                    <th>品牌</th><td id="paperBrand">迪赛特</td>
+                  </tr>
+                  <tr>
+                    <th>款号</th><td id="paperStyle">JK57</td>
+                    <th>颜色</th><td id="paperColor">深灰</td>
+                    <th>严重程度</th><td id="paperSeverity">不可接受，需要返修</td>
+                  </tr>
+                  <tr>
+                    <th>问题来源</th><td id="paperSource">压胶部</td>
+                    <th>责任部门</th><td id="paperDept">车缝部</td>
+                    <th>责任人</th><td id="paperPeople">夏红霞、朱小丽</td>
+                  </tr>
+                  <tr class="section-row"><td colspan="6">一、问题描述</td></tr>
+                  <tr>
+                    <td colspan="6">
+                      <span id="paperProblem">左内里布上下分配不均匀，造成里布上节多布约1CM左右，扭曲。客人QC不接受，需要返修处理。</span>
+                      <div class="photo-row">
+                        <img src="assets/issue-photo-sewing-clean.png" alt="问题照片" data-problem-image>
+                        <span class="pill amber">改善前</span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="section-row"><td colspan="6">二、根本原因分析</td></tr>
+                  <tr>
+                    <td colspan="6" id="paperRootCause">产线生产例缝胶条时，为保证下袋位置平服，员工未按标准线作业，造成止口松量不一致。版面工艺要求折位一致，实际操作中上下节松量失衡，所以造成扭曲。</td>
+                  </tr>
+                  <tr class="section-row"><td colspan="6">三、纠正与预防措施</td></tr>
+                  <tr>
+                    <td colspan="6">
+                      <table class="measure-table">
+                        <thead><tr><th>序号</th><th>措施类型</th><th>措施内容</th><th>责任人</th><th>计划完成日期</th><th>状态</th></tr></thead>
+                        <tbody id="paperMeasureRows"></tbody>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr class="section-row"><td colspan="6">四、效果验证与确认</td></tr>
+                  <tr>
+                    <td colspan="6">
+                      <span id="paperVerify">待责任人执行后填写改善照片、完成日期和复核意见。</span>
+                      <div class="readonly-note">录入阶段只形成纠正报告主体；效果验证内容在“我的任务”和“部门复核”完成后，进入“归档审批”生成完整正式报告。</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>报告人</th><td id="paperReporter">李小华</td>
+                    <th>复核人</th><td id="paperReviewer">李小华</td>
+                    <th>审批人</th><td>张亚琴</td>
+                  </tr>
+                  <tr class="section-row"><td colspan="6">五、备注</td></tr>
+                  <tr><td colspan="6" style="height: 58px;">KPI按报告责任人归集；逾期、未执行按措施任务追加扣分。归档后报告锁定，可导出图片或PDF打印。</td></tr>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="tasks">
+          <div class="metric-grid">
+            <div class="metric"><span>我的待执行</span><strong>3</strong><small>项</small></div>
+            <div class="metric"><span>今天到期</span><strong>1</strong><small>项</small></div>
+            <div class="metric"><span>已逾期</span><strong>1</strong><small>项</small></div>
+            <div class="metric"><span>本月完成率</span><strong>82%</strong></div>
+          </div>
+
+          <div class="task-board">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>我的任务</h2>
+                  <p>责任人只看到分配给自己的措施任务，上传改善照片后可标记已执行。</p>
+                </div>
+                <div class="toolbar">
+                  <select>
+                    <option>当前责任人：夏红霞</option>
+                    <option>朱小丽</option>
+                    <option>李小华</option>
+                    <option>朱玲玲</option>
+                    <option>张吉云</option>
+                    <option>张亚琴</option>
+                    <option>顾瑶</option>
+                    <option>顾永宏</option>
+                  </select>
+                  <button class="btn">只看逾期</button>
+                </div>
+              </div>
+
+              <div class="task-list">
+                <article class="task-card">
+                  <div class="task-card-head">
+                    <div>
+                      <h3>里布腰上节超过1CM松量的全部返修处理</h3>
+                      <div class="task-meta">
+                        <span>报告：<b>XCJ2026-001</b></span>
+                        <span>款号：<b>JK57</b></span>
+                        <span>来源：<b>压胶部</b></span>
+                        <span>期限：<b>2026/7/25</b></span>
+                      </div>
+                    </div>
+                    <span class="pill red">已逾期</span>
+                  </div>
+                  <div class="compare-grid">
+                    <div class="compare-photo">
+                      <b>问题照片</b>
+                      <img src="assets/issue-photo-sewing-clean.png" alt="问题照片" data-problem-image>
+                      <p class="readonly-note">问题描述：<b data-problem-text>左内里布上下分配不均匀，造成里布上节多布约1CM左右，扭曲。客人QC不接受，需要返修处理。</b></p>
+                    </div>
+                    <label class="upload-zone" style="min-height: 220px;">
+                      <input type="file" accept="image/*" multiple hidden>
+                      <strong>上传改善照片</strong>
+                      <span>每条措施至少 1 张，未上传不能关闭</span>
+                    </label>
+                  </div>
+                  <div class="task-actions">
+                    <div class="field"><label>执行说明</label><input value="已按标准止口返修，待压胶部复核。"></div>
+                    <button class="btn primary">标记已执行</button>
+                    <button class="btn">查看报告</button>
+                  </div>
+                </article>
+
+                <article class="task-card">
+                  <div class="task-card-head">
+                    <div>
+                      <h3>把下摆折位0.8CM改回1CM，减少上下节松量差</h3>
+                      <div class="task-meta">
+                        <span>报告：<b>XCJ2026-001</b></span>
+                        <span>款号：<b>JK57</b></span>
+                        <span>来源：<b>压胶部</b></span>
+                        <span>期限：<b>2026/7/27</b></span>
+                      </div>
+                    </div>
+                    <span class="pill amber">待执行</span>
+                  </div>
+                  <div class="task-actions">
+                    <label class="upload-zone" style="min-height: 92px;">
+                      <input type="file" accept="image/*" multiple hidden>
+                      <strong>上传改善照片</strong>
+                    </label>
+                    <button class="btn primary">标记已执行</button>
+                    <button class="btn">查看报告</button>
+                  </div>
+                </article>
+
+                <article class="task-card">
+                  <div class="task-card-head">
+                    <div>
+                      <h3>组长每日首件确认，品质巡检同步确认标准线</h3>
+                      <div class="task-meta">
+                        <span>报告：<b>XCJ2026-001</b></span>
+                        <span>款号：<b>JK57</b></span>
+                        <span>协同：<b>QC部、业务部</b></span>
+                        <span>周期：<b>长期执行</b></span>
+                      </div>
+                    </div>
+                    <span class="pill blue">长期执行</span>
+                  </div>
+                  <div class="task-actions">
+                    <div class="field"><label>本次巡检记录</label><input value="首件确认正常，继续跟进量产稳定性。"></div>
+                    <button class="btn primary">提交记录</button>
+                    <button class="btn">查看历史</button>
+                  </div>
+                </article>
+              </div>
+            </div>
+
+            <aside class="right-summary">
+              <div class="summary-box">
+                <h3>责任人操作规则</h3>
+                <div class="summary-list">
+                  <div><span>可做</span><b>上传改善照片</b></div>
+                  <div><span>可做</span><b>填写执行说明</b></div>
+                  <div><span>可做</span><b>标记已执行</b></div>
+                  <div><span>不可做</span><b>修改责任/KPI</b></div>
+                  <div><span>关闭条件</span><b>来源部门复核通过</b></div>
+                </div>
+              </div>
+              <div class="summary-box">
+                <h3>提醒项目栏</h3>
+                <div class="summary-list">
+                  <div><span>今日提醒</span><span class="pill amber">1项</span></div>
+                  <div><span>逾期提醒</span><span class="pill red">1项</span></div>
+                  <div><span>已提交待复核</span><span class="pill blue">2项</span></div>
+                  <div><span>长期执行</span><span class="pill dark">1项</span></div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="page" id="review">
+          <div class="metric-grid">
+            <div class="metric"><span>待复核</span><strong>4</strong><small>项</small></div>
+            <div class="metric"><span>退回改善</span><strong>1</strong><small>项</small></div>
+            <div class="metric"><span>今日已通过</span><strong>6</strong><small>项</small></div>
+            <div class="metric"><span>平均复核时长</span><strong>1.4</strong><small>天</small></div>
+          </div>
+
+          <div class="task-board">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>提出部门复核</h2>
+                  <p>谁提出问题，谁复核改善是否到位；通过后流转给厂长/主管归档。</p>
+                </div>
+                <div class="toolbar">
+                  <select>
+                    <option>当前来源部门：压胶部</option>
+                    <option>车缝部</option>
+                    <option>裁剪部</option>
+                    <option>QC部</option>
+                    <option>业务部</option>
+                  </select>
+                  <button class="btn">只看待复核</button>
+                </div>
+              </div>
+
+              <div class="task-list">
+                <article class="task-card">
+                  <div class="task-card-head">
+                    <div>
+                      <h3>左内里布止口不均，责任人已提交改善</h3>
+                      <div class="task-meta">
+                        <span>报告：<b>XCJ2026-001</b></span>
+                        <span>款号：<b>JK57</b></span>
+                        <span>责任部门：<b>车缝部</b></span>
+                        <span>责任人：<b>夏红霞、朱小丽</b></span>
+                      </div>
+                    </div>
+                    <span class="pill blue">待复核</span>
+                  </div>
+                  <div class="compare-grid">
+                    <div class="compare-photo">
+                      <b>改善前</b>
+                      <img src="assets/issue-photo-sewing-clean.png" alt="改善前照片" data-problem-image>
+                      <p class="readonly-note">问题描述：<b data-problem-text>左内里布上下分配不均匀，造成里布上节多布约1CM左右，扭曲。客人QC不接受，需要返修处理。</b></p>
+                    </div>
+                    <div class="compare-photo">
+                      <b>责任人改善后</b>
+                      <img src="assets/corrective-report-reference.png" alt="改善后照片">
+                      <p class="readonly-note">执行说明：<b>已按标准止口返修，待压胶部复核。</b></p>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label>复核意见</label>
+                    <textarea>检查上下布配均匀，版面加量跟足腰节定位线。若仍有扭曲，退回继续改善。</textarea>
+                  </div>
+                  <div class="actions">
+                    <button class="btn primary">复核通过，提交归档</button>
+                    <button class="btn">退回改善</button>
+                    <button class="btn">补充复核照片</button>
+                  </div>
+                </article>
+
+                <article class="task-card">
+                  <div class="task-card-head">
+                    <div>
+                      <h3>肩缝松量偏大，改善照片不足</h3>
+                      <div class="task-meta">
+                        <span>报告：<b>XCJ2026-004</b></span>
+                        <span>款号：<b>JX-2308</b></span>
+                        <span>责任部门：<b>车缝部</b></span>
+                        <span>责任人：<b>张吉云</b></span>
+                      </div>
+                    </div>
+                    <span class="pill amber">待补充</span>
+                  </div>
+                  <div class="field">
+                    <label>退回原因</label>
+                    <input value="改善照片未拍到肩缝压胶后状态，需要补充清晰照片。">
+                  </div>
+                  <div class="actions">
+                    <button class="btn">再次退回</button>
+                    <button class="btn primary">资料补齐后通过</button>
+                  </div>
+                </article>
+              </div>
+            </div>
+
+            <aside class="right-summary">
+              <div class="summary-box">
+                <h3>复核规则</h3>
+                <div class="summary-list">
+                  <div><span>压胶提车缝</span><b>压胶复核</b></div>
+                  <div><span>车缝提压胶</span><b>车缝复核</b></div>
+                  <div><span>QC提出</span><b>QC复核</b></div>
+                  <div><span>业务客户反馈</span><b>业务评论，QC复核</b></div>
+                  <div><span>通过后</span><b>主管归档锁定</b></div>
+                </div>
+              </div>
+              <div class="summary-box">
+                <h3>复核结果</h3>
+                <div class="summary-list">
+                  <div><span>通过</span><b>进入归档审批</b></div>
+                  <div><span>退回</span><b>回到责任人任务</b></div>
+                  <div><span>补充照片</span><b>保存复核证据</b></div>
+                  <div><span>归档后</span><b>进入KPI历史</b></div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="page" id="archive">
+          <div class="metric-grid">
+            <div class="metric"><span>待归档审批</span><strong>3</strong><small>份</small></div>
+            <div class="metric"><span>资料完整</span><strong>2</strong><small>份</small></div>
+            <div class="metric"><span>需补充</span><strong>1</strong><small>份</small></div>
+            <div class="metric"><span>本月已归档</span><strong>15</strong><small>份</small></div>
+          </div>
+
+          <div class="task-board">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>主管归档审批</h2>
+                  <p>复核通过后由厂长/主管最终锁定报告和KPI；归档后只允许补充说明，不允许修改责任人。</p>
+                </div>
+                <div class="toolbar">
+                  <select>
+                    <option>全部待归档</option>
+                    <option>资料完整</option>
+                    <option>需补充资料</option>
+                    <option>已归档</option>
+                  </select>
+                  <button class="btn">批量导出PDF</button>
+                </div>
+              </div>
+
+              <div class="task-list">
+                <article class="task-card">
+                  <div class="task-card-head">
+                    <div>
+                      <h3>XCJ2026-001 左内里布止口不均</h3>
+                      <div class="task-meta">
+                        <span>款号：<b>JK57</b></span>
+                        <span>来源：<b>压胶部</b></span>
+                        <span>责任：<b>车缝部</b></span>
+                        <span>KPI影响：<b>-5</b></span>
+                      </div>
+                    </div>
+                    <span class="pill green">资料完整</span>
+                  </div>
+                  <div class="compare-grid archive-approval-grid">
+                    <div class="report-paper archive-report-paper" onclick="document.getElementById('reportPaper').scrollIntoView({ block: 'start' })">
+                      <h2>纠正措施报告</h2>
+                      <table class="report-table">
+                        <tr>
+                          <th>报告编号</th><td id="archivePaperReportNo">XCJ2026-001</td>
+                          <th>发现日期</th><td id="archivePaperFoundDate">2026/7/5</td>
+                          <th>品牌</th><td id="archivePaperBrand">迪赛特</td>
+                        </tr>
+                        <tr>
+                          <th>款号</th><td id="archivePaperStyle">JK57</td>
+                          <th>颜色</th><td id="archivePaperColor">深灰</td>
+                          <th>严重程度</th><td id="archivePaperSeverity">不可接受，需要返修</td>
+                        </tr>
+                        <tr>
+                          <th>问题来源</th><td id="archivePaperSource">压胶部</td>
+                          <th>责任部门</th><td id="archivePaperDept">车缝部</td>
+                          <th>责任人</th><td id="archivePaperPeople">夏红霞、朱小丽</td>
+                        </tr>
+                        <tr class="section-row"><td colspan="6">一、问题描述</td></tr>
+                        <tr>
+                          <td colspan="6">
+                            <span id="archivePaperProblem" data-problem-text>左内里布上下分配不均匀，造成里布上节多布约1CM左右，扭曲。客人QC不接受，需要返修处理。</span>
+                            <div class="photo-row">
+                              <img src="assets/issue-photo-sewing-clean.png" alt="归档报告问题照片" data-problem-image>
+                              <span class="pill amber">改善前</span>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr class="section-row"><td colspan="6">二、根本原因分析</td></tr>
+                        <tr>
+                          <td colspan="6" id="archivePaperRootCause">产线生产例缝胶条时，为保证下袋位置平服，员工未按标准线作业，造成止口松量不一致。版面工艺要求折位一致，实际操作中上下节松量失衡，所以造成扭曲。</td>
+                        </tr>
+                        <tr class="section-row"><td colspan="6">三、纠正与预防措施</td></tr>
+                        <tr>
+                          <td colspan="6">
+                            <table class="measure-table">
+                              <thead><tr><th>序号</th><th>措施类型</th><th>措施内容</th><th>责任人</th><th>计划完成日期</th><th>状态</th></tr></thead>
+                              <tbody id="archivePaperMeasureRows"></tbody>
+                            </table>
+                          </td>
+                        </tr>
+                        <tr class="section-row"><td colspan="6">四、效果验证与确认</td></tr>
+                        <tr>
+                          <td colspan="6">
+                            <span id="archivePaperVerify">改善照片已上传；完成日期：2026/7/10；来源部门复核通过。复核意见：上下布配均匀，版面加量跟足腰节定位线。</span>
+                            <div class="photo-row">
+                              <img src="assets/corrective-report-reference.png" alt="归档报告改善后照片">
+                              <span class="pill green">改善后</span>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>报告人</th><td id="archivePaperReporter">李小华</td>
+                          <th>复核人</th><td id="archivePaperReviewer">李小华</td>
+                          <th>审批人</th><td>张亚琴</td>
+                        </tr>
+                        <tr class="section-row"><td colspan="6">五、备注</td></tr>
+                        <tr><td colspan="6" style="height: 48px;">KPI按报告责任人归集；逾期、未执行按措施任务追加扣分。归档后报告锁定，可导出图片或PDF打印。</td></tr>
+                      </table>
+                    </div>
+                    <div class="archive-check-grid">
+                      <div class="summary-box">
+                        <h3>归档前检查</h3>
+                        <div class="summary-list">
+                          <div><span>问题照片</span><span class="pill green">已上传</span></div>
+                          <div><span>改善照片</span><span class="pill green">已上传</span></div>
+                          <div><span>责任人执行确认</span><span class="pill green">已确认</span></div>
+                          <div><span>来源部门复核</span><span class="pill green">已通过</span></div>
+                          <div><span>KPI责任</span><span class="pill green">已计算</span></div>
+                        </div>
+                      </div>
+                      <div class="summary-box">
+                        <h3>归档结果</h3>
+                        <div class="summary-list">
+                          <div><span>锁定报告</span><b>是</b></div>
+                          <div><span>进入KPI</span><b>是，100分倒扣</b></div>
+                          <div><span>历史记录</span><b>按款号 JK57 归集</b></div>
+                          <div><span>后续权限</span><b>仅补充说明/评论</b></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label>主管归档意见</label>
+                    <input value="资料完整，复核通过，归档并进入本月KPI。">
+                  </div>
+                  <div class="actions">
+                    <button class="btn primary">确认归档并锁定KPI</button>
+                    <button class="btn">导出PDF</button>
+                    <button class="btn">退回补充资料</button>
+                  </div>
+                </article>
+
+                <article class="task-card">
+                  <div class="task-card-head">
+                    <div>
+                      <h3>XCJ2026-004 肩缝松量偏大</h3>
+                      <div class="task-meta">
+                        <span>款号：<b>JX-2308</b></span>
+                        <span>来源：<b>压胶部</b></span>
+                        <span>责任：<b>车缝部</b></span>
+                        <span>KPI影响：<b>-1</b></span>
+                      </div>
+                    </div>
+                    <span class="pill amber">需补充</span>
+                  </div>
+                  <div class="field">
+                    <label>缺少资料</label>
+                    <input value="改善后照片不清晰，来源部门复核意见不足，暂不归档。">
+                  </div>
+                  <div class="actions">
+                    <button class="btn">退回部门复核</button>
+                    <button class="btn">提醒责任人补照片</button>
+                  </div>
+                </article>
+
+                <article class="task-card">
+                  <div class="task-card-head">
+                    <div>
+                      <h3>XCJ2026-009 袋口胶条贴合不牢</h3>
+                      <div class="task-meta">
+                        <span>款号：<b>KW-7721</b></span>
+                        <span>来源：<b>车缝部</b></span>
+                        <span>责任：<b>压胶部</b></span>
+                        <span>KPI影响：<b>-6</b></span>
+                      </div>
+                    </div>
+                    <span class="pill red">逾期归档</span>
+                  </div>
+                  <div class="field">
+                    <label>主管处理意见</label>
+                    <input value="已逾期，按严重问题和措施逾期追加扣分，归档后纳入月度复盘。">
+                  </div>
+                  <div class="actions">
+                    <button class="btn primary">确认归档并锁定KPI</button>
+                    <button class="btn">导出PDF</button>
+                    <button class="btn">撤回到复核</button>
+                  </div>
+                </article>
+              </div>
+            </div>
+
+            <aside class="right-summary">
+              <div class="summary-box">
+                <h3>归档权限</h3>
+                <div class="summary-list">
+                  <div><span>可归档</span><b>厂长/主管</b></div>
+                  <div><span>可撤回</span><b>厂长/主管</b></div>
+                  <div><span>可查看</span><b>相关部门</b></div>
+                  <div><span>可补充</span><b>业务/QC评论</b></div>
+                  <div><span>不可修改</span><b>责任人/KPI</b></div>
+                </div>
+              </div>
+              <div class="summary-box">
+                <h3>锁定后去向</h3>
+                <div class="summary-list">
+                  <div><span>正式报告</span><b>可PDF打印</b></div>
+                  <div><span>月KPI</span><b>进入个人扣分</b></div>
+                  <div><span>款式记录</span><b>进入历史汇总</b></div>
+                  <div><span>投屏</span><b>不再显示已关闭</b></div>
+                  <div><span>复盘</span><b>按问题类型统计</b></div>
+                </div>
+              </div>
+              <div class="summary-box">
+                <h3>已归档示例</h3>
+                <div class="summary-list">
+                  <div><span>XCJ2026-001</span><span class="pill green">已锁定</span></div>
+                  <div><span>XCJ2026-002</span><span class="pill green">已锁定</span></div>
+                  <div><span>XCJ2026-003</span><span class="pill green">已锁定</span></div>
+                  <div><span>导出</span><button class="btn">归档Excel</button></div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="page" id="people">
+          <div class="metric-grid">
+            <div class="metric"><span>部门总数</span><strong id="peoplePageDeptCount">6</strong><small>个</small></div>
+            <div class="metric"><span>人员总数</span><strong id="peoplePagePeopleCount">8</strong><small>人</small></div>
+            <div class="metric"><span>可选责任人</span><strong id="peoplePageAssignableCount">8</strong><small>人</small></div>
+            <div class="metric"><span>数据状态</span><strong>同步</strong></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>人员库维护</h2>
+                <p>这里维护基础部门和人员；报告人、责任部门、措施责任人、KPI归集都会使用同一份人员库。</p>
+              </div>
+              <button class="btn primary" id="peoplePageAddBtn" type="button">新增到人员库</button>
+            </div>
+            <div class="form-grid">
+              <div class="field span-2"><label>新增部门</label><input id="libraryDept" placeholder="例如：裁剪部"></div>
+              <div class="field span-2"><label>新增人员姓名</label><input id="libraryPerson" placeholder="例如：张亚琴"></div>
+            </div>
+            <div class="people-page-grid" id="peopleDeptCards"></div>
+          </div>
+
+          <div class="panel" style="margin-top: 18px;">
+            <div class="panel-head">
+              <div>
+                <h2>同步范围</h2>
+                <p>人员库是系统基础资料，更新后会立即刷新以下字段。</p>
+              </div>
+            </div>
+            <div class="subpanel-body">
+              <div class="library-sync-list">
+                <div><b>纠正报告：</b>问题来源部门、责任部门多选、部门人员勾选、报告人。</div>
+                <div><b>纠正与预防措施：</b>每条措施的责任人多选，支持跨部门协助。</div>
+                <div><b>我的任务 / 部门复核 / 归档报告：</b>责任人显示、KPI归集和归档报告责任人字段。</div>
+                <div><b>左侧统计：</b>部门总数、人员总数和部门列表同步更新。</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="kpi">
+          <div class="metric-grid">
+            <div class="metric"><span>车缝责任问题</span><strong>11</strong><small>件</small></div>
+            <div class="metric"><span>压胶责任问题</span><strong>7</strong><small>件</small></div>
+            <div class="metric"><span>重复发生</span><strong>3</strong><small>件</small></div>
+            <div class="metric"><span>本月待导出</span><strong>18</strong><small>条</small></div>
+          </div>
+          <div class="panel" style="margin-bottom: 18px;">
+            <div class="panel-head">
+              <div>
+                <h2>100分倒扣规则</h2>
+                <p>KPI按报告责任人归集；措施逾期、未执行、重复发生追加扣分。</p>
+              </div>
+              <button class="btn">编辑规则</button>
+            </div>
+            <div class="subpanel-body">
+              <div class="rule-grid">
+                <div class="rule-card"><span>一般问题</span><b>-1</b><small>单次质量异常</small></div>
+                <div class="rule-card"><span>严重问题</span><b>-3</b><small>影响返修或交期</small></div>
+                <div class="rule-card"><span>不可接受/客户投诉</span><b>-5</b><small>客户QC不接受</small></div>
+                <div class="rule-card"><span>措施逾期</span><b>-1</b><small>每项任务追加</small></div>
+                <div class="rule-card"><span>重复发生</span><b>-2</b><small>同款/同类问题</small></div>
+              </div>
+            </div>
+          </div>
+          <div class="kpi-grid">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>个人月KPI责任汇总</h2>
+                  <p>主管归档锁定后的报告才进入最终扣分或评分。</p>
+                </div>
+                <button class="btn primary">导出月KPI</button>
+              </div>
+              <table class="data">
+                <thead>
+                  <tr><th>责任人</th><th>部门</th><th>问题次数</th><th>严重</th><th>逾期</th><th>改善率</th><th>建议KPI</th></tr>
+                </thead>
+                <tbody id="kpiPeopleRows"></tbody>
+              </table>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>问题类型分布</h2>
+                  <p>用于培训重点和工艺改善。</p>
+                </div>
+              </div>
+              <div class="bar-list">
+                <div class="bar-row"><span>止口不均</span><div class="bar"><i style="width: 72%"></i></div><b>6</b></div>
+                <div class="bar-row"><span>压胶偏位</span><div class="bar"><i style="width: 61%"></i></div><b>5</b></div>
+                <div class="bar-row"><span>起皱扭曲</span><div class="bar"><i style="width: 48%"></i></div><b>4</b></div>
+                <div class="bar-row"><span>贴合不牢</span><div class="bar"><i style="width: 36%; background: var(--red)"></i></div><b>3</b></div>
+                <div class="bar-row"><span>返修逾期</span><div class="bar"><i style="width: 24%; background: var(--amber)"></i></div><b>2</b></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="archive-grid">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>历史 / 归档改善记录</h2>
+                  <p>归档后可按款号、部门、责任人回看；报告锁定，允许补充评论。</p>
+                </div>
+                <div class="toolbar">
+                  <select>
+                    <option>全部款号</option>
+                    <option>JK57 / 迪赛特</option>
+                    <option>JX-2308</option>
+                    <option>KW-7721</option>
+                  </select>
+                  <button class="btn primary">导出款式Excel</button>
+                </div>
+              </div>
+              <table class="data">
+                <thead>
+                  <tr><th>报告编号</th><th>款号</th><th>问题来源</th><th>责任部门</th><th>责任人</th><th>闭环状态</th><th>KPI影响</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>XCJ2026-001</td><td>JK57</td><td>压胶部</td><td>车缝部</td><td>夏红霞、朱小丽</td><td><span class="pill green">已归档</span></td><td>-5</td></tr>
+                  <tr><td>XCJ2026-004</td><td>JX-2308</td><td>压胶部</td><td>车缝部</td><td>张吉云</td><td><span class="pill blue">待复核</span></td><td>-1</td></tr>
+                  <tr><td>XCJ2026-006</td><td>JK57</td><td>车缝部</td><td>压胶部</td><td>李小华</td><td><span class="pill amber">待执行</span></td><td>-3</td></tr>
+                  <tr><td>XCJ2026-009</td><td>KW-7721</td><td>车缝部</td><td>压胶部</td><td>李小华</td><td><span class="pill red">逾期</span></td><td>-6</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>款式部门表现</h2>
+                  <p>导出Excel时可作为款式质量复盘。</p>
+                </div>
+              </div>
+              <div class="bar-list">
+                <div class="bar-row"><span>车缝部</span><div class="bar"><i style="width: 68%"></i></div><b>11</b></div>
+                <div class="bar-row"><span>压胶部</span><div class="bar"><i style="width: 44%"></i></div><b>7</b></div>
+                <div class="bar-row"><span>QC部</span><div class="bar"><i style="width: 20%; background: var(--green)"></i></div><b>3</b></div>
+                <div class="bar-row"><span>业务部</span><div class="bar"><i style="width: 12%; background: var(--amber)"></i></div><b>2</b></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <button class="btn projector-exit" id="exitProjectorBtn">退出投屏</button>
+
+  <script>
+    const navButtons = document.querySelectorAll(".nav button");
+    const pages = document.querySelectorAll(".page");
+    const projectorBtn = document.getElementById("projectorBtn");
+    const exitProjectorBtn = document.getElementById("exitProjectorBtn");
+    const projectorChoiceButtons = document.querySelectorAll("[data-projector-target]");
+    const styleFilter = document.getElementById("styleFilter");
+    const peopleDb = {
+      "车缝部": ["夏红霞", "朱小丽"],
+      "压胶部": ["李小华"],
+      "裁剪部": ["张亚琴"],
+      "厂长": ["张亚琴"],
+      "QC部": ["朱玲玲", "张吉云"],
+      "业务部": ["顾瑶", "顾永宏"]
+    };
+    let reportCounter = 1;
+    let measures = [
+      {
+        type: "临时纠正",
+        content: "里布腰上节超过1CM松量的全部返修处理。",
+        people: ["夏红霞", "朱小丽"],
+        due: "2026-07-25",
+        status: "待执行",
+        note: "系统已分配到责任人提醒项目栏"
+      },
+      {
+        type: "永久纠正",
+        content: "把下摆折位0.8CM改回1CM，减少上下节松量差。",
+        people: ["夏红霞", "朱小丽"],
+        due: "2026-07-07",
+        status: "待执行",
+        note: "系统已分配到责任人提醒项目栏"
+      },
+      {
+        type: "预防措施",
+        content: "组长每日首件确认，品质巡检同步确认标准线。",
+        people: ["张吉云", "李小华", "顾永宏"],
+        due: "2026-07-10",
+        status: "长期执行",
+        note: "长期执行任务，月度复盘"
+      }
+    ];
+
+    const fields = {
+      reportNo: document.getElementById("reportNo"),
+      foundDate: document.getElementById("foundDate"),
+      brandName: document.getElementById("brandName"),
+      styleNo: document.getElementById("styleNo"),
+      colorName: document.getElementById("colorName"),
+      severity: document.getElementById("severity"),
+      sourceDept: document.getElementById("sourceDept"),
+      responsibleDepartments: document.getElementById("responsibleDepartments"),
+      departmentPeoplePreview: document.getElementById("departmentPeoplePreview"),
+      kpiFlag: document.getElementById("kpiFlag"),
+      reporter: document.getElementById("reporter"),
+      problemDesc: document.getElementById("problemDesc"),
+      rootCause: document.getElementById("rootCause"),
+      sourceReview: document.getElementById("sourceReview"),
+      reviewer: document.getElementById("reviewer"),
+      archiveStatus: document.getElementById("archiveStatus")
+    };
+
+    function formatDate(value) {
+      if (!value) return "";
+      const parts = value.split("-");
+      return parts.length === 3 ? `${Number(parts[0])}/${Number(parts[1])}/${Number(parts[2])}` : value;
+    }
+
+    function allPeople() {
+      return [...new Set(Object.values(peopleDb).flat())];
+    }
+
+    function renderPeopleLibrarySummary() {
+      document.getElementById("sideDeptCount").textContent = Object.keys(peopleDb).length;
+      document.getElementById("sidePeopleCount").textContent = allPeople().length;
+      document.getElementById("sideDeptList").textContent = Object.keys(peopleDb).join("、");
+      document.getElementById("peoplePageDeptCount").textContent = Object.keys(peopleDb).length;
+      document.getElementById("peoplePagePeopleCount").textContent = allPeople().length;
+      document.getElementById("peoplePageAssignableCount").textContent = allPeople().length;
+      renderPeopleLibraryPage();
+      renderKpiPeopleRows();
+    }
+
+    function renderPeopleLibraryPage() {
+      const container = document.getElementById("peopleDeptCards");
+      container.innerHTML = Object.entries(peopleDb).map(([dept, people]) => `
+        <article class="dept-card">
+          <div class="dept-card-head">
+            <div class="field" style="margin: 0;">
+              <label>部门名称</label>
+              <input class="library-input" data-library-field="dept" data-dept="${dept}" value="${dept}">
+            </div>
+            <span class="pill blue">${people.length}人</span>
+            <button class="mini-action danger" type="button" data-delete-dept="${dept}">删除部门</button>
+          </div>
+          <div class="person-table">
+            ${people.map((person, index) => `
+              <div class="person-row">
+                <input data-library-field="person" data-dept="${dept}" data-index="${index}" value="${person}">
+                <button class="mini-action danger" type="button" data-delete-person="${dept}" data-index="${index}">删除</button>
+              </div>
+            `).join("") || '<div class="readonly-note">暂无人员，请在上方新增。</div>'}
+          </div>
+        </article>
+      `).join("");
+      container.querySelectorAll('[data-library-field="dept"]').forEach((input) => {
+        input.addEventListener("change", renameDepartment);
+      });
+      container.querySelectorAll('[data-library-field="person"]').forEach((input) => {
+        input.addEventListener("change", renamePerson);
+      });
+      container.querySelectorAll("[data-delete-dept]").forEach((button) => {
+        button.addEventListener("click", deleteDepartment);
+      });
+      container.querySelectorAll("[data-delete-person]").forEach((button) => {
+        button.addEventListener("click", deletePerson);
+      });
+    }
+
+    function syncPeopleLibrary() {
+      refreshDeptOptions();
+      renderMeasures();
+      updateReportPreview();
+    }
+
+    function renameDepartment(event) {
+      const oldDept = event.target.dataset.dept;
+      const newDept = event.target.value.trim();
+      if (!newDept || oldDept === newDept) {
+        renderPeopleLibraryPage();
+        return;
+      }
+      if (peopleDb[newDept]) {
+        peopleDb[newDept] = [...new Set([...peopleDb[newDept], ...peopleDb[oldDept]])];
+      } else {
+        peopleDb[newDept] = peopleDb[oldDept];
+      }
+      delete peopleDb[oldDept];
+      syncPeopleLibrary();
+    }
+
+    function renamePerson(event) {
+      const dept = event.target.dataset.dept;
+      const index = Number(event.target.dataset.index);
+      const newName = event.target.value.trim();
+      const oldName = peopleDb[dept][index];
+      if (!newName) {
+        renderPeopleLibraryPage();
+        return;
+      }
+      peopleDb[dept][index] = newName;
+      measures = measures.map((measure) => ({
+        ...measure,
+        people: measure.people.map((person) => person === oldName ? newName : person)
+      }));
+      syncPeopleLibrary();
+    }
+
+    function deleteDepartment(event) {
+      const dept = event.target.dataset.deleteDept;
+      const deletedPeople = new Set(peopleDb[dept] || []);
+      delete peopleDb[dept];
+      measures = measures.map((measure) => ({
+        ...measure,
+        people: measure.people.filter((person) => !deletedPeople.has(person))
+      }));
+      syncPeopleLibrary();
+    }
+
+    function deletePerson(event) {
+      const dept = event.target.dataset.deletePerson;
+      const index = Number(event.target.dataset.index);
+      const [deletedPerson] = peopleDb[dept].splice(index, 1);
+      measures = measures.map((measure) => ({
+        ...measure,
+        people: measure.people.filter((person) => person !== deletedPerson)
+      }));
+      syncPeopleLibrary();
+    }
+
+    function renderKpiPeopleRows() {
+      const container = document.getElementById("kpiPeopleRows");
+      container.innerHTML = Object.entries(peopleDb).flatMap(([dept, people]) => {
+        return people.map((person, index) => {
+          const issueCount = dept === "车缝部" ? 3 : dept === "压胶部" ? 4 : index + 1;
+          const severeCount = dept === "压胶部" ? 2 : dept === "车缝部" ? 1 : 0;
+          const overdueCount = dept === "压胶部" ? 1 : 0;
+          const score = Math.max(80, 100 - issueCount - severeCount * 2 - overdueCount);
+          return `<tr>
+            <td>${person}</td>
+            <td>${dept}</td>
+            <td>${issueCount}</td>
+            <td>${severeCount}</td>
+            <td>${overdueCount}</td>
+            <td>${overdueCount ? "75%" : "100%"}</td>
+            <td><span class="score" style="${score < 90 ? "color:var(--red)" : ""}">${score}</span></td>
+          </tr>`;
+        });
+      }).join("");
+    }
+
+    function selectedResponsibleDepartments() {
+      return [...document.querySelectorAll('#responsibleDepartments input:checked')].map((input) => input.value);
+    }
+
+    function selectedDepartmentPeople() {
+      return [...document.querySelectorAll('#departmentPeoplePreview input:checked')].map((input) => input.value);
+    }
+
+    function defaultMeasurePeople() {
+      const selectedPeople = selectedDepartmentPeople();
+      if (selectedPeople.length) return [...new Set(selectedPeople)];
+      const departments = selectedResponsibleDepartments();
+      return [...new Set(departments.flatMap((dept) => peopleDb[dept] || []))].slice(0, 1);
+    }
+
+    function assignedMeasurePeople() {
+      return [...new Set(measures.flatMap((measure) => measure.people || []))];
+    }
+
+    function renderReporterOptions() {
+      const current = fields.reporter.value;
+      fields.reporter.innerHTML = allPeople().map((person) => `<option ${person === current ? "selected" : ""}>${person}</option>`).join("");
+      if (!fields.reporter.value && allPeople()[0]) fields.reporter.value = allPeople()[0];
+    }
+
+    function renderResponsibleDepartments() {
+      const selected = selectedResponsibleDepartments();
+      const selectedSet = new Set(selected.length ? selected : ["车缝部"]);
+      fields.responsibleDepartments.innerHTML = Object.keys(peopleDb).map((dept) => `
+        <label class="chip">
+          <input type="checkbox" value="${dept}" ${selectedSet.has(dept) ? "checked" : ""}>
+          ${dept}
+        </label>
+      `).join("");
+      fields.responsibleDepartments.querySelectorAll("input").forEach((input) => {
+        input.addEventListener("change", () => {
+          renderDepartmentPeoplePreview();
+          updateReportPreview();
+        });
+      });
+      renderDepartmentPeoplePreview();
+    }
+
+    function renderDepartmentPeoplePreview() {
+      const departments = selectedResponsibleDepartments();
+      const people = departments.flatMap((dept) => peopleDb[dept] || []);
+      const selectedSet = new Set(selectedDepartmentPeople());
+      const uniquePeople = [...new Set(people)];
+      fields.departmentPeoplePreview.innerHTML = uniquePeople.map((person, index) => `
+        <label class="chip">
+          <input type="checkbox" value="${person}" onchange="syncMeasuresWithDepartmentPeople()" ${selectedSet.has(person) || (!selectedSet.size && index === 0) ? "checked" : ""}>
+          ${person}
+        </label>
+      `).join("") || '<span class="chip">未选择部门</span>';
+      fields.departmentPeoplePreview.querySelectorAll("input").forEach((input) => {
+        input.addEventListener("input", syncMeasuresWithDepartmentPeople);
+        input.addEventListener("change", syncMeasuresWithDepartmentPeople);
+      });
+    }
+
+    function syncMeasuresWithDepartmentPeople() {
+      const selectedPeople = selectedDepartmentPeople();
+      if (!selectedPeople.length) {
+        updateReportPreview();
+        return;
+      }
+      measures = measures.map((measure) => {
+        if (measure.type === "预防措施") return measure;
+        return { ...measure, people: selectedPeople };
+      });
+      document.querySelectorAll('#measureRows tr').forEach((row, index) => {
+        if (measures[index]?.type === "预防措施") return;
+        const select = row.querySelector('[data-measure-field="people"]');
+        if (!select) return;
+        [...select.options].forEach((option) => {
+          option.selected = selectedPeople.includes(option.value);
+        });
+      });
+      renderVerification();
+      updateReportPreview();
+    }
+
+    function peopleOptions(selectedPeople, measureType) {
+      const options = allPeople();
+      return options.map((person) => `<option ${selectedPeople.includes(person) ? "selected" : ""}>${person}</option>`).join("");
+    }
+
+    function renderMeasures() {
+      const tbody = document.getElementById("measureRows");
+      tbody.innerHTML = measures.map((measure, index) => `
+        <tr data-index="${index}">
+          <td><b>${index + 1}</b></td>
+          <td>
+            <select data-measure-field="type">
+              <option ${measure.type === "临时纠正" ? "selected" : ""}>临时纠正</option>
+              <option ${measure.type === "永久纠正" ? "selected" : ""}>永久纠正</option>
+              <option ${measure.type === "预防措施" ? "selected" : ""}>预防措施</option>
+            </select>
+          </td>
+          <td><textarea data-measure-field="content">${measure.content}</textarea></td>
+          <td><select multiple data-measure-field="people">${peopleOptions(measure.people, measure.type)}</select></td>
+          <td><input type="date" data-measure-field="due" value="${measure.due}"></td>
+          <td><textarea data-measure-field="note">${measure.note}</textarea></td>
+          <td>
+            <select data-measure-field="status">
+              <option ${measure.status === "待执行" ? "selected" : ""}>待执行</option>
+              <option ${measure.status === "已执行" ? "selected" : ""}>已执行</option>
+              <option ${measure.status === "长期执行" ? "selected" : ""}>长期执行</option>
+              <option ${measure.status === "逾期" ? "selected" : ""}>逾期</option>
+            </select>
+          </td>
+          <td><button class="btn danger delete-measure" type="button" data-index="${index}">删除</button></td>
+        </tr>
+      `).join("");
+
+      tbody.querySelectorAll("[data-measure-field]").forEach((control) => {
+        control.addEventListener("input", updateMeasureFromControl);
+        control.addEventListener("change", updateMeasureFromControl);
+      });
+      tbody.querySelectorAll(".delete-measure").forEach((button) => {
+        button.addEventListener("click", () => {
+          measures.splice(Number(button.dataset.index), 1);
+          if (!measures.length) addMeasure();
+          else renderMeasures();
+        });
+      });
+      renderVerification();
+      updateReportPreview();
+    }
+
+    function updateMeasureFromControl(event) {
+      const row = event.target.closest("tr");
+      const index = Number(row.dataset.index);
+      const field = event.target.dataset.measureField;
+      if (field === "people") {
+        measures[index].people = [...event.target.selectedOptions].map((option) => option.value);
+      } else {
+        measures[index][field] = event.target.value;
+      }
+      if (field === "type") {
+        renderMeasures();
+        return;
+      }
+      renderVerification();
+      updateReportPreview();
+    }
+
+    function renderVerification() {
+      const container = document.getElementById("verifyCards");
+      container.innerHTML = measures.map((measure, index) => `
+        <div class="verify-card">
+          <b>措施 ${index + 1}：${measure.type}</b>
+          <span>${measure.content}</span>
+          <div class="field">
+            <label>责任人改善照片</label>
+            <label class="upload-zone" style="min-height: 118px;">
+              <input type="file" multiple accept="image/*" hidden>
+              <strong>上传改善照片</strong>
+              <span>${measure.people.join("、") || "未选择责任人"}</span>
+            </label>
+          </div>
+          <div class="verify-grid">
+            <div class="field"><label>完成日期</label><input type="date" value="${measure.status === "已执行" ? "2026-07-10" : ""}"></div>
+            <div class="field"><label>执行状态</label><button class="btn mark-done" type="button" data-index="${index}">${measure.status === "已执行" ? "已执行" : "标记已执行"}</button></div>
+          </div>
+        </div>
+      `).join("");
+      container.querySelectorAll(".mark-done").forEach((button) => {
+        button.addEventListener("click", () => {
+          measures[Number(button.dataset.index)].status = "已执行";
+          renderMeasures();
+        });
+      });
+      document.getElementById("taskCount").textContent = `${measures.length}项任务`;
+    }
+
+    function renderPaperMeasures() {
+      document.getElementById("paperMeasureRows").innerHTML = measures.map((measure, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${measure.type}</td>
+          <td>${measure.content}</td>
+          <td>${measure.people.join("、")}</td>
+          <td>${formatDate(measure.due)}</td>
+          <td>${measure.status}</td>
+        </tr>
+      `).join("");
+      document.getElementById("archivePaperMeasureRows").innerHTML = measures.map((measure, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${measure.type}</td>
+          <td>${measure.content}</td>
+          <td>${measure.people.join("、")}</td>
+          <td>${formatDate(measure.due)}</td>
+          <td>${measure.status === "待执行" ? "已执行" : measure.status}</td>
+        </tr>
+      `).join("");
+    }
+
+    function updateReportPreview() {
+      const departments = selectedResponsibleDepartments();
+      const people = assignedMeasurePeople();
+      document.getElementById("summaryReportNo").textContent = fields.reportNo.value;
+      document.getElementById("summarySource").textContent = fields.sourceDept.value;
+      document.getElementById("summaryDept").textContent = departments.join("、") || "未选择";
+      document.getElementById("summaryPeople").textContent = people.join("、") || "待措施分配";
+      document.getElementById("paperReportNo").textContent = fields.reportNo.value;
+      document.getElementById("paperFoundDate").textContent = formatDate(fields.foundDate.value);
+      document.getElementById("paperBrand").textContent = fields.brandName.value;
+      document.getElementById("paperStyle").textContent = fields.styleNo.value;
+      document.getElementById("paperColor").textContent = fields.colorName.value;
+      document.getElementById("paperSeverity").textContent = fields.severity.value;
+      document.getElementById("paperSource").textContent = fields.sourceDept.value;
+      document.getElementById("paperDept").textContent = departments.join("、") || "未选择";
+      document.getElementById("paperPeople").textContent = people.join("、") || "待措施分配";
+      document.getElementById("paperProblem").textContent = fields.problemDesc.value;
+      document.getElementById("paperRootCause").textContent = fields.rootCause.value;
+      document.getElementById("paperReporter").textContent = fields.reporter.value;
+      document.getElementById("paperReviewer").textContent = fields.reviewer.value;
+      document.getElementById("paperVerify").textContent = "待责任人执行后填写改善照片、完成日期和复核意见。";
+      document.getElementById("archivePaperReportNo").textContent = fields.reportNo.value;
+      document.getElementById("archivePaperFoundDate").textContent = formatDate(fields.foundDate.value);
+      document.getElementById("archivePaperBrand").textContent = fields.brandName.value;
+      document.getElementById("archivePaperStyle").textContent = fields.styleNo.value;
+      document.getElementById("archivePaperColor").textContent = fields.colorName.value;
+      document.getElementById("archivePaperSeverity").textContent = fields.severity.value;
+      document.getElementById("archivePaperSource").textContent = fields.sourceDept.value;
+      document.getElementById("archivePaperDept").textContent = departments.join("、") || "未选择";
+      document.getElementById("archivePaperPeople").textContent = people.join("、") || "待措施分配";
+      document.getElementById("archivePaperProblem").textContent = fields.problemDesc.value;
+      document.getElementById("archivePaperRootCause").textContent = fields.rootCause.value;
+      document.getElementById("archivePaperReporter").textContent = fields.reporter.value;
+      document.getElementById("archivePaperReviewer").textContent = fields.reviewer.value;
+      document.getElementById("archivePaperVerify").textContent = `${fields.sourceDept.value}复核通过；完成日期：2026/7/10；复核意见：上下布配均匀，版面加量跟足腰节定位线。`;
+      document.querySelectorAll("[data-problem-text]").forEach((node) => {
+        node.textContent = fields.problemDesc.value || "待填写问题描述";
+      });
+      renderPaperMeasures();
+    }
+
+    function refreshDeptOptions() {
+      const deptOptions = Object.keys(peopleDb).map((dept) => `<option>${dept}</option>`).join("");
+      const currentSource = fields.sourceDept.value || "压胶部";
+      fields.sourceDept.innerHTML = deptOptions;
+      fields.sourceDept.value = Object.keys(peopleDb).includes(currentSource) ? currentSource : "压胶部";
+      renderReporterOptions();
+      renderResponsibleDepartments();
+      renderPeopleLibrarySummary();
+    }
+
+    function addPersonFromInputs(deptInput, personInput) {
+      const dept = deptInput.value.trim();
+      const person = personInput.value.trim();
+      if (!dept || !person) return;
+      if (!peopleDb[dept]) peopleDb[dept] = [];
+      if (!peopleDb[dept].includes(person)) peopleDb[dept].push(person);
+      syncPeopleLibrary();
+      const newDeptOption = [...fields.responsibleDepartments.querySelectorAll("input")].find((input) => input.value === dept);
+      if (newDeptOption) newDeptOption.checked = true;
+      renderDepartmentPeoplePreview();
+      deptInput.value = "";
+      personInput.value = "";
+    }
+
+    function addMeasure() {
+      measures.push({
+        type: "临时纠正",
+        content: "填写新的纠正措施内容。",
+        people: defaultMeasurePeople(),
+        due: "",
+        status: "待执行",
+        note: "系统已分配到责任人提醒项目栏"
+      });
+      renderMeasures();
+    }
+
+    function newReport() {
+      reportCounter += 1;
+      fields.reportNo.value = `XCJ2026-${String(reportCounter).padStart(3, "0")}`;
+      fields.problemDesc.value = "";
+      fields.rootCause.value = "";
+      measures = [{
+        type: "临时纠正",
+        content: "填写纠正措施内容。",
+        people: defaultMeasurePeople(),
+        due: "",
+        status: "待执行",
+        note: "系统已分配到责任人提醒项目栏"
+      }];
+      renderMeasures();
+      updateReportPreview();
+    }
+
+    function applyStyleFilter() {
+      const selectedStyle = styleFilter.value;
+      document.querySelectorAll(".issue-card[data-style]").forEach((card) => {
+        card.style.display = selectedStyle === "all" || card.dataset.style === selectedStyle ? "" : "none";
+      });
+      document.querySelectorAll(".screen-list").forEach((list) => {
+        const visibleCards = [...list.querySelectorAll(".issue-card[data-style]")].filter((card) => card.style.display !== "none");
+        list.classList.toggle("single-card", visibleCards.length === 1);
+      });
+    }
+
+    function exitProjector() {
+      document.body.classList.remove("projector-selecting", "projector", "projector-sewing", "projector-taping", "projector-cutting-business");
+      projectorBtn.textContent = "投屏预览";
+      if (window.location.hash) {
+        history.replaceState(null, "", window.location.pathname);
+      }
+    }
+
+    function openDashboard() {
+      navButtons.forEach((item) => item.classList.remove("active"));
+      pages.forEach((page) => page.classList.remove("active"));
+      document.querySelector('[data-tab="dashboard"]').classList.add("active");
+      document.getElementById("dashboard").classList.add("active");
+    }
+
+    function openProjectorChoice(updateHash = true) {
+      openDashboard();
+      document.body.classList.remove("projector", "projector-sewing", "projector-taping", "projector-cutting-business");
+      document.body.classList.add("projector-selecting");
+      projectorBtn.textContent = "投屏选择中";
+      if (updateHash) {
+        history.replaceState(null, "", "#projector-choice");
+      }
+    }
+
+    function openProjector(target, updateHash = true) {
+      openDashboard();
+      const hashMap = {
+        sewing: "#sewing-screen",
+        taping: "#taping-screen",
+        "cutting-business": "#cutting-business-screen"
+      };
+      document.body.classList.remove("projector-selecting", "projector-sewing", "projector-taping", "projector-cutting-business");
+      document.body.classList.add("projector", `projector-${target}`);
+      if (updateHash) {
+        history.replaceState(null, "", hashMap[target] || "#sewing-screen");
+      }
+    }
+
+    navButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        exitProjector();
+        navButtons.forEach((item) => item.classList.remove("active"));
+        pages.forEach((page) => page.classList.remove("active"));
+        button.classList.add("active");
+        document.getElementById(button.dataset.tab).classList.add("active");
+      });
+    });
+
+    projectorBtn.addEventListener("click", () => {
+      openProjectorChoice();
+    });
+
+    projectorChoiceButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        openProjector(button.dataset.projectorTarget);
+      });
+    });
+
+    exitProjectorBtn.addEventListener("click", exitProjector);
+
+    [
+      fields.reportNo,
+      fields.foundDate,
+      fields.brandName,
+      fields.styleNo,
+      fields.colorName,
+      fields.severity,
+      fields.sourceDept,
+      fields.kpiFlag,
+      fields.reporter,
+      fields.problemDesc,
+      fields.rootCause,
+      fields.sourceReview,
+      fields.reviewer,
+      fields.archiveStatus
+    ].forEach((field) => {
+      field.addEventListener("input", updateReportPreview);
+      field.addEventListener("change", updateReportPreview);
+    });
+
+    document.getElementById("sidePeopleManageBtn").addEventListener("click", () => {
+      exitProjector();
+      document.querySelector('[data-tab="people"]').click();
+    });
+    document.getElementById("peoplePageAddBtn").addEventListener("click", () => {
+      addPersonFromInputs(document.getElementById("libraryDept"), document.getElementById("libraryPerson"));
+    });
+    document.getElementById("addMeasureBtn").addEventListener("click", addMeasure);
+    document.getElementById("addMeasureInlineBtn").addEventListener("click", addMeasure);
+    document.getElementById("newReportBtn").addEventListener("click", () => {
+      document.querySelector('[data-tab="report"]').click();
+      newReport();
+    });
+    styleFilter.addEventListener("change", applyStyleFilter);
+
+    document.getElementById("problemPhotoInput").addEventListener("change", (event) => {
+      const container = document.getElementById("problemThumbs");
+      container.innerHTML = "";
+      const files = [...event.target.files].slice(0, 6);
+      const firstUrl = files.length ? URL.createObjectURL(files[0]) : "assets/issue-photo-sewing-clean.png";
+      document.querySelectorAll("[data-problem-image]").forEach((image) => {
+        image.src = firstUrl;
+      });
+      files.forEach((file) => {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        img.alt = file.name;
+        container.appendChild(img);
+      });
+      if (!event.target.files.length) {
+        container.innerHTML = '<img src="assets/issue-photo-sewing-clean.png" alt="问题照片示例">';
+      }
+    });
+
+    refreshDeptOptions();
+    fields.sourceDept.value = "压胶部";
+    renderResponsibleDepartments();
+    renderMeasures();
+    applyStyleFilter();
+
+    const initialHash = window.location.hash;
+    if (initialHash === "#projector-choice") {
+      openProjectorChoice(false);
+    } else if (initialHash === "#sewing-screen") {
+      openProjector("sewing", false);
+    } else if (initialHash === "#taping-screen") {
+      openProjector("taping", false);
+    } else if (initialHash === "#cutting-business-screen") {
+      openProjector("cutting-business", false);
+    } else if (initialHash === "#report" || initialHash === "#report-paper") {
+      document.querySelector('[data-tab="report"]').click();
+      if (initialHash === "#report-paper") {
+        setTimeout(() => document.getElementById("reportPaper").scrollIntoView({ block: "start" }), 50);
+      }
+    } else if (["#dashboard", "#tasks", "#review", "#archive", "#people", "#kpi"].includes(initialHash)) {
+      document.querySelector(`[data-tab="${initialHash.slice(1)}"]`).click();
+    }
+  </script>
+</body>
+</html>
