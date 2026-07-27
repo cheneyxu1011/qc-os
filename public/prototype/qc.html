@@ -1769,7 +1769,7 @@
               <div class="field span-2"><label>责任部门（可多选）</label><div class="chip-list" id="responsibleDepartments"></div></div>
               <div class="field"><label>部门人员</label><div class="chip-list" id="departmentPeoplePreview"></div></div>
               <div class="field"><label>是否计入KPI</label><select id="kpiFlag"><option>是，归档后计入</option><option>否，仅作培训记录</option></select></div>
-              <div class="field"><label>报告人</label><select id="reporter"><option>李小华</option><option>朱玲玲</option><option>张吉云</option><option>顾瑶</option><option>顾永宏</option></select></div>
+              <div class="field"><label>报告人</label><select id="reporter"><option>夏红霞</option><option>朱小丽</option><option selected>李小华</option><option>张亚琴</option><option>朱玲玲</option><option>张吉云</option><option>顾瑶</option><option>顾永宏</option></select></div>
             </div>
 
             <div class="workflow-grid">
@@ -1871,7 +1871,8 @@
                         <textarea id="reviewNote">由问题来源部门确认改善是否有效；例如压胶部提出问题，则压胶部复核车缝改善结果。</textarea>
                       </div>
                       <div class="verify-grid">
-                        <div class="field"><label>复核人</label><select id="reviewer"><option>李小华</option><option>朱玲玲</option><option>张吉云</option></select></div>
+                        <div class="field"><label>复核人（默认报告人）</label><select id="reviewer"><option>夏红霞</option><option>朱小丽</option><option selected>李小华</option><option>张亚琴</option><option>朱玲玲</option><option>张吉云</option><option>顾瑶</option><option>顾永宏</option></select></div>
+                        <div class="field"><label>审批人（默认厂长）</label><select id="approver"><option>夏红霞</option><option>朱小丽</option><option>李小华</option><option selected>张亚琴</option><option>朱玲玲</option><option>张吉云</option><option>顾瑶</option><option>顾永宏</option></select></div>
                         <div class="field"><label>归档确认</label><select id="archiveStatus"><option>待归档</option><option>已归档，进入月KPI</option></select></div>
                       </div>
                     </div>
@@ -1988,7 +1989,7 @@
                   <tr>
                     <th>报告人</th><td id="paperReporter">李小华</td>
                     <th>复核人</th><td id="paperReviewer">李小华</td>
-                    <th>审批人</th><td>张亚琴</td>
+                    <th>审批人</th><td id="paperApprover">张亚琴</td>
                   </tr>
                   <tr class="section-row"><td colspan="6">五、备注</td></tr>
                   <tr><td colspan="6" style="height: 58px;">KPI按报告责任人归集；逾期、未执行按措施任务追加扣分。归档后报告锁定，可导出图片或PDF打印。</td></tr>
@@ -2338,7 +2339,7 @@
                         <tr>
                           <th>报告人</th><td id="archivePaperReporter">李小华</td>
                           <th>复核人</th><td id="archivePaperReviewer">李小华</td>
-                          <th>审批人</th><td>张亚琴</td>
+                          <th>审批人</th><td id="archivePaperApprover">张亚琴</td>
                         </tr>
                         <tr class="section-row"><td colspan="6">五、备注</td></tr>
                         <tr><td colspan="6" style="height: 48px;">KPI按报告责任人归集；逾期、未执行按措施任务追加扣分。归档后报告锁定，可导出图片或PDF打印。</td></tr>
@@ -2365,6 +2366,10 @@
                         </div>
                       </div>
                     </div>
+                  </div>
+                  <div class="field">
+                    <label>审批人（默认厂长，可按所在工厂选择）</label>
+                    <select id="archiveApprover"><option>夏红霞</option><option>朱小丽</option><option>李小华</option><option selected>张亚琴</option><option>朱玲玲</option><option>张吉云</option><option>顾瑶</option><option>顾永宏</option></select>
                   </div>
                   <div class="field">
                     <label>主管归档意见</label>
@@ -2742,6 +2747,8 @@
       rootCause: document.getElementById("rootCause"),
       sourceReview: document.getElementById("sourceReview"),
       reviewer: document.getElementById("reviewer"),
+      approver: document.getElementById("approver"),
+      archiveApprover: document.getElementById("archiveApprover"),
       archiveStatus: document.getElementById("archiveStatus")
     };
 
@@ -3144,10 +3151,25 @@
       return [...new Set(measures.flatMap((measure) => measure.people || []))];
     }
 
-    function renderReporterOptions() {
-      const current = fields.reporter.value;
-      fields.reporter.innerHTML = allPeople().map((person) => `<option ${person === current ? "selected" : ""}>${person}</option>`).join("");
-      if (!fields.reporter.value && allPeople()[0]) fields.reporter.value = allPeople()[0];
+    function defaultFactoryApprover() {
+      return peopleDb["厂长"]?.[0] || allPeople()[0] || "";
+    }
+
+    function populatePeopleSelect(select, preferred, fallback) {
+      const people = allPeople();
+      select.innerHTML = people.map((person) => `<option>${person}</option>`).join("");
+      select.value = people.includes(preferred) ? preferred : fallback;
+      if (!select.value && people[0]) select.value = people[0];
+    }
+
+    function renderReportPeopleOptions() {
+      const reporter = fields.reporter.value;
+      const reviewer = fields.reviewer.value;
+      const approver = fields.approver.value || fields.archiveApprover.value;
+      populatePeopleSelect(fields.reporter, reporter, allPeople()[0] || "");
+      populatePeopleSelect(fields.reviewer, reviewer, fields.reporter.value);
+      populatePeopleSelect(fields.approver, approver, defaultFactoryApprover());
+      populatePeopleSelect(fields.archiveApprover, fields.approver.value, defaultFactoryApprover());
     }
 
     function renderResponsibleDepartments() {
@@ -3344,6 +3366,7 @@
       document.getElementById("paperRootCause").textContent = fields.rootCause.value;
       document.getElementById("paperReporter").textContent = fields.reporter.value;
       document.getElementById("paperReviewer").textContent = fields.reviewer.value;
+      document.getElementById("paperApprover").textContent = fields.approver.value;
       document.getElementById("paperVerify").textContent = "待责任人执行后填写改善照片、完成日期和复核意见。";
       document.getElementById("archivePaperReportNo").textContent = fields.reportNo.value;
       document.getElementById("archivePaperFoundDate").textContent = formatDate(fields.foundDate.value);
@@ -3358,6 +3381,7 @@
       document.getElementById("archivePaperRootCause").textContent = fields.rootCause.value;
       document.getElementById("archivePaperReporter").textContent = fields.reporter.value;
       document.getElementById("archivePaperReviewer").textContent = fields.reviewer.value;
+      document.getElementById("archivePaperApprover").textContent = fields.approver.value;
       document.getElementById("archivePaperVerify").textContent = `${fields.sourceDept.value}复核通过；完成日期：2026/7/10；复核意见：上下布配均匀，版面加量跟足腰节定位线。`;
       document.querySelectorAll("[data-problem-text]").forEach((node) => {
         node.textContent = fields.problemDesc.value || "待填写问题描述";
@@ -3370,7 +3394,7 @@
       const currentSource = fields.sourceDept.value || "压胶部";
       fields.sourceDept.innerHTML = deptOptions;
       fields.sourceDept.value = Object.keys(peopleDb).includes(currentSource) ? currentSource : "压胶部";
-      renderReporterOptions();
+      renderReportPeopleOptions();
       renderResponsibleDepartments();
       renderPeopleLibrarySummary();
     }
@@ -3406,6 +3430,9 @@
       fields.reportNo.value = `XCJ2026-${String(reportCounter).padStart(3, "0")}`;
       fields.problemDesc.value = "";
       fields.rootCause.value = "";
+      fields.reviewer.value = fields.reporter.value;
+      fields.approver.value = defaultFactoryApprover();
+      fields.archiveApprover.value = fields.approver.value;
       const saveButton = document.getElementById("saveReportBtn");
       saveButton.disabled = false;
       saveButton.textContent = "保存报告";
@@ -3494,6 +3521,21 @@
 
     exitProjectorBtn.addEventListener("click", exitProjector);
 
+    fields.reporter.addEventListener("change", () => {
+      if (allPeople().includes(fields.reporter.value)) {
+        fields.reviewer.value = fields.reporter.value;
+      }
+      updateReportPreview();
+    });
+    fields.approver.addEventListener("change", () => {
+      fields.archiveApprover.value = fields.approver.value;
+      updateReportPreview();
+    });
+    fields.archiveApprover.addEventListener("change", () => {
+      fields.approver.value = fields.archiveApprover.value;
+      updateReportPreview();
+    });
+
     [
       fields.reportNo,
       fields.foundDate,
@@ -3503,7 +3545,6 @@
       fields.severity,
       fields.sourceDept,
       fields.kpiFlag,
-      fields.reporter,
       fields.problemDesc,
       fields.rootCause,
       fields.sourceReview,
