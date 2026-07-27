@@ -2,17 +2,21 @@
 
 QC OS is the quality inspection and corrective action workflow for production.
 
+## Required Reading
+
+Before making any product, data, API, database, UI, or deployment change, read:
+
+- [`SYSTEM_RULES.md`](./SYSTEM_RULES.md) - canonical product baseline and data synchronization standard.
+
+The current prototype contains both live integrations and demonstration-only sections. `SYSTEM_RULES.md` records the difference and must be kept aligned with confirmed business decisions.
+
 Current deployment strategy:
 
 - The validated workshop prototype is served from `/prototype/qc.html`.
 - The mobile capture prototype is served from `/prototype/mobile.html`.
 - Root `/` redirects to `/prototype/qc.html` for the first workshop trial.
 - Current Vercel production URL: `https://qc-os.vercel.app/prototype/qc.html`.
-- Planned production domain: `https://qc-os.vanwellgroup.com`.
-- DNS record needed for the planned domain:
-  - Type: `CNAME`
-  - Name: `qc-os`
-  - Value: `111751b2c1b95b55.vercel-dns-016.com.`
+- Production domain: `https://qc-os.vanwellgroup.com`.
 
 Future integrations:
 
