@@ -38,6 +38,8 @@ type CreateReportPayload = {
   responsiblePeople: string[];
   kpiEnabled: boolean;
   reporter: string;
+  reviewer?: string;
+  approver?: string;
   problemDescription: string;
   rootCause?: string;
   actions: ReportAction[];
@@ -153,6 +155,8 @@ function validatePayload(body: unknown): CreateReportPayload {
     responsiblePeople,
     kpiEnabled: input.kpiEnabled !== false,
     reporter,
+    reviewer: cleanText(input.reviewer, 80) || undefined,
+    approver: cleanText(input.approver, 80) || undefined,
     problemDescription,
     rootCause: cleanText(input.rootCause, 5000) || undefined,
     actions,
@@ -233,6 +237,19 @@ export async function POST(request: Request) {
     const reporterPersonId = peopleIds.get(payload.reporter);
     if (!sourceDepartmentId) throw new Error("问题来源部门不在人员库中");
     if (!reporterPersonId) throw new Error("报告人不在人员库中");
+    const factoryManagerDepartmentId = departmentIds.get("厂长");
+    const factoryManagerMembership = (memberships || []).find(
+      (membership) => membership.department_id === factoryManagerDepartmentId,
+    );
+    const factoryManagerName = (people || []).find(
+      (person) => person.id === factoryManagerMembership?.person_id,
+    )?.name;
+    const reviewerName = payload.reviewer || payload.reporter;
+    const approverName = payload.approver || factoryManagerName || payload.reporter;
+    const reviewerPersonId = peopleIds.get(reviewerName);
+    const approverPersonId = peopleIds.get(approverName);
+    if (!reviewerPersonId) throw new Error("复核人不在人员库中");
+    if (!approverPersonId) throw new Error("审批人不在人员库中");
 
     const { data: selectedStyle, error: selectedStyleError } = payload.styleCatalogId
       ? await supabase
@@ -267,6 +284,10 @@ export async function POST(request: Request) {
       source_department_name: payload.sourceDepartment,
       reporter_person_id: reporterPersonId,
       reporter_name: payload.reporter,
+      default_reviewer_person_id: reviewerPersonId,
+      default_reviewer_name: reviewerName,
+      intended_approver_person_id: approverPersonId,
+      intended_approver_name: approverName,
       kpi_enabled: payload.kpiEnabled,
       problem_description: payload.problemDescription,
       root_cause: payload.rootCause || null,
