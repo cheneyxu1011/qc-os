@@ -22,6 +22,7 @@ type ReportListFilters = {
   styleNo?: string;
   department?: string;
   factoryId?: string;
+  reporter?: string;
   month?: string;
   limit?: number;
 };
@@ -78,6 +79,7 @@ export async function readQcReportList(filters: ReportListFilters) {
   const styleNo = cleanFilter(filters.styleNo, 200);
   const department = cleanFilter(filters.department, 80);
   const factoryId = cleanFilter(filters.factoryId, 80);
+  const reporter = cleanFilter(filters.reporter, 80);
   const month = cleanFilter(filters.month, 7);
   const limit = clampLimit(filters.limit);
 
@@ -109,6 +111,7 @@ export async function readQcReportList(filters: ReportListFilters) {
   if (status) reportQuery = reportQuery.eq("status", status);
   if (styleNo) reportQuery = reportQuery.ilike("style_no", `%${styleNo}%`);
   if (factoryId) reportQuery = reportQuery.eq("factory_id", factoryId);
+  if (reporter) reportQuery = reportQuery.eq("reporter_name", reporter);
   if (month) {
     const [year, monthNumber] = month.split("-").map(Number);
     const start = `${month}-01`;
@@ -139,7 +142,7 @@ export async function readQcReportList(filters: ReportListFilters) {
     supabase
       .from("qc_corrective_actions")
       .select(
-        "id,report_id,sequence_no,action_type,action_content,due_date,status,completed_at",
+        "id,report_id,sequence_no,action_type,action_content,due_date,status,executed_by_name,execution_note,completed_at",
       )
       .in("report_id", reportIds)
       .order("sequence_no", { ascending: true }),
@@ -147,7 +150,6 @@ export async function readQcReportList(filters: ReportListFilters) {
       .from("qc_attachments")
       .select(ATTACHMENT_FIELDS)
       .in("report_id", reportIds)
-      .eq("attachment_type", "problem_before")
       .order("uploaded_at", { ascending: true }),
   ]);
 
@@ -171,13 +173,22 @@ export async function readQcReportList(filters: ReportListFilters) {
   const departmentsByReport = groupByReportId(departments || []);
   const peopleByReport = groupByReportId(people || []);
   const assigneesByAction = groupByActionId(assignees || []);
+  const attachmentsByAction = groupByActionId(
+    signedAttachments.filter(
+      (attachment): attachment is typeof attachment & { action_id: string } =>
+        Boolean(attachment.action_id),
+    ),
+  );
   const actionsByReport = groupByReportId(
     (actions || []).map((action) => ({
       ...action,
       assignees: assigneesByAction.get(action.id) || [],
+      attachments: attachmentsByAction.get(action.id) || [],
     })),
   );
-  const attachmentsByReport = groupByReportId(signedAttachments);
+  const attachmentsByReport = groupByReportId(
+    signedAttachments.filter((attachment) => attachment.attachment_type === "problem_before"),
+  );
 
   return reports.map((report) => ({
     ...report,

@@ -10,7 +10,7 @@ type NamedId = {
 };
 
 type ReportAction = {
-  type: "temporary_correction" | "permanent_correction" | "preventive_action";
+  type: "temporary_correction" | "permanent_correction" | "preventive_action" | "notification_only";
   content: string;
   people: string[];
   dueDate?: string;
@@ -26,6 +26,7 @@ type ReportAttachment = {
 };
 
 type CreateReportPayload = {
+  draftId?: string;
   reportNo?: string;
   factoryId: string;
   styleCatalogId?: string;
@@ -96,7 +97,7 @@ function validatePayload(body: unknown): CreateReportPayload {
         const content = cleanText(action.content, 5000);
         const people = uniqueNames(action.people);
         const dueDate = cleanText(action.dueDate, 10);
-        if (!["temporary_correction", "permanent_correction", "preventive_action"].includes(type)) {
+        if (!["temporary_correction", "permanent_correction", "preventive_action", "notification_only"].includes(type)) {
           throw new Error(`第 ${index + 1} 条措施类型不正确`);
         }
         if (!content) throw new Error(`第 ${index + 1} 条措施内容不能为空`);
@@ -135,6 +136,7 @@ function validatePayload(body: unknown): CreateReportPayload {
     : [];
 
   return {
+    draftId: cleanText(input.draftId, 80) || undefined,
     reportNo: cleanText(input.reportNo, 30).toUpperCase() || undefined,
     factoryId,
     styleCatalogId: cleanText(input.styleCatalogId, 80) || undefined,
@@ -170,6 +172,7 @@ export async function GET(request: Request) {
       styleNo: searchParams.get("styleNo") || undefined,
       department: searchParams.get("department") || undefined,
       factoryId: searchParams.get("factoryId") || undefined,
+      reporter: searchParams.get("reporter") || undefined,
       month: searchParams.get("month") || undefined,
       limit: limitValue,
     });
@@ -399,6 +402,14 @@ export async function POST(request: Request) {
       actor_name: payload.reporter,
       event_data: { report_no: report.report_no },
     });
+
+    if (payload.draftId && /^[0-9a-f-]{36}$/i.test(payload.draftId)) {
+      await supabase
+        .from("qc_report_drafts")
+        .delete()
+        .eq("id", payload.draftId)
+        .eq("reporter_name", payload.reporter);
+    }
 
     return NextResponse.json({
       id: report.id,

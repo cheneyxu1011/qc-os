@@ -18,6 +18,7 @@ const actionTypeNames: Record<string, string> = {
   temporary_correction: "临时改善",
   permanent_correction: "永久改善",
   preventive_action: "预防措施",
+  notification_only: "仅通知",
 };
 
 function names(rows: Array<Record<string, unknown>>, key: string) {

@@ -45,17 +45,24 @@ export async function POST(request: Request, context: RouteContext) {
 
     if (!/^[0-9a-f-]{36}$/i.test(actionId)) throw new Error("措施编号格式不正确");
     if (!actorName) throw new Error("请选择实际完成人");
-    if (!executionNote) throw new Error("请填写执行说明");
-    if (!attachments.length) throw new Error("请至少上传一张改善照片");
 
     const supabase = createAdminSupabaseClient();
     const { data: action, error: actionError } = await supabase
       .from("qc_corrective_actions")
-      .select("id,report_id,sequence_no,status")
+      .select("id,report_id,sequence_no,status,action_type,executed_by_name")
       .eq("id", actionId)
       .maybeSingle();
     if (actionError) throw actionError;
     if (!action) return NextResponse.json({ error: "措施不存在" }, { status: 404 });
+    if (action.status === "executed") {
+      return NextResponse.json(
+        { error: `本项已由${action.executed_by_name || "其他责任人"}完成，不能重复覆盖` },
+        { status: 409 },
+      );
+    }
+    const notificationOnly = action.action_type === "notification_only";
+    if (!notificationOnly && !executionNote) throw new Error("请填写执行说明");
+    if (!notificationOnly && !attachments.length) throw new Error("请至少上传一张改善照片");
 
     const { data: report, error: reportError } = await supabase
       .from("qc_reports")
@@ -81,39 +88,48 @@ export async function POST(request: Request, context: RouteContext) {
         status: "executed",
         executed_by_person_id: actor.id,
         executed_by_name: actor.name,
-        execution_note: executionNote,
+        execution_note: executionNote || (notificationOnly ? "已确认收到通知" : null),
         completed_at: new Date().toISOString(),
       })
       .eq("id", action.id);
     if (updateError) throw updateError;
 
-    const bucket = process.env.AWS_S3_BUCKET_QC_IMAGES;
-    if (!bucket) throw new Error("S3 bucket environment variable is missing");
-    const { error: attachmentError } = await supabase.from("qc_attachments").insert(
-      attachments.map((attachment) => ({
-        report_id: report.id,
-        action_id: action.id,
-        attachment_type: "action_after",
-        s3_bucket: bucket,
-        s3_key: attachment.s3Key,
-        original_file_name: attachment.originalFileName || null,
-        content_type: attachment.contentType || null,
-        file_size_bytes: attachment.fileSizeBytes || null,
-        uploaded_by_person_id: actor.id,
-        uploaded_by_name: actor.name,
-      })),
-    );
-    if (attachmentError) throw attachmentError;
+    if (attachments.length) {
+      const bucket = process.env.AWS_S3_BUCKET_QC_IMAGES;
+      if (!bucket) throw new Error("S3 bucket environment variable is missing");
+      const { error: attachmentError } = await supabase.from("qc_attachments").insert(
+        attachments.map((attachment) => ({
+          report_id: report.id,
+          action_id: action.id,
+          attachment_type: "action_after",
+          s3_bucket: bucket,
+          s3_key: attachment.s3Key,
+          original_file_name: attachment.originalFileName || null,
+          content_type: attachment.contentType || null,
+          file_size_bytes: attachment.fileSizeBytes || null,
+          uploaded_by_person_id: actor.id,
+          uploaded_by_name: actor.name,
+        })),
+      );
+      if (attachmentError) throw attachmentError;
+    }
 
-    const { data: openActions, error: openActionsError } = await supabase
+    const { data: reportActions, error: openActionsError } = await supabase
       .from("qc_corrective_actions")
-      .select("id")
-      .eq("report_id", report.id)
-      .neq("status", "executed");
+      .select("id,status,action_type")
+      .eq("report_id", report.id);
     if (openActionsError) throw openActionsError;
 
-    const nextReportStatus = openActions?.length ? "executing" : "pending_review";
-    const nextWorkflowStep = openActions?.length ? 2 : 3;
+    const openActions = (reportActions || []).filter((item) => item.status !== "executed");
+    const hasReviewableActions = (reportActions || []).some(
+      (item) => item.action_type !== "notification_only",
+    );
+    const nextReportStatus = openActions.length
+      ? "executing"
+      : hasReviewableActions
+        ? "pending_review"
+        : "pending_archive";
+    const nextWorkflowStep = openActions.length ? 2 : hasReviewableActions ? 3 : 4;
     const { error: reportUpdateError } = await supabase
       .from("qc_reports")
       .update({ status: nextReportStatus, workflow_step: nextWorkflowStep })
@@ -126,13 +142,29 @@ export async function POST(request: Request, context: RouteContext) {
       event_type: "action_executed",
       actor_person_id: actor.id,
       actor_name: actor.name,
-      event_data: { report_no: report.report_no, sequence_no: action.sequence_no, execution_note: executionNote },
+      event_data: {
+        report_no: report.report_no,
+        sequence_no: action.sequence_no,
+        action_type: action.action_type,
+        execution_note: executionNote || (notificationOnly ? "已确认收到通知" : ""),
+      },
     });
+    if (!openActions.length && !hasReviewableActions) {
+      await supabase.from("qc_audit_events").insert({
+        report_id: report.id,
+        action_id: action.id,
+        event_type: "notification_review_skipped",
+        actor_person_id: actor.id,
+        actor_name: actor.name,
+        event_data: { report_no: report.report_no, reason: "报告仅包含通知事项" },
+      });
+    }
 
     return NextResponse.json({
       actionId: action.id,
       reportNo: report.report_no,
       status: "executed",
+      notificationOnly,
       reportStatus: nextReportStatus,
     });
   } catch (error) {

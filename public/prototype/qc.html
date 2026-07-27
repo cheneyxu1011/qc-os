@@ -795,6 +795,115 @@
       cursor: pointer;
     }
 
+    .records-dialog {
+      width: min(760px, calc(100vw - 32px));
+      max-height: min(78vh, 760px);
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+      color: var(--ink);
+    }
+
+    .records-dialog::backdrop {
+      background: rgba(15, 23, 42, 0.46);
+    }
+
+    .records-dialog-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 22px 24px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .records-dialog-head h3,
+    .records-dialog-head p {
+      margin: 0;
+    }
+
+    .records-dialog-head p {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .records-dialog-body {
+      padding: 14px 24px 24px;
+      overflow: auto;
+      max-height: calc(78vh - 92px);
+    }
+
+    .record-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .record-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .record-row:last-child {
+      border-bottom: 0;
+    }
+
+    .record-row b,
+    .record-row span {
+      display: block;
+    }
+
+    .record-row span {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .record-row-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .verification-action-row {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .verification-action-row:last-child {
+      border-bottom: 0;
+    }
+
+    .verification-action-meta {
+      display: grid;
+      grid-template-columns: 70px 120px minmax(180px, 1.4fr) 140px 130px;
+      gap: 10px;
+      align-items: start;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .notification-panel {
+      display: grid;
+      place-items: center;
+      min-height: 160px;
+      padding: 24px;
+      border: 1px dashed #9fb0c3;
+      background: #f7f9fb;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .verification-action-meta {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
     .toast-stack {
       position: fixed;
       top: 22px;
@@ -2009,6 +2118,9 @@
               <div class="toolbar">
                 <span class="report-no-indicator">系统编号 <b id="reportNoDisplay">XCJ2026-001</b></span>
                 <input id="reportNo" type="hidden" value="XCJ2026-001">
+                <button class="btn" id="submissionHistoryBtn" type="button">历史提交记录</button>
+                <button class="btn" id="draftBoxBtn" type="button">草稿箱</button>
+                <button class="btn" id="saveDraftBtn" type="button">保存至草稿</button>
                 <button class="btn primary" id="saveReportBtn" type="button">保存报告</button>
               </div>
             </div>
@@ -2660,6 +2772,16 @@
     <button type="button" id="imageLightboxClose" aria-label="关闭大图">×</button>
     <img id="imageLightboxImage" alt="照片放大预览">
   </div>
+  <dialog class="records-dialog" id="recordsDialog">
+    <div class="records-dialog-head">
+      <div>
+        <h3 id="recordsDialogTitle">草稿箱</h3>
+        <p id="recordsDialogSubtitle"></p>
+      </div>
+      <button class="btn" id="closeRecordsDialog" type="button" aria-label="关闭">关闭</button>
+    </div>
+    <div class="records-dialog-body" id="recordsDialogBody"></div>
+  </dialog>
   <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 
   <script>
@@ -2700,6 +2822,7 @@
       }
     ];
     let reportCounter = 1;
+    let currentDraftId = null;
     let measures = [
       {
         type: "临时改善",
@@ -2751,8 +2874,8 @@
 
     function formatDate(value) {
       if (!value) return "";
-      const parts = value.split("-");
-      return parts.length === 3 ? `${Number(parts[0])}/${Number(parts[1])}/${Number(parts[2])}` : value;
+      const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+      return match ? `${Number(match[1])}/${Number(match[2])}/${Number(match[3])}` : String(value);
     }
 
     function escapeHtml(value) {
@@ -3490,11 +3613,11 @@
         return;
       }
       measures = measures.map((measure) => {
-        if (measure.type === "预防措施") return measure;
+        if (measure.type === "预防措施" || measure.type === "仅通知") return measure;
         return { ...measure, people: selectedPeople };
       });
       document.querySelectorAll('#measureRows tr').forEach((row, index) => {
-        if (measures[index]?.type === "预防措施") return;
+        if (measures[index]?.type === "预防措施" || measures[index]?.type === "仅通知") return;
         const select = row.querySelector('[data-measure-field="people"]');
         if (!select) return;
         [...select.options].forEach((option) => {
@@ -3520,6 +3643,7 @@
               <option ${measure.type === "临时改善" ? "selected" : ""}>临时改善</option>
               <option ${measure.type === "永久改善" ? "selected" : ""}>永久改善</option>
               <option ${measure.type === "预防措施" ? "selected" : ""}>预防措施</option>
+              <option ${measure.type === "仅通知" ? "selected" : ""}>仅通知</option>
             </select>
           </td>
           <td><textarea data-measure-field="content">${measure.content}</textarea></td>
@@ -3576,14 +3700,17 @@
         <div class="verify-card">
           <b>措施 ${index + 1}：${measure.type}</b>
           <span>${measure.content}</span>
-          <div class="field">
+          ${measure.type === "仅通知" ? `
+          <div class="notification-panel">
+            <div><b>仅需确认已知</b><br><span>此项不要求上传改善照片，也不进入来源部门效果复核。</span></div>
+          </div>` : `<div class="field">
             <label>责任人改善照片</label>
             <label class="upload-zone" style="min-height: 118px;">
               <input type="file" multiple accept="image/*" hidden>
               <strong>上传改善照片</strong>
               <span>${measure.people.join("、") || "未选择责任人"}</span>
             </label>
-          </div>
+          </div>`}
           <div class="verify-grid">
             <div class="field"><label>完成日期</label><input type="date" value="${measure.status === "已执行" ? "2026-07-10" : ""}"></div>
             <div class="field"><label>执行状态</label><button class="btn mark-done" type="button" data-index="${index}">${measure.status === "已执行" ? "已执行" : "标记已执行"}</button></div>
@@ -3723,6 +3850,7 @@
     }
 
     function newReport() {
+      currentDraftId = null;
       updateNextReportNumber();
       fields.problemDesc.value = "";
       fields.rootCause.value = "";
@@ -3848,6 +3976,7 @@
 
       const container = document.getElementById("taskList");
       container.innerHTML = visibleTasks.map(({ report, action, state }) => {
+        const notificationOnly = action.action_type === "notification_only";
         const problemImages = report.problem_attachments?.length
           ? report.problem_attachments
           : [{ view_url: "assets/issue-photo-sewing-clean.png", original_file_name: "问题照片" }];
@@ -3874,17 +4003,27 @@
                 <div class="photo-row">${attachmentImages(problemImages, "暂无问题照片")}</div>
                 <p class="readonly-note">问题描述：<b>${escapeHtml(report.problem_description || "未填写")}</b></p>
               </div>
-              <label class="upload-zone" style="min-height: 220px;">
+              ${state.key === "completed" ? `
+              <div class="compare-photo">
+                <b>${notificationOnly ? "通知确认" : "已提交的改善证据"}</b>
+                ${notificationOnly ? '<div class="notification-panel"><b>已确认收到通知</b></div>' : `<div class="photo-row">${attachmentImages(action.attachments || [], "暂无改善照片")}</div>`}
+                <p class="readonly-note">实际完成人：<b>${escapeHtml(action.executed_by_name || "未记录")}</b><br>完成日期：<b>${escapeHtml(formatDate(action.completed_at) || "未记录")}</b></p>
+              </div>` : notificationOnly ? `
+              <div class="notification-panel">
+                <div><b>仅通知事项</b><br><span>确认已知即可，无需上传照片。</span></div>
+              </div>` : `<label class="upload-zone" style="min-height: 220px;">
                 <input type="file" accept="image/*" multiple hidden data-task-upload="${escapeHtml(action.id)}" data-report-no="${escapeHtml(report.report_no)}" data-action-sequence="${escapeHtml(action.sequence_no)}">
                 <strong>上传改善照片</strong>
                 <span>每条措施至少 1 张，未上传不能关闭</span>
                 <div class="thumbs" data-task-thumbs="${escapeHtml(action.id)}"></div>
                 <div class="upload-status" data-task-status="${escapeHtml(action.id)}"></div>
-              </label>
+              </label>`}
             </div>
             <div class="task-actions">
-              <div class="field"><label>执行说明</label><input data-execution-note="${escapeHtml(action.id)}" placeholder="填写本次改善执行说明"></div>
-              <button class="btn primary complete-action-btn" type="button" data-action-id="${escapeHtml(action.id)}" data-actor-name="${escapeHtml(personName)}">标记已执行</button>
+              ${state.key === "completed"
+                ? `<div class="readonly-note">执行说明：<b>${escapeHtml(action.execution_note || (notificationOnly ? "已确认收到通知" : "未填写"))}</b></div>`
+                : `<div class="field"><label>${notificationOnly ? "确认说明（可选）" : "执行说明"}</label><input data-execution-note="${escapeHtml(action.id)}" placeholder="${notificationOnly ? "可补充已知悉或后续注意事项" : "填写本次改善执行说明"}"></div>
+                  <button class="btn primary complete-action-btn" type="button" data-action-id="${escapeHtml(action.id)}" data-actor-name="${escapeHtml(personName)}" data-notification-only="${notificationOnly}">${notificationOnly ? "确认已知" : "标记已执行"}</button>`}
             </div>
           </article>`;
       }).join("") || `<div class="readonly-note">${escapeHtml(personName || "当前人员")}目前没有${taskOverdueOnly ? "逾期" : "已分配"}的改善任务。</div>`;
@@ -3959,11 +4098,12 @@
         executionNote: document.querySelector(`[data-execution-note="${CSS.escape(actionId)}"]`)?.value || "",
         attachments: taskAttachments(actionId)
       };
-      if (!payload.executionNote.trim()) {
+      const notificationOnly = button.dataset.notificationOnly === "true";
+      if (!notificationOnly && !payload.executionNote.trim()) {
         setUploadStatus(status, "请先填写执行说明。", "error");
         return;
       }
-      if (!payload.attachments.length) {
+      if (!notificationOnly && !payload.attachments.length) {
         setUploadStatus(status, "请至少上传一张改善照片。", "error");
         return;
       }
@@ -3981,7 +4121,7 @@
         await Promise.all([loadTaskReports(), loadReviewReports(), loadHistoryReports(), loadProjectorReports()]);
       } catch (error) {
         button.disabled = false;
-        button.textContent = "标记已执行";
+        button.textContent = notificationOnly ? "确认已知" : "标记已执行";
         setUploadStatus(status, error.message || "保存执行结果失败", "error");
       }
     }
@@ -4009,6 +4149,7 @@
     function actionTypeLabel(value) {
       if (value === "permanent_correction") return "永久改善";
       if (value === "preventive_action") return "预防措施";
+      if (value === "notification_only") return "仅通知";
       return "临时改善";
     }
 
@@ -4071,12 +4212,7 @@
 
     function renderCompleteReport(report) {
       const review = latestReview(report);
-      const afterImages = actionAfterAttachments(report);
       const reviewImages = reviewEvidenceAttachments(report);
-      const executionDetails = (report.actions || []).map((action) => {
-        if (!action.completed_at && !action.execution_note) return "";
-        return `第${action.sequence_no}项：完成人 ${action.executed_by_name || "未记录"}；完成日期 ${formatDate(action.completed_at) || "未记录"}；执行说明 ${action.execution_note || "未填写"}`;
-      }).filter(Boolean).join("；");
       const actionRows = (report.actions || []).map((action) => `
         <tr>
           <td>${escapeHtml(action.sequence_no)}</td>
@@ -4087,9 +4223,33 @@
           <td>${escapeHtml(action.status === "executed" ? "已执行" : reportStatusNames[action.status] || action.status)}</td>
         </tr>
       `).join("");
-      const verifyText = report.status === "archived" || report.status === "pending_archive"
-        ? `${executionDetails || "改善照片已上传"}；复核人：${review?.reviewer_name || report.default_reviewer_name || ""}；复核意见：${review?.review_comment || "待填写"}`
-        : "待责任人执行后填写改善照片、完成日期和复核意见。";
+      const verificationRows = (report.actions || []).map((action) => {
+        const notificationOnly = action.action_type === "notification_only";
+        const completed = Boolean(action.completed_at || action.status === "executed");
+        return `
+          <div class="verification-action-row">
+            <div class="verification-action-meta">
+              <b>第 ${escapeHtml(action.sequence_no)} 项</b>
+              <span>${escapeHtml(actionTypeLabel(action.action_type))}</span>
+              <span>${escapeHtml(action.action_content || "")}</span>
+              <span>完成人：${escapeHtml(action.executed_by_name || "待执行")}</span>
+              <span>完成日期：${escapeHtml(formatDate(action.completed_at) || "待填写")}</span>
+            </div>
+            <div class="readonly-note">执行说明：<b>${escapeHtml(action.execution_note || (notificationOnly && completed ? "已确认收到通知" : "待填写"))}</b></div>
+            ${notificationOnly
+              ? '<div class="readonly-note">仅通知事项，无需上传改善照片及来源部门复核。</div>'
+              : `<div class="photo-row">${attachmentImages(action.attachments || [], "待上传本项改善照片")}<span class="pill green">第 ${escapeHtml(action.sequence_no)} 项改善后</span></div>`}
+          </div>`;
+      }).join("");
+      const onlyNotifications = (report.actions || []).length > 0 && (report.actions || []).every((action) => action.action_type === "notification_only");
+      const reviewSummary = onlyNotifications ? `
+        <div class="verification-action-row"><b>来源部门复核</b><div class="readonly-note">本报告仅包含通知事项，按规则免复核。</div></div>
+      ` : `
+        <div class="verification-action-row">
+          <b>来源部门复核</b>
+          <div class="readonly-note">复核人：<b>${escapeHtml(review?.reviewer_name || report.default_reviewer_name || "待复核")}</b>；复核意见：<b>${escapeHtml(review?.review_comment || "待填写")}</b></div>
+          ${reviewImages.length ? `<div class="photo-row">${attachmentImages(reviewImages)}<span class="pill blue">复核证据</span></div>` : ""}
+        </div>`;
       return `
         <div class="report-paper archive-report-paper">
           <h2>改善措施报告</h2>
@@ -4105,7 +4265,7 @@
             <tr class="section-row"><td colspan="6">三、改善与预防措施</td></tr>
             <tr><td colspan="6"><table class="measure-table"><thead><tr><th>序号</th><th>措施类型</th><th>措施内容</th><th>责任人</th><th>计划完成日期</th><th>状态</th></tr></thead><tbody>${actionRows}</tbody></table></td></tr>
             <tr class="section-row"><td colspan="6">四、效果验证与确认</td></tr>
-            <tr><td colspan="6"><span>${escapeHtml(verifyText)}</span><div class="photo-row">${attachmentImages(afterImages, "待上传改善照片")}<span class="pill green">改善后</span></div>${reviewImages.length ? `<div class="photo-row">${attachmentImages(reviewImages)}<span class="pill blue">复核证据</span></div>` : ""}</td></tr>
+            <tr><td colspan="6">${verificationRows || "待责任人执行后填写。"}${reviewSummary}</td></tr>
             <tr><th>报告人</th><td>${escapeHtml(report.reporter_name || "")}</td><th>复核人</th><td>${escapeHtml(review?.reviewer_name || report.default_reviewer_name || "")}</td><th>审批人</th><td>${escapeHtml(report.archive?.approved_by_name || report.intended_approver_name || "")}</td></tr>
             <tr class="section-row"><td colspan="6">五、备注</td></tr>
             <tr><td colspan="6" style="height: 48px;">KPI按报告责任人归集；逾期、未执行按措施任务追加扣分。归档后报告锁定，可导出图片或PDF打印。</td></tr>
@@ -4214,9 +4374,26 @@
           !sourceFilter || report.source_department_name === sourceFilter
         );
         container.innerHTML = reports.map((report) => {
-          const afterImages = actionAfterAttachments(report);
           const reviewImages = reviewEvidenceAttachments(report);
           const supplementRequest = latestArchiveSupplementRequest(report);
+          const reviewableActions = (report.actions || []).filter((action) => action.action_type !== "notification_only");
+          const notificationActions = (report.actions || []).filter((action) => action.action_type === "notification_only");
+          const actionEvidence = reviewableActions.map((action) => `
+            <div class="verification-action-row">
+              <div class="verification-action-meta">
+                <b>第 ${escapeHtml(action.sequence_no)} 项</b>
+                <span>${escapeHtml(actionTypeLabel(action.action_type))}</span>
+                <span>${escapeHtml(action.action_content || "")}</span>
+                <span>完成人：${escapeHtml(action.executed_by_name || "未记录")}</span>
+                <span>完成日期：${escapeHtml(formatDate(action.completed_at) || "未记录")}</span>
+              </div>
+              <div class="compare-photo">
+                <b>本项改善后照片</b>
+                <div class="photo-row">${attachmentImages(action.attachments || [], "本项暂无改善照片")}</div>
+                <p class="readonly-note">执行说明：<b>${escapeHtml(action.execution_note || "未填写")}</b></p>
+              </div>
+            </div>
+          `).join("");
           return `
             <article class="task-card" data-review-report="${escapeHtml(report.report_no)}">
               <div class="task-card-head">
@@ -4231,18 +4408,13 @@
                 </div>
                 ${reportStatusPill(report.status)}
               </div>
-              <div class="compare-grid">
-                <div class="compare-photo">
-                  <b>改善前</b>
-                  ${attachmentImages(report.attachments?.filter((item) => item.attachment_type === "problem_before") || [], "暂无问题照片")}
-                  <p class="readonly-note">问题描述：<b>${escapeHtml(report.problem_description || "未填写")}</b></p>
-                </div>
-                <div class="compare-photo">
-                  <b>责任人改善后</b>
-                  ${attachmentImages(afterImages, "责任人还未上传改善照片")}
-                  <p class="readonly-note">执行说明：<b>${escapeHtml((report.actions || []).map((action) => action.execution_note).filter(Boolean).join("；") || "未填写")}</b></p>
-                </div>
+              <div class="compare-photo">
+                <b>改善前</b>
+                <div class="photo-row">${attachmentImages(report.attachments?.filter((item) => item.attachment_type === "problem_before") || [], "暂无问题照片")}</div>
+                <p class="readonly-note">问题描述：<b>${escapeHtml(report.problem_description || "未填写")}</b></p>
               </div>
+              <div class="review-action-evidence">${actionEvidence || '<div class="readonly-note">本报告只有“仅通知”事项，无需效果复核。</div>'}</div>
+              ${notificationActions.length ? `<p class="readonly-note">仅通知已确认：<b>${notificationActions.map((action) => `第${action.sequence_no}项 ${action.executed_by_name || "待确认"}`).join("；")}</b>（不进入效果复核）</p>` : ""}
               <div class="field">
                 <label>复核意见</label>
                 <textarea data-review-comment="${escapeHtml(report.report_no)}" placeholder="填写来源部门复核意见"></textarea>
@@ -4401,7 +4573,7 @@
                     <div><span>改善照片</span><span class="pill green">${actionAfterAttachments(report).length ? "已上传" : "待补充"}</span></div>
                     <div><span>复核证据</span><span class="pill ${reviewEvidenceAttachments(report).length ? "green" : "blue"}">${reviewEvidenceAttachments(report).length ? `已上传 ${reviewEvidenceAttachments(report).length} 张` : "可选"}</span></div>
                     <div><span>责任人执行确认</span><span class="pill green">已确认</span></div>
-                    <div><span>来源部门复核</span><span class="pill green">${latestReview(report) ? "已通过" : "待复核"}</span></div>
+                    <div><span>来源部门复核</span><span class="pill green">${(report.actions || []).every((action) => action.action_type === "notification_only") ? "仅通知免复核" : latestReview(report) ? "已通过" : "待复核"}</span></div>
                     <div><span>KPI责任</span><span class="pill green">${report.kpi_enabled ? "已计算" : "不计入"}</span></div>
                   </div>
                 </div>
@@ -4848,6 +5020,7 @@
     function actionTypeValue(label) {
       if (label === "永久改善") return "permanent_correction";
       if (label === "预防措施") return "preventive_action";
+      if (label === "仅通知") return "notification_only";
       return "temporary_correction";
     }
 
@@ -4881,11 +5054,10 @@
       });
     }
 
-    async function saveReport() {
-      const button = document.getElementById("saveReportBtn");
-      const status = document.getElementById("saveReportStatus");
-      const payload = {
-        reportNo: fields.reportNo.value,
+    function buildReportPayload({ includeReportNumber = true } = {}) {
+      return {
+        ...(includeReportNumber ? { reportNo: fields.reportNo.value } : {}),
+        ...(currentDraftId ? { draftId: currentDraftId } : {}),
         factoryId: fields.factoryId.value,
         styleCatalogId: currentStyleCatalogId(),
         foundDate: fields.foundDate.value,
@@ -4902,6 +5074,8 @@
         approver: fields.approver.value,
         problemDescription: fields.problemDesc.value,
         rootCause: fields.rootCause.value,
+        businessComment: document.getElementById("businessComment").value,
+        qcComment: document.getElementById("qcComment").value,
         actions: measures.map((measure) => ({
           type: actionTypeValue(measure.type),
           content: measure.content,
@@ -4911,6 +5085,171 @@
         })),
         attachments: problemAttachments()
       };
+    }
+
+    async function saveDraft() {
+      const button = document.getElementById("saveDraftBtn");
+      const payload = buildReportPayload({ includeReportNumber: false });
+      if (!payload.reporter) {
+        showToast("草稿保存失败", "请先选择报告人", "error");
+        return;
+      }
+      button.disabled = true;
+      button.textContent = "正在保存";
+      try {
+        const response = await fetch("/api/qc/drafts", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ id: currentDraftId, reporter: payload.reporter, draftData: payload })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "保存草稿失败");
+        currentDraftId = result.draft.id;
+        showToast("草稿已保存", `${payload.reporter} · 不会生成任务或占用正式编号`);
+      } catch (error) {
+        showToast("草稿保存失败", error.message || "请稍后重试", "error");
+      } finally {
+        button.disabled = false;
+        button.textContent = "保存至草稿";
+      }
+    }
+
+    function openRecordsDialog(title, subtitle, bodyHtml) {
+      const dialog = document.getElementById("recordsDialog");
+      document.getElementById("recordsDialogTitle").textContent = title;
+      document.getElementById("recordsDialogSubtitle").textContent = subtitle;
+      document.getElementById("recordsDialogBody").innerHTML = bodyHtml;
+      dialog.showModal();
+    }
+
+    async function openDraftBox() {
+      const reporter = fields.reporter.value;
+      openRecordsDialog("草稿箱", `${reporter} 的未提交草稿`, '<div class="readonly-note">正在读取草稿...</div>');
+      try {
+        const response = await fetch(`/api/qc/drafts?reporter=${encodeURIComponent(reporter)}`);
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "读取草稿失败");
+        const body = document.getElementById("recordsDialogBody");
+        body.innerHTML = `<div class="record-list">${(result.drafts || []).map((draft) => {
+          const data = draft.draft_data || {};
+          return `
+            <div class="record-row">
+              <div><b>${escapeHtml(data.styleNo || "未选择款号")} · ${escapeHtml(data.color || "未选择颜色")}</b><span>${escapeHtml((data.problemDescription || "尚未填写问题描述").slice(0, 70))} · 更新于 ${escapeHtml(formatDate(draft.updated_at))}</span></div>
+              <div class="record-row-actions">
+                <button class="btn load-draft-btn" data-draft-id="${escapeHtml(draft.id)}" type="button">继续填写</button>
+                <button class="btn danger delete-draft-btn" data-draft-id="${escapeHtml(draft.id)}" type="button">删除</button>
+              </div>
+            </div>`;
+        }).join("")}</div>` || "";
+        if (!(result.drafts || []).length) body.innerHTML = '<div class="readonly-note">当前报告人暂无草稿。</div>';
+        body.querySelectorAll(".load-draft-btn").forEach((button) => {
+          button.addEventListener("click", () => {
+            const draft = result.drafts.find((item) => item.id === button.dataset.draftId);
+            if (draft) applyDraft(draft);
+          });
+        });
+        body.querySelectorAll(".delete-draft-btn").forEach((button) => {
+          button.addEventListener("click", () => deleteDraft(button.dataset.draftId));
+        });
+      } catch (error) {
+        document.getElementById("recordsDialogBody").innerHTML = `<div class="readonly-note">${escapeHtml(error.message || "读取草稿失败")}</div>`;
+      }
+    }
+
+    async function openSubmissionHistory() {
+      const reporter = fields.reporter.value;
+      openRecordsDialog("历史提交记录", `${reporter} 已正式提交的改善报告`, '<div class="readonly-note">正在读取提交记录...</div>');
+      try {
+        const response = await fetch(`/api/qc/reports?reporter=${encodeURIComponent(reporter)}&limit=5000`);
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "读取提交记录失败");
+        const reports = result.reports || [];
+        const body = document.getElementById("recordsDialogBody");
+        body.innerHTML = reports.length ? `<div class="record-list">${reports.map((report) => `
+          <div class="record-row">
+            <div><b>${escapeHtml(report.report_no)} · ${escapeHtml(report.style_no || "")} · ${escapeHtml(report.color || "")}</b><span>${escapeHtml(formatDate(report.found_date))} · ${escapeHtml(report.problem_description || "")}</span></div>
+            <div class="record-row-actions">${reportStatusPill(report.status)}<button class="btn view-submission-btn" data-report-no="${escapeHtml(report.report_no)}" type="button">查看</button></div>
+          </div>`).join("")}</div>` : '<div class="readonly-note">当前报告人暂无正式提交记录。</div>';
+        body.querySelectorAll(".view-submission-btn").forEach((button) => {
+          button.addEventListener("click", async () => {
+            const response = await fetch(`/api/qc/reports/${encodeURIComponent(button.dataset.reportNo)}`);
+            const result = await response.json();
+            if (!response.ok) return showToast("读取报告失败", result.error || "请稍后重试", "error");
+            document.getElementById("recordsDialogBody").innerHTML = `${renderCompleteReport(result.report)}<div class="actions"><button class="btn history-dialog-back" type="button">返回记录</button></div>`;
+            document.querySelector(".history-dialog-back")?.addEventListener("click", openSubmissionHistory);
+          });
+        });
+      } catch (error) {
+        document.getElementById("recordsDialogBody").innerHTML = `<div class="readonly-note">${escapeHtml(error.message || "读取提交记录失败")}</div>`;
+      }
+    }
+
+    function applyDraft(draft) {
+      const data = draft.draft_data || {};
+      currentDraftId = draft.id;
+      fields.reporter.value = data.reporter || draft.reporter_name || fields.reporter.value;
+      fields.foundDate.value = data.foundDate || fields.foundDate.value;
+      fields.factoryId.value = data.factoryId || fields.factoryId.value;
+      const selectedStyle = styleCatalog.find((item) => item.id === data.styleCatalogId);
+      if (selectedStyle) {
+        fields.styleNo.value = `${selectedStyle.brand}::${selectedStyle.style_no}`;
+        renderStyleColors(selectedStyle.color);
+      }
+      const severityLabels = {
+        minor: "轻微，提醒改善",
+        general: "一般，需要改善",
+        serious: "严重，需要改善",
+        unacceptable: "不可接受，需要返修",
+        customer_complaint: "客户投诉"
+      };
+      if ([...fields.severity.options].some((option) => option.value === severityLabels[data.severity])) fields.severity.value = severityLabels[data.severity];
+      if ([...fields.sourceDept.options].some((option) => option.value === data.sourceDepartment)) fields.sourceDept.value = data.sourceDepartment;
+      fields.responsibleDepartments.querySelectorAll("input").forEach((input) => {
+        input.checked = (data.responsibleDepartments || []).includes(input.value);
+      });
+      renderDepartmentPeoplePreview();
+      fields.departmentPeoplePreview.querySelectorAll("input").forEach((input) => {
+        input.checked = (data.responsiblePeople || []).includes(input.value);
+      });
+      fields.kpiFlag.value = data.kpiEnabled === false ? "否，仅作培训记录" : "是，归档后计入";
+      fields.problemDesc.value = data.problemDescription || "";
+      fields.rootCause.value = data.rootCause || "";
+      document.getElementById("businessComment").value = data.businessComment || "";
+      document.getElementById("qcComment").value = data.qcComment || "";
+      measures = (data.actions || []).map((action) => ({
+        type: actionTypeLabel(action.type),
+        content: action.content || "",
+        people: action.people || [],
+        due: action.dueDate || "",
+        status: "待执行",
+        note: action.reminderNote || ""
+      }));
+      if (!measures.length) addMeasure();
+      else renderMeasures();
+      const thumbs = document.getElementById("problemThumbs");
+      thumbs.innerHTML = (data.attachments || []).map((attachment) => `
+        <img src="${escapeHtml(attachment.viewUrl || "")}" alt="${escapeHtml(attachment.originalFileName || "问题照片")}" data-s3-key="${escapeHtml(attachment.s3Key || "")}" data-file-name="${escapeHtml(attachment.originalFileName || "")}" data-content-type="${escapeHtml(attachment.contentType || "")}" data-file-size="${escapeHtml(attachment.fileSizeBytes || 0)}" data-lightbox-src="${escapeHtml(attachment.viewUrl || "")}">
+      `).join("");
+      document.getElementById("recordsDialog").close();
+      updateNextReportNumber();
+      updateReportPreview();
+      showToast("草稿已载入", "继续填写后可再次保存草稿或正式提交");
+    }
+
+    async function deleteDraft(id) {
+      const reporter = fields.reporter.value;
+      const response = await fetch(`/api/qc/drafts/${encodeURIComponent(id)}?reporter=${encodeURIComponent(reporter)}`, { method: "DELETE" });
+      const result = await response.json();
+      if (!response.ok) return showToast("删除草稿失败", result.error || "请稍后重试", "error");
+      if (currentDraftId === id) currentDraftId = null;
+      showToast("草稿已删除");
+      openDraftBox();
+    }
+
+    async function saveReport() {
+      const button = document.getElementById("saveReportBtn");
+      const status = document.getElementById("saveReportStatus");
+      const payload = buildReportPayload();
       if (!payload.styleCatalogId) {
         setUploadStatus(status, "请先从 08 款式资料库选择有效的款号和颜色。", "error");
         return;
@@ -4932,6 +5271,7 @@
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || "保存报告失败");
         fields.reportNo.value = result.reportNo;
+        currentDraftId = null;
         button.textContent = "已保存";
         setUploadStatus(status, `报告 ${result.reportNo} 已保存，措施任务已分配。`, "success");
         showToast("报告已保存", `${result.reportNo} · 措施任务已分配`);
@@ -5042,6 +5382,15 @@
       if (event.key === "Escape") closeImageLightbox();
     });
     document.getElementById("saveReportBtn").addEventListener("click", saveReport);
+    document.getElementById("saveDraftBtn").addEventListener("click", saveDraft);
+    document.getElementById("draftBoxBtn").addEventListener("click", openDraftBox);
+    document.getElementById("submissionHistoryBtn").addEventListener("click", openSubmissionHistory);
+    document.getElementById("closeRecordsDialog").addEventListener("click", () => {
+      document.getElementById("recordsDialog").close();
+    });
+    document.getElementById("recordsDialog").addEventListener("click", (event) => {
+      if (event.target === event.currentTarget) event.currentTarget.close();
+    });
 
     refreshDeptOptions();
     loadPeopleLibrary();
