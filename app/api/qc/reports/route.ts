@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { qcApiErrorMessage, readQcReportList } from "@/lib/qc/reports";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
@@ -158,6 +159,28 @@ function validatePayload(body: unknown): CreateReportPayload {
 
 function indexByName(rows: NamedId[]) {
   return new Map(rows.map((row) => [row.name, row.id]));
+}
+
+export async function GET(request: Request) {
+  try {
+    const searchParams = new URL(request.url).searchParams;
+    const limitValue = Number(searchParams.get("limit") || "50");
+    const reports = await readQcReportList({
+      status: searchParams.get("status") || undefined,
+      styleNo: searchParams.get("styleNo") || undefined,
+      department: searchParams.get("department") || undefined,
+      limit: limitValue,
+    });
+    return NextResponse.json(
+      { reports, count: reports.length },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { error: qcApiErrorMessage(error, "读取报告列表失败") },
+      { status: 400 },
+    );
+  }
 }
 
 export async function POST(request: Request) {
@@ -343,7 +366,7 @@ export async function POST(request: Request) {
         // Preserve the original error; the audit check will surface any orphaned draft.
       }
     }
-    const message = error instanceof Error ? error.message : "保存报告失败";
+    const message = qcApiErrorMessage(error, "保存报告失败");
     const status = message.includes("duplicate key") ? 409 : 400;
     return NextResponse.json({ error: message }, { status });
   }
