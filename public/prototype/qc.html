@@ -503,7 +503,7 @@
 
     .issue-card {
       display: grid;
-      grid-template-columns: 104px minmax(0, 1fr);
+      grid-template-columns: 216px minmax(0, 1fr);
       gap: 14px;
       padding: 12px;
       border: 1px solid var(--line);
@@ -511,8 +511,15 @@
       background: #fff;
     }
 
-    .issue-card img {
-      width: 104px;
+    .issue-media {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      align-content: start;
+    }
+
+    .issue-media img {
+      width: 100%;
       height: 124px;
       object-fit: cover;
       border-radius: 6px;
@@ -739,9 +746,53 @@
       background: #eef2f5;
     }
 
+    .thumbs img,
+    .photo-row img,
+    .issue-media img,
+    .compare-photo img {
+      cursor: zoom-in;
+    }
+
     .thumbs img.upload-failed {
       border-color: var(--red);
       opacity: .55;
+    }
+
+    .image-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: none;
+      place-items: center;
+      padding: 28px;
+      background: rgba(10, 18, 28, .88);
+    }
+
+    .image-lightbox.open {
+      display: grid;
+    }
+
+    .image-lightbox img {
+      max-width: min(94vw, 1600px);
+      max-height: 90vh;
+      object-fit: contain;
+      background: #fff;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .38);
+    }
+
+    .image-lightbox button {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(255, 255, 255, .45);
+      border-radius: 50%;
+      background: rgba(0, 0, 0, .38);
+      color: #fff;
+      font-size: 28px;
+      line-height: 1;
+      cursor: pointer;
     }
 
     .upload-status {
@@ -1529,10 +1580,19 @@
 
     .projector .issue-card img {
       width: 100%;
-      height: 100%;
-      min-height: 330px;
+      height: min(40vh, 430px);
+      min-height: 220px;
       object-fit: contain;
       background: #f1f5f8;
+    }
+
+    .projector .issue-media {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-content: stretch;
+    }
+
+    .projector .issue-media:has(img:only-child) {
+      grid-template-columns: 1fr;
     }
 
     .projector .issue-title h3 {
@@ -1611,6 +1671,10 @@
       }
       .issue-card img {
         width: 88px;
+        height: 108px;
+      }
+      .issue-card .issue-media img {
+        width: 100%;
         height: 108px;
       }
       .issue-title {
@@ -1907,7 +1971,7 @@
                         <span>支持多张，作为改善前留底</span>
                       </label>
                       <div class="thumbs" id="problemThumbs">
-                        <img src="assets/issue-photo-sewing-clean.png" alt="问题照片示例">
+                        <img src="assets/issue-photo-sewing-clean.png" alt="问题照片示例" data-demo-image data-lightbox-src="assets/issue-photo-sewing-clean.png">
                         <span class="thumb-placeholder"></span>
                         <span class="thumb-placeholder"></span>
                       </div>
@@ -2520,6 +2584,10 @@
   </div>
   <button class="btn projector-exit" id="exitProjectorBtn">退出投屏</button>
   <div class="print-root" id="printRoot" aria-hidden="true"></div>
+  <div class="image-lightbox" id="imageLightbox" role="dialog" aria-modal="true" aria-label="照片放大预览">
+    <button type="button" id="imageLightboxClose" aria-label="关闭大图">×</button>
+    <img id="imageLightboxImage" alt="照片放大预览">
+  </div>
 
   <script>
     const navButtons = document.querySelectorAll(".nav button");
@@ -3707,7 +3775,9 @@
 
       const container = document.getElementById("taskList");
       container.innerHTML = visibleTasks.map(({ report, action, state }) => {
-        const image = report.problem_attachments?.[0]?.view_url || "assets/issue-photo-sewing-clean.png";
+        const problemImages = report.problem_attachments?.length
+          ? report.problem_attachments
+          : [{ view_url: "assets/issue-photo-sewing-clean.png", original_file_name: "问题照片" }];
         const assignees = (action.assignees || []).map((item) => item.person_name).join("、");
         return `
           <article class="task-card" data-report-no="${escapeHtml(report.report_no)}" data-action-id="${escapeHtml(action.id)}">
@@ -3728,7 +3798,7 @@
             <div class="compare-grid">
               <div class="compare-photo">
                 <b>问题照片</b>
-                <img src="${escapeHtml(image)}" alt="${escapeHtml(report.problem_description || "问题照片")}">
+                <div class="photo-row">${attachmentImages(problemImages, "暂无问题照片")}</div>
                 <p class="readonly-note">问题描述：<b>${escapeHtml(report.problem_description || "未填写")}</b></p>
               </div>
               <label class="upload-zone" style="min-height: 220px;">
@@ -3765,38 +3835,35 @@
           const reportNo = event.target.dataset.reportNo;
           const thumbs = document.querySelector(`[data-task-thumbs="${CSS.escape(actionId)}"]`);
           const status = document.querySelector(`[data-task-status="${CSS.escape(actionId)}"]`);
-          const files = [...event.target.files].slice(0, 6);
-          thumbs.innerHTML = "";
+          const files = [...event.target.files];
+          if (!files.length) return;
           const images = files.map((file) => {
             const img = document.createElement("img");
             img.src = URL.createObjectURL(file);
             img.alt = file.name;
+            img.dataset.lightboxSrc = img.src;
             thumbs.appendChild(img);
             return img;
           });
-          if (!files.length) {
-            setUploadStatus(status, "");
-            return;
-          }
           setUploadStatus(status, `正在上传 ${files.length} 张改善照片...`);
-          const settled = await Promise.allSettled(files.map((file) =>
-            uploadFileToS3(file, "action-after", sequenceNo, { reportNo })
-          ));
           let successCount = 0;
-          settled.forEach((item, index) => {
-            if (item.status === "fulfilled") {
-              images[index].dataset.s3Key = item.value.key;
+          for (let index = 0; index < files.length; index += 1) {
+            try {
+              const result = await uploadFileToS3(files[index], "action-after", sequenceNo, { reportNo });
+              images[index].dataset.s3Key = result.key;
               images[index].dataset.fileName = files[index].name;
               images[index].dataset.contentType = files[index].type || "image/jpeg";
               images[index].dataset.fileSize = String(files[index].size);
               successCount += 1;
-            } else {
+            } catch {
               images[index].classList.add("upload-failed");
             }
-          });
+          }
+          event.target.value = "";
+          const totalCount = thumbs.querySelectorAll("img[data-s3-key]").length;
           setUploadStatus(
             status,
-            successCount === files.length ? `已上传改善照片：${successCount} 张` : `已上传 ${successCount}/${files.length} 张，失败项请重传。`,
+            successCount === files.length ? `已上传改善照片：共 ${totalCount} 张` : `本次已上传 ${successCount}/${files.length} 张，当前共 ${totalCount} 张，失败项请重传。`,
             successCount ? "success" : "error"
           );
         });
@@ -3902,7 +3969,7 @@
       const images = (attachments || []).filter((item) => item.view_url);
       if (!images.length) return `<div class="readonly-note">${escapeHtml(fallbackText)}</div>`;
       return images.map((item) =>
-        `<img src="${escapeHtml(item.view_url)}" alt="${escapeHtml(item.original_file_name || "照片")}">`
+        `<img src="${escapeHtml(item.view_url)}" alt="${escapeHtml(item.original_file_name || "照片")}" data-lightbox-src="${escapeHtml(item.view_url)}">`
       ).join("");
     }
 
@@ -4146,40 +4213,37 @@
           const year = event.target.dataset.reportYear;
           const thumbs = document.querySelector(`[data-review-thumbs="${CSS.escape(reportNo)}"]`);
           const status = document.querySelector(`[data-review-upload-status="${CSS.escape(reportNo)}"]`);
-          const files = [...event.target.files].slice(0, 6);
-          thumbs.innerHTML = "";
+          const files = [...event.target.files];
+          if (!files.length) return;
           const images = files.map((file) => {
             const image = document.createElement("img");
             image.src = URL.createObjectURL(file);
             image.alt = file.name;
+            image.dataset.lightboxSrc = image.src;
             thumbs.appendChild(image);
             return image;
           });
-          if (!files.length) {
-            setUploadStatus(status, "");
-            return;
-          }
           setUploadStatus(status, `正在上传 ${files.length} 张复核照片...`);
-          const settled = await Promise.allSettled(files.map((file) =>
-            uploadFileToS3(file, "review-evidence", "", { reportNo, year })
-          ));
           let successCount = 0;
-          settled.forEach((item, index) => {
-            if (item.status === "fulfilled") {
-              images[index].dataset.s3Key = item.value.key;
+          for (let index = 0; index < files.length; index += 1) {
+            try {
+              const result = await uploadFileToS3(files[index], "review-evidence", "", { reportNo, year });
+              images[index].dataset.s3Key = result.key;
               images[index].dataset.fileName = files[index].name;
               images[index].dataset.contentType = files[index].type || "image/jpeg";
               images[index].dataset.fileSize = String(files[index].size);
               successCount += 1;
-            } else {
+            } catch {
               images[index].classList.add("upload-failed");
             }
-          });
+          }
+          event.target.value = "";
+          const totalCount = thumbs.querySelectorAll("img[data-s3-key]").length;
           setUploadStatus(
             status,
             successCount === files.length
-              ? `已上传复核照片：${successCount} 张`
-              : `已上传 ${successCount}/${files.length} 张，失败项请重传。`,
+              ? `已上传复核照片：共 ${totalCount} 张`
+              : `本次已上传 ${successCount}/${files.length} 张，当前共 ${totalCount} 张，失败项请重传。`,
             successCount ? "success" : "error"
           );
         });
@@ -4475,12 +4539,14 @@
               </div>
               <div class="screen-list">
                 ${items.map((report) => {
-                  const image = report.problem_attachments?.[0]?.view_url || "assets/issue-photo-sewing-clean.png";
+                  const problemImages = report.problem_attachments?.length
+                    ? report.problem_attachments
+                    : [{ view_url: "assets/issue-photo-sewing-clean.png", original_file_name: "问题照片" }];
                   const people = (report.responsible_people || []).map((item) => item.person_name).join("、");
                   const dueDates = (report.actions || []).map((action) => action.due_date).filter(Boolean).sort();
                   return `
                     <div class="issue-card" data-style="${escapeHtml(report.style_no || "")}" data-factory="${escapeHtml(report.factory_id)}">
-                      <img src="${escapeHtml(image)}" alt="${escapeHtml(report.problem_description)}">
+                      <div class="issue-media">${attachmentImages(problemImages, "暂无问题照片")}</div>
                       <div>
                         <div class="issue-title"><h3>${escapeHtml(report.problem_description)}</h3><span class="pill red">${severityName(report.severity)}</span></div>
                         <div class="issue-meta">
@@ -4713,7 +4779,7 @@
     }
 
     function currentProblemImages() {
-      const uploaded = [...document.querySelectorAll("#problemThumbs img")].map((image) => ({
+      const uploaded = [...document.querySelectorAll("#problemThumbs img:not(.upload-failed)")].map((image) => ({
         src: image.src,
         alt: image.alt || "问题照片"
       }));
@@ -4726,7 +4792,7 @@
         if (!row) return;
         row.innerHTML = images.length
           ? images.map((image) =>
-              `<img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt)}" data-problem-image>`
+              `<img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt)}" data-problem-image data-lightbox-src="${escapeHtml(image.src)}">`
             ).join("") + '<span class="pill amber">改善前</span>'
           : '<span class="readonly-note">待上传问题照片</span>';
       });
@@ -4803,52 +4869,75 @@
     document.getElementById("problemPhotoInput").addEventListener("change", async (event) => {
       const container = document.getElementById("problemThumbs");
       const status = document.getElementById("problemUploadStatus");
-      container.innerHTML = "";
-      const files = [...event.target.files].slice(0, 6);
+      const files = [...event.target.files];
+      if (!files.length) return;
+      container.querySelectorAll("[data-demo-image], .thumb-placeholder").forEach((item) => item.remove());
       const previewImages = files.map((file) => {
         const img = document.createElement("img");
         img.src = URL.createObjectURL(file);
         img.alt = file.name;
+        img.dataset.lightboxSrc = img.src;
         container.appendChild(img);
         return img;
       });
-      if (!event.target.files.length) {
-        container.innerHTML = '<span class="thumb-placeholder"></span><span class="thumb-placeholder"></span><span class="thumb-placeholder"></span>';
-        setUploadStatus(status, "");
-        renderProblemPhotoRows();
-        return;
-      }
-
-      renderProblemPhotoRows(previewImages.map((image) => ({ src: image.src, alt: image.alt })));
+      renderProblemPhotoRows();
       setUploadStatus(status, `正在上传 ${files.length} 张问题照片...`);
-      const settled = await Promise.allSettled(files.map((file) => uploadFileToS3(file, "problem-before")));
       let successCount = 0;
-      settled.forEach((item, index) => {
-        if (item.status === "fulfilled") {
-          const result = item.value;
+      let skippedLocalUpload = false;
+      let firstError = "";
+      for (let index = 0; index < files.length; index += 1) {
+        try {
+          const result = await uploadFileToS3(files[index], "problem-before");
           previewImages[index].dataset.s3Key = result.key;
           previewImages[index].dataset.fileName = files[index].name;
           previewImages[index].dataset.contentType = files[index].type || "image/jpeg";
           previewImages[index].dataset.fileSize = String(files[index].size);
+          skippedLocalUpload ||= Boolean(result.skipped);
           successCount += 1;
-        } else {
+          setUploadStatus(status, `正在上传问题照片：${successCount}/${files.length}`);
+        } catch (error) {
           previewImages[index].classList.add("upload-failed");
+          firstError ||= error?.message || "上传失败";
         }
-      });
-      renderProblemPhotoRows(previewImages.map((image) => ({ src: image.src, alt: image.alt })));
+      }
+      renderProblemPhotoRows();
+      event.target.value = "";
+      const totalCount = container.querySelectorAll("img[data-s3-key]").length;
       if (successCount === files.length) {
-        const message = settled.some((item) => item.status === "fulfilled" && item.value.skipped)
+        const message = skippedLocalUpload
           ? "本地预览模式：上线域名打开后会上传到 S3。"
-          : `已上传到 S3：${successCount} 张`;
+          : `已上传到 S3：共 ${totalCount} 张`;
         setUploadStatus(status, message, "success");
       } else {
-        const firstError = settled.find((item) => item.status === "rejected");
         setUploadStatus(
           status,
-          `已上传 ${successCount}/${files.length} 张；失败项请重新选择上传。${firstError?.reason?.message || ""}`,
+          `本次已上传 ${successCount}/${files.length} 张；当前共 ${totalCount} 张。失败项请重新选择上传。${firstError}`,
           successCount ? "success" : "error"
         );
       }
+    });
+
+    const imageLightbox = document.getElementById("imageLightbox");
+    const imageLightboxImage = document.getElementById("imageLightboxImage");
+    function closeImageLightbox() {
+      imageLightbox.classList.remove("open");
+      imageLightboxImage.removeAttribute("src");
+    }
+    document.addEventListener("click", (event) => {
+      const image = event.target.closest("img[data-lightbox-src]");
+      if (!image) return;
+      event.preventDefault();
+      event.stopPropagation();
+      imageLightboxImage.src = image.dataset.lightboxSrc || image.src;
+      imageLightboxImage.alt = image.alt || "照片放大预览";
+      imageLightbox.classList.add("open");
+    });
+    document.getElementById("imageLightboxClose").addEventListener("click", closeImageLightbox);
+    imageLightbox.addEventListener("click", (event) => {
+      if (event.target === imageLightbox) closeImageLightbox();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeImageLightbox();
     });
     document.getElementById("saveReportBtn").addEventListener("click", saveReport);
 
