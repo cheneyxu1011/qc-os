@@ -1987,7 +1987,7 @@
               </div>
               <div class="screen-list">
                 <div class="issue-card" data-style="JK57">
-                  <img src="assets/issue-photo-sewing-clean.png" alt="左内里布止口不均问题照片" data-problem-image>
+                  <img src="/prototype/assets/issue-photo-sewing-clean.png" alt="左内里布止口不均问题照片" data-problem-image>
                   <div>
                     <div class="issue-title">
                       <h3>左内里布止口不均，造成中下节扭曲</h3>
@@ -2006,7 +2006,7 @@
                 </div>
 
                 <div class="issue-card" data-style="JX-2308">
-                  <img src="assets/issue-photo-sewing-clean.png" alt="肩缝松量问题照片">
+                  <img src="/prototype/assets/issue-photo-sewing-clean.png" alt="肩缝松量问题照片">
                   <div>
                     <div class="issue-title">
                       <h3>肩缝松量偏大，压胶后出现局部起皱</h3>
@@ -2036,7 +2036,7 @@
               </div>
               <div class="screen-list">
                 <div class="issue-card" data-style="JK57">
-                  <img src="assets/issue-photo-sewing-clean.png" alt="压胶宽度问题照片">
+                  <img src="/prototype/assets/issue-photo-sewing-clean.png" alt="压胶宽度问题照片">
                   <div>
                     <div class="issue-title">
                       <h3>下节压胶宽度不足，返修后仍有局部偏位</h3>
@@ -2055,7 +2055,7 @@
                 </div>
 
                 <div class="issue-card" data-style="KW-7721">
-                  <img src="assets/issue-photo-sewing-clean.png" alt="胶条贴合问题照片">
+                  <img src="/prototype/assets/issue-photo-sewing-clean.png" alt="胶条贴合问题照片">
                   <div>
                     <div class="issue-title">
                       <h3>袋口胶条贴合不牢，水洗测试后翘边</h3>
@@ -2085,7 +2085,7 @@
               </div>
               <div class="screen-list">
                 <div class="issue-card" data-style="395">
-                  <img src="assets/issue-photo-sewing-clean.png" alt="裁剪反馈业务问题照片" data-problem-image>
+                  <img src="/prototype/assets/issue-photo-sewing-clean.png" alt="裁剪反馈业务问题照片" data-problem-image>
                   <div>
                     <div class="issue-title">
                       <h3>发布机器打开灯光之后发现了抽丝</h3>
@@ -2155,7 +2155,7 @@
                         <span>支持多张，作为改善前留底</span>
                       </label>
                       <div class="thumbs" id="problemThumbs">
-                        <img src="assets/issue-photo-sewing-clean.png" alt="问题照片示例" data-demo-image data-lightbox-src="assets/issue-photo-sewing-clean.png">
+                        <img src="/prototype/assets/issue-photo-sewing-clean.png" alt="问题照片示例" data-demo-image data-lightbox-src="/prototype/assets/issue-photo-sewing-clean.png">
                         <span class="thumb-placeholder"></span>
                         <span class="thumb-placeholder"></span>
                       </div>
@@ -2332,7 +2332,7 @@
                     <td colspan="6">
                       <span id="paperProblem">左内里布上下分配不均匀，造成里布上节多布约1CM左右，扭曲。客人QC不接受，需要返修处理。</span>
                       <div class="photo-row" id="paperProblemPhotoRow">
-                        <img src="assets/issue-photo-sewing-clean.png" alt="问题照片" data-problem-image>
+                        <img src="/prototype/assets/issue-photo-sewing-clean.png" alt="问题照片" data-problem-image>
                         <span class="pill amber">改善前</span>
                       </div>
                     </td>
@@ -3979,7 +3979,7 @@
         const notificationOnly = action.action_type === "notification_only";
         const problemImages = report.problem_attachments?.length
           ? report.problem_attachments
-          : [{ view_url: "assets/issue-photo-sewing-clean.png", original_file_name: "问题照片" }];
+          : [{ view_url: "/prototype/assets/issue-photo-sewing-clean.png", original_file_name: "问题照片" }];
         const assignees = (action.assignees || []).map((item) => item.person_name).join("、");
         return `
           <article class="task-card" data-report-no="${escapeHtml(report.report_no)}" data-action-id="${escapeHtml(action.id)}">
@@ -4796,7 +4796,7 @@
                 ${items.map((report) => {
                   const problemImages = report.problem_attachments?.length
                     ? report.problem_attachments
-                    : [{ view_url: "assets/issue-photo-sewing-clean.png", original_file_name: "问题照片" }];
+                    : [{ view_url: "/prototype/assets/issue-photo-sewing-clean.png", original_file_name: "问题照片" }];
                   const people = (report.responsible_people || []).map((item) => item.person_name).join("、");
                   const dueDates = (report.actions || []).map((action) => action.due_date).filter(Boolean).sort();
                   return `
