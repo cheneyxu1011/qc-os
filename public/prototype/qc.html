@@ -4414,7 +4414,7 @@
                 <p class="readonly-note">问题描述：<b>${escapeHtml(report.problem_description || "未填写")}</b></p>
               </div>
               <div class="review-action-evidence">${actionEvidence || '<div class="readonly-note">本报告只有“仅通知”事项，无需效果复核。</div>'}</div>
-              ${notificationActions.length ? `<p class="readonly-note">仅通知已确认：<b>${notificationActions.map((action) => `第${action.sequence_no}项 ${action.executed_by_name || "待确认"}`).join("；")}</b>（不进入效果复核）</p>` : ""}
+              ${notificationActions.length ? `<p class="readonly-note">仅通知已确认：<b>${escapeHtml(notificationActions.map((action) => `第${action.sequence_no}项 ${action.executed_by_name || "待确认"}`).join("；"))}</b>（不进入效果复核）</p>` : ""}
               <div class="field">
                 <label>复核意见</label>
                 <textarea data-review-comment="${escapeHtml(report.report_no)}" placeholder="填写来源部门复核意见"></textarea>
@@ -5188,6 +5188,9 @@
       const data = draft.draft_data || {};
       currentDraftId = draft.id;
       fields.reporter.value = data.reporter || draft.reporter_name || fields.reporter.value;
+      fields.reviewer.value = data.reviewer || fields.reporter.value;
+      fields.approver.value = data.approver || defaultFactoryApprover();
+      fields.archiveApprover.value = fields.approver.value;
       fields.foundDate.value = data.foundDate || fields.foundDate.value;
       fields.factoryId.value = data.factoryId || fields.factoryId.value;
       const selectedStyle = styleCatalog.find((item) => item.id === data.styleCatalogId);
