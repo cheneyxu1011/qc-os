@@ -84,8 +84,8 @@ NEXT_PUBLIC_APP_NAME="QC OS"
 NEXT_PUBLIC_APP_ENV="production"
 
 NEXT_PUBLIC_SUPABASE_URL=""
-NEXT_PUBLIC_SUPABASE_ANON_KEY=""
-SUPABASE_SERVICE_ROLE_KEY=""
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=""
+SUPABASE_SECRET_KEY=""
 
 AWS_REGION=""
 AWS_S3_BUCKET_QC_IMAGES=""
@@ -103,8 +103,8 @@ QC_OS_PUBLIC_BASE_URL="https://qc-os.vanwellgroup.com"
 
 注意：
 
-- `SUPABASE_SERVICE_ROLE_KEY`、AWS密钥、Factory OS/People OS API Key 只能放服务端环境变量。
-- 前端只能使用 `NEXT_PUBLIC_SUPABASE_URL` 和公开匿名 key。
+- `SUPABASE_SECRET_KEY`、AWS密钥、Factory OS/People OS API Key 只能放服务端环境变量。
+- 前端只能使用 `NEXT_PUBLIC_SUPABASE_URL` 和 publishable key。
 - 图片上传建议由后端生成 S3 presigned URL，前端不要直接暴露 AWS Secret。
 
 ## 4. Supabase 数据表预留

@@ -1752,9 +1752,10 @@
               </div>
               <div class="toolbar">
                 <button class="btn" id="addMeasureBtn">新增措施</button>
-                <button class="btn primary">保存报告</button>
+                <button class="btn primary" id="saveReportBtn" type="button">保存报告</button>
               </div>
             </div>
+            <div class="upload-status" id="saveReportStatus"></div>
 
             <div class="form-grid">
               <div class="field"><label>报告编号</label><input id="reportNo" value="XCJ2026-001" readonly></div>
@@ -3091,6 +3092,10 @@
       fields.reportNo.value = `XCJ2026-${String(reportCounter).padStart(3, "0")}`;
       fields.problemDesc.value = "";
       fields.rootCause.value = "";
+      const saveButton = document.getElementById("saveReportBtn");
+      saveButton.disabled = false;
+      saveButton.textContent = "保存报告";
+      setUploadStatus(document.getElementById("saveReportStatus"), "");
       measures = [{
         type: "临时纠正",
         content: "填写纠正措施内容。",
@@ -3238,6 +3243,79 @@
       return presign;
     }
 
+    function severityValue(label) {
+      if (label.includes("客户投诉")) return "customer_complaint";
+      if (label.includes("不可接受")) return "unacceptable";
+      if (label.includes("严重")) return "serious";
+      if (label.includes("轻微")) return "minor";
+      return "general";
+    }
+
+    function actionTypeValue(label) {
+      if (label === "永久纠正") return "permanent_correction";
+      if (label === "预防措施") return "preventive_action";
+      return "temporary_correction";
+    }
+
+    function problemAttachments() {
+      return [...document.querySelectorAll("#problemThumbs img[data-s3-key]")].map((image) => ({
+        s3Key: image.dataset.s3Key,
+        attachmentType: "problem_before",
+        originalFileName: image.dataset.fileName || image.alt || "",
+        contentType: image.dataset.contentType || "",
+        fileSizeBytes: Number(image.dataset.fileSize || 0)
+      }));
+    }
+
+    async function saveReport() {
+      const button = document.getElementById("saveReportBtn");
+      const status = document.getElementById("saveReportStatus");
+      const payload = {
+        reportNo: fields.reportNo.value,
+        foundDate: fields.foundDate.value,
+        brand: fields.brandName.value,
+        styleNo: fields.styleNo.value,
+        color: fields.colorName.value,
+        severity: severityValue(fields.severity.value),
+        sourceDepartment: fields.sourceDept.value,
+        responsibleDepartments: selectedResponsibleDepartments(),
+        responsiblePeople: selectedDepartmentPeople(),
+        kpiEnabled: fields.kpiFlag.value.startsWith("是"),
+        reporter: fields.reporter.value,
+        problemDescription: fields.problemDesc.value,
+        rootCause: fields.rootCause.value,
+        actions: measures.map((measure) => ({
+          type: actionTypeValue(measure.type),
+          content: measure.content,
+          people: measure.people,
+          dueDate: measure.due,
+          reminderNote: measure.note
+        })),
+        attachments: problemAttachments()
+      };
+
+      button.disabled = true;
+      button.textContent = "正在保存";
+      setUploadStatus(status, "正在保存报告、措施任务和图片索引...");
+      try {
+        const response = await fetch("/api/qc/reports", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "保存报告失败");
+        fields.reportNo.value = result.reportNo;
+        button.textContent = "已保存";
+        setUploadStatus(status, `报告 ${result.reportNo} 已保存，措施任务已分配。`, "success");
+        updateReportPreview();
+      } catch (error) {
+        button.disabled = false;
+        button.textContent = "重新保存";
+        setUploadStatus(status, error.message || "保存失败，请检查后重试。", "error");
+      }
+    }
+
     function setUploadStatus(element, message, status = "") {
       if (!element) return;
       element.textContent = message;
@@ -3271,6 +3349,9 @@
         const results = await Promise.all(files.map((file) => uploadFileToS3(file, "problem-before")));
         results.forEach((result, index) => {
           previewImages[index].dataset.s3Key = result.key;
+          previewImages[index].dataset.fileName = files[index].name;
+          previewImages[index].dataset.contentType = files[index].type || "image/jpeg";
+          previewImages[index].dataset.fileSize = String(files[index].size);
         });
         const message = results.some((result) => result.skipped)
           ? "本地预览模式：上线域名打开后会上传到 S3。"
@@ -3280,6 +3361,7 @@
         setUploadStatus(status, error.message || "图片上传失败，请重试。", "error");
       }
     });
+    document.getElementById("saveReportBtn").addEventListener("click", saveReport);
 
     refreshDeptOptions();
     fields.sourceDept.value = "压胶部";
