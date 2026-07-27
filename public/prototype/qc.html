@@ -795,6 +795,78 @@
       cursor: pointer;
     }
 
+    .toast-stack {
+      position: fixed;
+      top: 22px;
+      right: 22px;
+      z-index: 11000;
+      display: grid;
+      gap: 10px;
+      width: min(360px, calc(100vw - 32px));
+      pointer-events: none;
+    }
+
+    .toast-message {
+      display: grid;
+      grid-template-columns: 32px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      padding: 12px 14px;
+      border: 1px solid #b8dfc7;
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      box-shadow: 0 14px 36px rgba(20, 33, 48, .18);
+      animation: toast-in .22s ease-out both;
+    }
+
+    .toast-message.error {
+      border-color: #efb8b4;
+    }
+
+    .toast-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--green-soft);
+      color: var(--green);
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .toast-message.error .toast-icon {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .toast-message > div > b,
+    .toast-message > div > span {
+      display: block;
+    }
+
+    .toast-message > div > span {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .toast-message.leaving {
+      animation: toast-out .2s ease-in both;
+    }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes toast-out {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(-8px); }
+    }
+
     .upload-status {
       margin-top: 8px;
       min-height: 18px;
@@ -2588,6 +2660,7 @@
     <button type="button" id="imageLightboxClose" aria-label="关闭大图">×</button>
     <img id="imageLightboxImage" alt="照片放大预览">
   </div>
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 
   <script>
     const navButtons = document.querySelectorAll(".nav button");
@@ -3866,6 +3939,11 @@
             successCount === files.length ? `已上传改善照片：共 ${totalCount} 张` : `本次已上传 ${successCount}/${files.length} 张，当前共 ${totalCount} 张，失败项请重传。`,
             successCount ? "success" : "error"
           );
+          if (successCount === files.length) {
+            showToast("改善照片已上传", `当前共 ${totalCount} 张`);
+          } else {
+            showToast("部分照片上传失败", `本次成功 ${successCount}/${files.length} 张`, "error");
+          }
         });
       });
       document.querySelectorAll(".complete-action-btn").forEach((button) => {
@@ -4246,6 +4324,11 @@
               : `本次已上传 ${successCount}/${files.length} 张，当前共 ${totalCount} 张，失败项请重传。`,
             successCount ? "success" : "error"
           );
+          if (successCount === files.length) {
+            showToast("复核照片已上传", `当前共 ${totalCount} 张`);
+          } else {
+            showToast("部分照片上传失败", `本次成功 ${successCount}/${files.length} 张`, "error");
+          }
         });
       });
     }
@@ -4744,13 +4827,13 @@
         })
       });
       const presign = await response.json();
-      if (!response.ok) throw new Error(presign.error || "S3签名失败");
+      if (!response.ok) throw new Error("获取图片上传凭证失败");
 
       const formData = new FormData();
       Object.entries(presign.fields).forEach(([key, value]) => formData.append(key, value));
       formData.append("file", file);
       const uploadResponse = await fetch(presign.url, { method: "POST", body: formData });
-      if (!uploadResponse.ok) throw new Error(`S3上传失败：${uploadResponse.status}`);
+      if (!uploadResponse.ok) throw new Error(`图片上传失败：${uploadResponse.status}`);
       return presign;
     }
 
@@ -4851,12 +4934,14 @@
         fields.reportNo.value = result.reportNo;
         button.textContent = "已保存";
         setUploadStatus(status, `报告 ${result.reportNo} 已保存，措施任务已分配。`, "success");
+        showToast("报告已保存", `${result.reportNo} · 措施任务已分配`);
         updateReportPreview();
         await Promise.all([loadHistoryReports(), loadProjectorReports(), loadTaskReports(), loadReviewReports(), loadArchiveReports(), loadFactories()]);
       } catch (error) {
         button.disabled = false;
         button.textContent = "重新保存";
         setUploadStatus(status, error.message || "保存失败，请检查后重试。", "error");
+        showToast("报告保存失败", error.message || "请检查后重试", "error");
       }
     }
 
@@ -4864,6 +4949,21 @@
       if (!element) return;
       element.textContent = message;
       element.className = `upload-status ${status}`.trim();
+    }
+
+    function showToast(title, detail = "", status = "success") {
+      const stack = document.getElementById("toastStack");
+      const toast = document.createElement("div");
+      toast.className = `toast-message ${status === "error" ? "error" : ""}`.trim();
+      toast.innerHTML = `
+        <span class="toast-icon" aria-hidden="true">${status === "error" ? "!" : "✓"}</span>
+        <div><b>${escapeHtml(title)}</b>${detail ? `<span>${escapeHtml(detail)}</span>` : ""}</div>
+      `;
+      stack.appendChild(toast);
+      window.setTimeout(() => {
+        toast.classList.add("leaving");
+        window.setTimeout(() => toast.remove(), 220);
+      }, 2800);
     }
 
     document.getElementById("problemPhotoInput").addEventListener("change", async (event) => {
@@ -4905,15 +5005,17 @@
       const totalCount = container.querySelectorAll("img[data-s3-key]").length;
       if (successCount === files.length) {
         const message = skippedLocalUpload
-          ? "本地预览模式：上线域名打开后会上传到 S3。"
-          : `已上传到 S3：共 ${totalCount} 张`;
+          ? `本地预览：已选择 ${files.length} 张`
+          : `已上传：共 ${totalCount} 张`;
         setUploadStatus(status, message, "success");
+        showToast("问题照片已上传", `当前共 ${totalCount || files.length} 张`);
       } else {
         setUploadStatus(
           status,
           `本次已上传 ${successCount}/${files.length} 张；当前共 ${totalCount} 张。失败项请重新选择上传。${firstError}`,
           successCount ? "success" : "error"
         );
+        showToast("部分照片上传失败", `本次成功 ${successCount}/${files.length} 张`, "error");
       }
     });
 
