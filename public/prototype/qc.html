@@ -173,26 +173,26 @@
     .people-page-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-      padding: 18px;
+      gap: 12px;
+      padding: 14px;
     }
 
     .dept-card {
       border: 1px solid var(--line);
       border-radius: 8px;
       background: #fff;
-      padding: 16px;
+      padding: 12px;
       display: grid;
-      gap: 12px;
+      gap: 10px;
     }
 
     .dept-card-head {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto auto;
-      align-items: end;
-      gap: 10px;
+      align-items: center;
+      gap: 8px;
       border-bottom: 1px dashed var(--line);
-      padding-bottom: 10px;
+      padding-bottom: 8px;
     }
 
     .dept-card h3 {
@@ -203,7 +203,7 @@
     .library-input,
     .person-row input {
       width: 100%;
-      min-height: 38px;
+      min-height: 34px;
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 0 10px;
@@ -211,9 +211,13 @@
       background: #fff;
     }
 
+    .dept-card-head .field {
+      gap: 4px;
+    }
+
     .person-table {
       display: grid;
-      gap: 8px;
+      gap: 6px;
     }
 
     .person-row {
@@ -224,7 +228,7 @@
     }
 
     .mini-action {
-      min-height: 36px;
+      min-height: 34px;
       padding: 0 10px;
       border-radius: 8px;
       border: 1px solid var(--line);
@@ -2165,11 +2169,6 @@
                 <div class="toolbar">
                   <select id="reviewSourceFilter">
                     <option value="">全部来源部门</option>
-                    <option value="压胶部">压胶部</option>
-                    <option value="车缝部">车缝部</option>
-                    <option value="裁剪部">裁剪部</option>
-                    <option value="QC部">QC部</option>
-                    <option value="业务部">业务部</option>
                   </select>
                   <button class="btn" id="reviewPendingOnlyToggle" type="button">只看待复核</button>
                 </div>
@@ -2310,6 +2309,7 @@
               <div class="field span-2"><label>新增部门</label><input id="libraryDept" placeholder="例如：裁剪部"></div>
               <div class="field span-2"><label>新增人员姓名</label><input id="libraryPerson" placeholder="例如：张亚琴"></div>
             </div>
+            <div class="upload-status" id="peopleLibraryStatus" aria-live="polite"></div>
             <div class="people-page-grid" id="peopleDeptCards"></div>
           </div>
 
@@ -2509,7 +2509,7 @@
     const styleFilter = document.getElementById("styleFilter");
     const factoryFilter = document.getElementById("factoryFilter");
     let factoryCatalog = [];
-    const peopleDb = {
+    let peopleDb = {
       "车缝部": ["夏红霞", "朱小丽"],
       "压胶部": ["李小华"],
       "裁剪部": ["张亚琴"],
@@ -2517,6 +2517,16 @@
       "QC部": ["朱玲玲", "张吉云"],
       "业务部": ["顾瑶", "顾永宏"]
     };
+    let peopleDirectory = Object.entries(peopleDb).map(([name, people], index) => ({
+      id: `local-dept-${index}`,
+      name,
+      people: people.map((person, personIndex) => ({
+        id: `local-person-${index}-${personIndex}`,
+        name: person,
+        department_id: `local-dept-${index}`,
+        department_name: name
+      }))
+    }));
     let styleCatalog = [
       {
         id: "",
@@ -2968,6 +2978,86 @@
       return [...new Set(Object.values(peopleDb).flat())];
     }
 
+    function rebuildPeopleDbFromDirectory() {
+      peopleDb = {};
+      peopleDirectory.forEach((department) => {
+        peopleDb[department.name] = (department.people || []).map((person) => person.name);
+      });
+    }
+
+    function localizePeopleDirectory() {
+      peopleDirectory = Object.entries(peopleDb).map(([name, people], index) => ({
+        id: `local-dept-${index}`,
+        name,
+        people: people.map((person, personIndex) => ({
+          id: `local-person-${index}-${personIndex}`,
+          name: person,
+          department_id: `local-dept-${index}`,
+          department_name: name
+        }))
+      }));
+    }
+
+    function applyPeopleLibraryPayload(payload) {
+      peopleDirectory = (payload.departments || []).map((department) => ({
+        id: department.id,
+        name: department.name,
+        people: (department.people || []).map((person) => ({
+          id: person.id,
+          name: person.name,
+          department_id: department.id,
+          department_name: department.name
+        }))
+      }));
+      rebuildPeopleDbFromDirectory();
+      refreshDeptOptions();
+      renderMeasures();
+      updateReportPreview();
+    }
+
+    async function loadPeopleLibrary() {
+      if (location.protocol === "file:") {
+        localizePeopleDirectory();
+        refreshDeptOptions();
+        return true;
+      }
+      try {
+        const response = await fetch("/api/qc/people");
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "读取人员库失败");
+        applyPeopleLibraryPayload(result);
+        return true;
+      } catch (error) {
+        setUploadStatus(document.getElementById("peopleLibraryStatus"), error.message || "读取人员库失败", "error");
+        return false;
+      }
+    }
+
+    async function savePeopleLibraryChange(payload, successMessage) {
+      const status = document.getElementById("peopleLibraryStatus");
+      try {
+        if (location.protocol === "file:") {
+          refreshDeptOptions();
+          setUploadStatus(status, successMessage, "success");
+          return true;
+        }
+        const response = await fetch("/api/qc/people", {
+          method: payload.method,
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload.body)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "人员库保存失败");
+        applyPeopleLibraryPayload(result);
+        setUploadStatus(status, successMessage, "success");
+        return true;
+      } catch (error) {
+        setUploadStatus(status, error.message || "人员库保存失败", "error");
+        await loadPeopleLibrary();
+        return false;
+      }
+    }
+
     function renderPeopleLibrarySummary() {
       document.getElementById("sideDeptCount").textContent = Object.keys(peopleDb).length;
       document.getElementById("sidePeopleCount").textContent = allPeople().length;
@@ -2981,21 +3071,21 @@
 
     function renderPeopleLibraryPage() {
       const container = document.getElementById("peopleDeptCards");
-      container.innerHTML = Object.entries(peopleDb).map(([dept, people]) => `
-        <article class="dept-card">
+      container.innerHTML = peopleDirectory.map((department) => `
+        <article class="dept-card" data-dept-id="${escapeHtml(department.id)}">
           <div class="dept-card-head">
             <div class="field" style="margin: 0;">
               <label>部门名称</label>
-              <input class="library-input" data-library-field="dept" data-dept="${dept}" value="${dept}">
+              <input class="library-input" data-library-field="dept" data-dept-id="${escapeHtml(department.id)}" data-old-name="${escapeHtml(department.name)}" value="${escapeHtml(department.name)}">
             </div>
-            <span class="pill blue">${people.length}人</span>
-            <button class="mini-action danger" type="button" data-delete-dept="${dept}">删除部门</button>
+            <span class="pill blue">${department.people.length}人</span>
+            <button class="mini-action danger" type="button" data-delete-dept="${escapeHtml(department.id)}">删除部门</button>
           </div>
           <div class="person-table">
-            ${people.map((person, index) => `
+            ${department.people.map((person, index) => `
               <div class="person-row">
-                <input data-library-field="person" data-dept="${dept}" data-index="${index}" value="${person}">
-                <button class="mini-action danger" type="button" data-delete-person="${dept}" data-index="${index}">删除</button>
+                <input data-library-field="person" data-person-id="${escapeHtml(person.id)}" data-dept-id="${escapeHtml(department.id)}" data-index="${index}" data-old-name="${escapeHtml(person.name)}" value="${escapeHtml(person.name)}">
+                <button class="mini-action danger" type="button" data-delete-person="${escapeHtml(person.id)}" data-dept-id="${escapeHtml(department.id)}" data-index="${index}">删除</button>
               </div>
             `).join("") || '<div class="readonly-note">暂无人员，请在上方新增。</div>'}
           </div>
@@ -3016,64 +3106,100 @@
     }
 
     function syncPeopleLibrary() {
+      localizePeopleDirectory();
       refreshDeptOptions();
       renderMeasures();
       updateReportPreview();
     }
 
-    function renameDepartment(event) {
-      const oldDept = event.target.dataset.dept;
+    async function renameDepartment(event) {
+      const deptId = event.target.dataset.deptId;
+      const oldDept = event.target.dataset.oldName;
       const newDept = event.target.value.trim();
       if (!newDept || oldDept === newDept) {
         renderPeopleLibraryPage();
         return;
       }
-      if (peopleDb[newDept]) {
-        peopleDb[newDept] = [...new Set([...peopleDb[newDept], ...peopleDb[oldDept]])];
-      } else {
-        peopleDb[newDept] = peopleDb[oldDept];
+      if (location.protocol === "file:") {
+        if (peopleDb[newDept]) peopleDb[newDept] = [...new Set([...peopleDb[newDept], ...peopleDb[oldDept]])];
+        else peopleDb[newDept] = peopleDb[oldDept];
+        delete peopleDb[oldDept];
+        syncPeopleLibrary();
+        return;
       }
-      delete peopleDb[oldDept];
-      syncPeopleLibrary();
+      await savePeopleLibraryChange(
+        { method: "PATCH", body: { type: "department", id: deptId, name: newDept } },
+        "部门名称已保存，并同步到问题来源、责任部门和筛选项。"
+      );
     }
 
-    function renamePerson(event) {
-      const dept = event.target.dataset.dept;
+    async function renamePerson(event) {
+      const personId = event.target.dataset.personId;
+      const deptId = event.target.dataset.deptId;
+      const dept = peopleDirectory.find((department) => department.id === deptId)?.name || "";
       const index = Number(event.target.dataset.index);
       const newName = event.target.value.trim();
-      const oldName = peopleDb[dept][index];
+      const oldName = event.target.dataset.oldName || peopleDb[dept]?.[index];
       if (!newName) {
         renderPeopleLibraryPage();
         return;
       }
-      peopleDb[dept][index] = newName;
       measures = measures.map((measure) => ({
         ...measure,
         people: measure.people.map((person) => person === oldName ? newName : person)
       }));
-      syncPeopleLibrary();
+      if (location.protocol === "file:") {
+        peopleDb[dept][index] = newName;
+        syncPeopleLibrary();
+        return;
+      }
+      await savePeopleLibraryChange(
+        { method: "PATCH", body: { type: "person", id: personId, name: newName } },
+        "人员姓名已保存，并同步到报告人、责任人和KPI字段。"
+      );
     }
 
-    function deleteDepartment(event) {
-      const dept = event.target.dataset.deleteDept;
-      const deletedPeople = new Set(peopleDb[dept] || []);
-      delete peopleDb[dept];
+    async function deleteDepartment(event) {
+      const deptId = event.target.dataset.deleteDept;
+      const department = peopleDirectory.find((item) => item.id === deptId);
+      if (!department || !window.confirm(`确认停用“${department.name}”？历史报告会保留原快照。`)) return;
+      const deletedPeople = new Set((department.people || []).map((person) => person.name));
       measures = measures.map((measure) => ({
         ...measure,
         people: measure.people.filter((person) => !deletedPeople.has(person))
       }));
-      syncPeopleLibrary();
+      if (location.protocol === "file:") {
+        delete peopleDb[department.name];
+        syncPeopleLibrary();
+        return;
+      }
+      await savePeopleLibraryChange(
+        { method: "DELETE", body: { type: "department", id: deptId } },
+        "部门已停用，并从新报告选项中移除。"
+      );
     }
 
-    function deletePerson(event) {
-      const dept = event.target.dataset.deletePerson;
+    async function deletePerson(event) {
+      const personId = event.target.dataset.deletePerson;
+      const deptId = event.target.dataset.deptId;
+      const department = peopleDirectory.find((item) => item.id === deptId);
+      const dept = department?.name || "";
       const index = Number(event.target.dataset.index);
-      const [deletedPerson] = peopleDb[dept].splice(index, 1);
+      const deletedPerson = department?.people?.[index]?.name;
+      if (!deletedPerson || !window.confirm(`确认从“${dept}”移除“${deletedPerson}”？`)) return;
       measures = measures.map((measure) => ({
         ...measure,
         people: measure.people.filter((person) => person !== deletedPerson)
       }));
-      syncPeopleLibrary();
+      if (location.protocol === "file:") {
+        peopleDb[dept].splice(index, 1);
+        syncPeopleLibrary();
+        return;
+      }
+      await savePeopleLibraryChange(
+        { method: "DELETE", body: { type: "person", id: personId, departmentId: deptId } },
+        "人员已移除，并同步刷新各页面选项。"
+      );
     }
 
     async function renderKpiPeopleRows() {
@@ -3161,7 +3287,8 @@
 
     function renderResponsibleDepartments() {
       const selected = selectedResponsibleDepartments();
-      const selectedSet = new Set(selected.length ? selected : ["车缝部"]);
+      const departmentNames = Object.keys(peopleDb);
+      const selectedSet = new Set(selected.length ? selected : departmentNames.slice(0, 1));
       fields.responsibleDepartments.innerHTML = Object.keys(peopleDb).map((dept) => `
         <label class="chip">
           <input type="checkbox" value="${dept}" ${selectedSet.has(dept) ? "checked" : ""}>
@@ -3383,21 +3510,37 @@
 
     function refreshDeptOptions() {
       const deptOptions = Object.keys(peopleDb).map((dept) => `<option>${dept}</option>`).join("");
-      const currentSource = fields.sourceDept.value || "压胶部";
+      const departmentNames = Object.keys(peopleDb);
+      const preferredSource = departmentNames.includes("压胶部") ? "压胶部" : departmentNames[0];
+      const currentSource = fields.sourceDept.value || preferredSource;
       fields.sourceDept.innerHTML = deptOptions;
-      fields.sourceDept.value = Object.keys(peopleDb).includes(currentSource) ? currentSource : "压胶部";
+      fields.sourceDept.value = departmentNames.includes(currentSource) ? currentSource : (preferredSource || "");
+      const reviewSourceFilter = document.getElementById("reviewSourceFilter");
+      if (reviewSourceFilter) {
+        const currentReviewSource = reviewSourceFilter.value;
+        reviewSourceFilter.innerHTML = `<option value="">全部来源部门</option>${deptOptions}`;
+        reviewSourceFilter.value = departmentNames.includes(currentReviewSource) ? currentReviewSource : "";
+      }
       renderReportPeopleOptions();
       renderResponsibleDepartments();
       renderPeopleLibrarySummary();
     }
 
-    function addPersonFromInputs(deptInput, personInput) {
+    async function addPersonFromInputs(deptInput, personInput) {
       const dept = deptInput.value.trim();
       const person = personInput.value.trim();
       if (!dept || !person) return;
-      if (!peopleDb[dept]) peopleDb[dept] = [];
-      if (!peopleDb[dept].includes(person)) peopleDb[dept].push(person);
-      syncPeopleLibrary();
+      if (location.protocol === "file:") {
+        if (!peopleDb[dept]) peopleDb[dept] = [];
+        if (!peopleDb[dept].includes(person)) peopleDb[dept].push(person);
+        syncPeopleLibrary();
+      } else {
+        const saved = await savePeopleLibraryChange(
+          { method: "POST", body: { departmentName: dept, personName: person } },
+          "人员库已新增，并同步到所有报告字段。"
+        );
+        if (!saved) return;
+      }
       const newDeptOption = [...fields.responsibleDepartments.querySelectorAll("input")].find((input) => input.value === dept);
       if (newDeptOption) newDeptOption.checked = true;
       renderDepartmentPeoplePreview();
@@ -4563,6 +4706,7 @@
     document.getElementById("saveReportBtn").addEventListener("click", saveReport);
 
     refreshDeptOptions();
+    loadPeopleLibrary();
     renderStyleSelectors();
     renderStyleCatalogPage();
     loadStyleCatalog();
@@ -4572,8 +4716,6 @@
     loadTaskReports();
     loadReviewReports();
     loadArchiveReports();
-    fields.sourceDept.value = "压胶部";
-    renderResponsibleDepartments();
     renderMeasures();
     applyStyleFilter();
 
