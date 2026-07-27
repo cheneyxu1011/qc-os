@@ -19,5 +19,6 @@ export function safeS3FileName(fileName: string) {
     .replace(/[^a-zA-Z0-9._-]/g, "")
     .slice(0, 80);
   const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, "");
-  return `${timestamp}-${safeBaseName || "upload"}${extension.toLowerCase()}`;
+  const suffix = Math.random().toString(36).slice(2, 8);
+  return `${timestamp}-${suffix}-${safeBaseName || "upload"}${extension.toLowerCase()}`;
 }

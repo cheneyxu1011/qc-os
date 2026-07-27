@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>车缝 / 压胶质量改善 KPI 闭环系统</title>
+  <title>车间质量改善 KPI 闭环系统</title>
   <style>
     :root {
       --ink: #17212b;
@@ -604,6 +604,12 @@
       min-height: 38px;
     }
 
+    input::placeholder,
+    textarea::placeholder {
+      color: #94a3b8;
+      opacity: 1;
+    }
+
     textarea {
       min-height: 90px;
       resize: vertical;
@@ -698,6 +704,11 @@
       object-fit: cover;
       border: 1px solid var(--line);
       background: #eef2f5;
+    }
+
+    .thumbs img.upload-failed {
+      border-color: var(--red);
+      opacity: .55;
     }
 
     .upload-status {
@@ -1516,7 +1527,7 @@
     <aside class="sidebar">
       <div class="brand">
         <strong>质量改善 KPI</strong>
-        <span>车缝组 × 压胶组互评闭环系统</span>
+        <span>车间互评闭环系统</span>
       </div>
       <nav class="nav" aria-label="页面导航">
         <button class="active" data-tab="dashboard" data-icon="01">现场双屏</button>
@@ -1542,7 +1553,7 @@
     <main>
       <header class="topbar">
         <div>
-          <h1>车缝 / 压胶生产不良改善措施闭环系统</h1>
+              <h1>车间生产不良改善措施闭环系统</h1>
           <p>从问题反馈、责任执行、部门复核到主管归档，最终进入个人月KPI和款式历史复盘。</p>
         </div>
         <div class="actions">
@@ -1821,11 +1832,11 @@
                   <div class="subpanel-body verify-grid">
                     <div class="field">
                       <label>业务部评论</label>
-                      <textarea>业务部可补充客户关注点、交期影响、客户验货意见，但不能修改责任人和KPI。</textarea>
+                      <textarea id="businessComment" placeholder="业务部可补充客户关注点、交期影响、客户验货意见，但不能修改责任人和KPI。"></textarea>
                     </div>
                     <div class="field">
                       <label>QC补充验证</label>
-                      <textarea>QC部可补充抽查结果、返修确认、复发风险说明，作为主管归档参考。</textarea>
+                      <textarea id="qcComment" placeholder="QC部可补充抽查结果、返修确认、复发风险说明，作为主管归档参考。"></textarea>
                     </div>
                   </div>
                 </div>
@@ -1967,7 +1978,7 @@
                   <tr>
                     <td colspan="6">
                       <span id="paperProblem">左内里布上下分配不均匀，造成里布上节多布约1CM左右，扭曲。客人QC不接受，需要返修处理。</span>
-                      <div class="photo-row">
+                      <div class="photo-row" id="paperProblemPhotoRow">
                         <img src="assets/issue-photo-sewing-clean.png" alt="问题照片" data-problem-image>
                         <span class="pill amber">改善前</span>
                       </div>
@@ -2083,7 +2094,7 @@
                 </div>
               </div>
 
-              <div class="task-list">
+              <div class="task-list" id="reviewList">
                 <article class="task-card">
                   <div class="task-card-head">
                     <div>
@@ -2195,7 +2206,7 @@
                 </div>
               </div>
 
-              <div class="task-list">
+              <div class="task-list" id="archiveList">
                 <article class="task-card">
                   <div class="task-card-head">
                     <div>
@@ -2235,7 +2246,7 @@
                         <tr>
                           <td colspan="6">
                             <span id="archivePaperProblem" data-problem-text>左内里布上下分配不均匀，造成里布上节多布约1CM左右，扭曲。客人QC不接受，需要返修处理。</span>
-                            <div class="photo-row">
+                            <div class="photo-row" id="archiveProblemPhotoRow">
                               <img src="assets/issue-photo-sewing-clean.png" alt="归档报告问题照片" data-problem-image>
                               <span class="pill amber">改善前</span>
                             </div>
@@ -2714,6 +2725,11 @@
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+    }
+
+    function setText(id, value) {
+      const element = document.getElementById(id);
+      if (element) element.textContent = value;
     }
 
     function selectedFactory() {
@@ -3195,25 +3211,47 @@
       syncPeopleLibrary();
     }
 
-    function renderKpiPeopleRows() {
+    async function renderKpiPeopleRows() {
       const container = document.getElementById("kpiPeopleRows");
-      container.innerHTML = Object.entries(peopleDb).flatMap(([dept, people]) => {
-        return people.map((person, index) => {
-          const issueCount = dept === "车缝部" ? 3 : dept === "压胶部" ? 4 : index + 1;
-          const severeCount = dept === "压胶部" ? 2 : dept === "车缝部" ? 1 : 0;
-          const overdueCount = dept === "压胶部" ? 1 : 0;
-          const score = Math.max(80, 100 - issueCount - severeCount * 2 - overdueCount);
+      if (location.protocol === "file:") {
+        container.innerHTML = '<tr><td colspan="7">上线后读取已归档 KPI 数据</td></tr>';
+        return;
+      }
+      try {
+        const reports = await readReportsByStatus(["archived"]);
+        const rows = new Map();
+        reports.flatMap((report) => report.kpi_entries || []).forEach((entry) => {
+          const row = rows.get(entry.person_name) || {
+            person: entry.person_name,
+            department: entry.department_name || "",
+            issueCount: 0,
+            severeCount: 0,
+            overdueCount: 0,
+            deductions: 0,
+            completed: 0
+          };
+          if (entry.reason_code === "report_severity") row.issueCount += 1;
+          if (Number(entry.deduction_points) >= 3) row.severeCount += 1;
+          if (entry.reason_code === "action_overdue") row.overdueCount += 1;
+          row.deductions += Number(entry.deduction_points || 0);
+          row.completed += 1;
+          rows.set(entry.person_name, row);
+        });
+        container.innerHTML = [...rows.values()].map((row) => {
+          const score = Math.max(0, 100 - row.deductions);
           return `<tr>
-            <td>${person}</td>
-            <td>${dept}</td>
-            <td>${issueCount}</td>
-            <td>${severeCount}</td>
-            <td>${overdueCount}</td>
-            <td>${overdueCount ? "75%" : "100%"}</td>
+            <td>${escapeHtml(row.person)}</td>
+            <td>${escapeHtml(row.department)}</td>
+            <td>${row.issueCount}</td>
+            <td>${row.severeCount}</td>
+            <td>${row.overdueCount}</td>
+            <td>${row.completed ? "100%" : "0%"}</td>
             <td><span class="score" style="${score < 90 ? "color:var(--red)" : ""}">${score}</span></td>
           </tr>`;
-        });
-      }).join("");
+        }).join("") || '<tr><td colspan="7">当前还没有已归档 KPI 数据</td></tr>';
+      } catch (error) {
+        container.innerHTML = `<tr><td colspan="7">${escapeHtml(error.message || "读取 KPI 数据失败")}</td></tr>`;
+      }
     }
 
     function selectedResponsibleDepartments() {
@@ -3418,7 +3456,8 @@
           <td>${measure.status}</td>
         </tr>
       `).join("");
-      document.getElementById("archivePaperMeasureRows").innerHTML = measures.map((measure, index) => `
+      const archiveRows = document.getElementById("archivePaperMeasureRows");
+      if (archiveRows) archiveRows.innerHTML = measures.map((measure, index) => `
         <tr>
           <td>${index + 1}</td>
           <td>${measure.type}</td>
@@ -3453,25 +3492,26 @@
       document.getElementById("paperReviewer").textContent = fields.reviewer.value;
       document.getElementById("paperApprover").textContent = fields.approver.value;
       document.getElementById("paperVerify").textContent = "待责任人执行后填写改善照片、完成日期和复核意见。";
-      document.getElementById("archivePaperReportNo").textContent = fields.reportNo.value;
-      document.getElementById("archivePaperFoundDate").textContent = formatDate(fields.foundDate.value);
-      document.getElementById("archivePaperBrand").textContent = fields.brandName.value;
-      document.getElementById("archivePaperStyle").textContent = currentStyleNo();
-      document.getElementById("archivePaperColor").textContent = fields.colorName.value;
-      document.getElementById("archivePaperSeverity").textContent = fields.severity.value;
-      document.getElementById("archivePaperSource").textContent = fields.sourceDept.value;
-      document.getElementById("archivePaperDept").textContent = departments.join("、") || "未选择";
-      document.getElementById("archivePaperPeople").textContent = people.join("、") || "待措施分配";
-      document.getElementById("archivePaperFactory").textContent = selectedFactory()?.name || "未选择";
-      document.getElementById("archivePaperProblem").textContent = fields.problemDesc.value;
-      document.getElementById("archivePaperRootCause").textContent = fields.rootCause.value;
-      document.getElementById("archivePaperReporter").textContent = fields.reporter.value;
-      document.getElementById("archivePaperReviewer").textContent = fields.reviewer.value;
-      document.getElementById("archivePaperApprover").textContent = fields.approver.value;
-      document.getElementById("archivePaperVerify").textContent = `${fields.sourceDept.value}复核通过；完成日期：2026/7/10；复核意见：上下布配均匀，版面加量跟足腰节定位线。`;
+      setText("archivePaperReportNo", fields.reportNo.value);
+      setText("archivePaperFoundDate", formatDate(fields.foundDate.value));
+      setText("archivePaperBrand", fields.brandName.value);
+      setText("archivePaperStyle", currentStyleNo());
+      setText("archivePaperColor", fields.colorName.value);
+      setText("archivePaperSeverity", fields.severity.value);
+      setText("archivePaperSource", fields.sourceDept.value);
+      setText("archivePaperDept", departments.join("、") || "未选择");
+      setText("archivePaperPeople", people.join("、") || "待措施分配");
+      setText("archivePaperFactory", selectedFactory()?.name || "未选择");
+      setText("archivePaperProblem", fields.problemDesc.value);
+      setText("archivePaperRootCause", fields.rootCause.value);
+      setText("archivePaperReporter", fields.reporter.value);
+      setText("archivePaperReviewer", fields.reviewer.value);
+      setText("archivePaperApprover", fields.approver.value);
+      setText("archivePaperVerify", `${fields.sourceDept.value}复核通过；完成日期：2026/7/10；复核意见：上下布配均匀，版面加量跟足腰节定位线。`);
       document.querySelectorAll("[data-problem-text]").forEach((node) => {
         node.textContent = fields.problemDesc.value || "待填写问题描述";
       });
+      renderProblemPhotoRows();
       renderPaperMeasures();
     }
 
@@ -3515,6 +3555,13 @@
       updateNextReportNumber();
       fields.problemDesc.value = "";
       fields.rootCause.value = "";
+      document.getElementById("problemPhotoInput").value = "";
+      document.getElementById("problemThumbs").innerHTML = `
+        <span class="thumb-placeholder"></span>
+        <span class="thumb-placeholder"></span>
+        <span class="thumb-placeholder"></span>
+      `;
+      setUploadStatus(document.getElementById("problemUploadStatus"), "");
       fields.reviewer.value = fields.reporter.value;
       fields.approver.value = defaultFactoryApprover();
       fields.archiveApprover.value = fields.approver.value;
@@ -3654,17 +3701,110 @@
                 <p class="readonly-note">问题描述：<b>${escapeHtml(report.problem_description || "未填写")}</b></p>
               </div>
               <label class="upload-zone" style="min-height: 220px;">
-                <input type="file" accept="image/*" multiple hidden data-task-upload="${escapeHtml(action.id)}">
+                <input type="file" accept="image/*" multiple hidden data-task-upload="${escapeHtml(action.id)}" data-report-no="${escapeHtml(report.report_no)}" data-action-sequence="${escapeHtml(action.sequence_no)}">
                 <strong>上传改善照片</strong>
                 <span>每条措施至少 1 张，未上传不能关闭</span>
+                <div class="thumbs" data-task-thumbs="${escapeHtml(action.id)}"></div>
+                <div class="upload-status" data-task-status="${escapeHtml(action.id)}"></div>
               </label>
             </div>
             <div class="task-actions">
-              <div class="field"><label>执行说明</label><input placeholder="填写本次改善执行说明"></div>
-              <button class="btn primary" type="button" disabled>标记已执行</button>
+              <div class="field"><label>执行说明</label><input data-execution-note="${escapeHtml(action.id)}" placeholder="填写本次改善执行说明"></div>
+              <button class="btn primary complete-action-btn" type="button" data-action-id="${escapeHtml(action.id)}" data-actor-name="${escapeHtml(personName)}">标记已执行</button>
             </div>
           </article>`;
       }).join("") || `<div class="readonly-note">${escapeHtml(personName || "当前人员")}目前没有${taskOverdueOnly ? "逾期" : "已分配"}的改善任务。</div>`;
+      bindTaskCardActions();
+    }
+
+    function taskAttachments(actionId) {
+      return [...document.querySelectorAll(`[data-task-thumbs="${CSS.escape(actionId)}"] img[data-s3-key]`)].map((image) => ({
+        s3Key: image.dataset.s3Key,
+        originalFileName: image.dataset.fileName || image.alt || "",
+        contentType: image.dataset.contentType || "",
+        fileSizeBytes: Number(image.dataset.fileSize || 0)
+      }));
+    }
+
+    function bindTaskCardActions() {
+      document.querySelectorAll("[data-task-upload]").forEach((input) => {
+        input.addEventListener("change", async (event) => {
+          const actionId = event.target.dataset.taskUpload;
+          const sequenceNo = Number(event.target.dataset.actionSequence || 0);
+          const thumbs = document.querySelector(`[data-task-thumbs="${CSS.escape(actionId)}"]`);
+          const status = document.querySelector(`[data-task-status="${CSS.escape(actionId)}"]`);
+          const files = [...event.target.files].slice(0, 6);
+          thumbs.innerHTML = "";
+          const images = files.map((file) => {
+            const img = document.createElement("img");
+            img.src = URL.createObjectURL(file);
+            img.alt = file.name;
+            thumbs.appendChild(img);
+            return img;
+          });
+          if (!files.length) {
+            setUploadStatus(status, "");
+            return;
+          }
+          setUploadStatus(status, `正在上传 ${files.length} 张改善照片...`);
+          const settled = await Promise.allSettled(files.map((file) => uploadFileToS3(file, "action-after", sequenceNo)));
+          let successCount = 0;
+          settled.forEach((item, index) => {
+            if (item.status === "fulfilled") {
+              images[index].dataset.s3Key = item.value.key;
+              images[index].dataset.fileName = files[index].name;
+              images[index].dataset.contentType = files[index].type || "image/jpeg";
+              images[index].dataset.fileSize = String(files[index].size);
+              successCount += 1;
+            } else {
+              images[index].classList.add("upload-failed");
+            }
+          });
+          setUploadStatus(
+            status,
+            successCount === files.length ? `已上传改善照片：${successCount} 张` : `已上传 ${successCount}/${files.length} 张，失败项请重传。`,
+            successCount ? "success" : "error"
+          );
+        });
+      });
+      document.querySelectorAll(".complete-action-btn").forEach((button) => {
+        button.addEventListener("click", () => completeAction(button));
+      });
+    }
+
+    async function completeAction(button) {
+      const actionId = button.dataset.actionId;
+      const status = document.querySelector(`[data-task-status="${CSS.escape(actionId)}"]`);
+      const payload = {
+        actorName: button.dataset.actorName,
+        executionNote: document.querySelector(`[data-execution-note="${CSS.escape(actionId)}"]`)?.value || "",
+        attachments: taskAttachments(actionId)
+      };
+      if (!payload.executionNote.trim()) {
+        setUploadStatus(status, "请先填写执行说明。", "error");
+        return;
+      }
+      if (!payload.attachments.length) {
+        setUploadStatus(status, "请至少上传一张改善照片。", "error");
+        return;
+      }
+      button.disabled = true;
+      button.textContent = "正在保存";
+      try {
+        const response = await fetch(`/api/qc/actions/${encodeURIComponent(actionId)}/complete`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "保存执行结果失败");
+        setUploadStatus(status, `已执行；报告状态：${reportStatusNames[result.reportStatus] || result.reportStatus}`, "success");
+        await Promise.all([loadTaskReports(), loadReviewReports(), loadHistoryReports(), loadProjectorReports()]);
+      } catch (error) {
+        button.disabled = false;
+        button.textContent = "标记已执行";
+        setUploadStatus(status, error.message || "保存执行结果失败", "error");
+      }
     }
 
     async function loadTaskReports() {
@@ -3684,6 +3824,273 @@
         renderTaskList();
       } catch (error) {
         container.innerHTML = `<div class="readonly-note">${escapeHtml(error.message || "读取改善任务失败")}</div>`;
+      }
+    }
+
+    function actionTypeLabel(value) {
+      if (value === "permanent_correction") return "永久改善";
+      if (value === "preventive_action") return "预防措施";
+      return "临时改善";
+    }
+
+    function severityDeduction(value) {
+      if (value === "customer_complaint" || value === "unacceptable") return -5;
+      if (value === "serious") return -3;
+      return -1;
+    }
+
+    async function readReportsByStatus(statuses) {
+      if (location.protocol === "file:") return [];
+      const lists = await Promise.all(statuses.map(async (status) => {
+        const response = await fetch(`/api/qc/reports?status=${encodeURIComponent(status)}&limit=5000`);
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "读取报告失败");
+        return result.reports || [];
+      }));
+      const summaryReports = lists.flat();
+      return Promise.all(summaryReports.map(async (report) => {
+        const response = await fetch(`/api/qc/reports/${encodeURIComponent(report.report_no)}`);
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "读取报告详情失败");
+        return result.report;
+      }));
+    }
+
+    function reportPeople(report) {
+      return (report.responsible_people || []).map((item) => item.person_name).join("、") || "待分配";
+    }
+
+    function reportDepartments(report) {
+      return (report.responsible_departments || []).map((item) => item.department_name).join("、") || "未选择";
+    }
+
+    function attachmentImages(attachments, fallbackText = "暂无照片") {
+      const images = (attachments || []).filter((item) => item.view_url);
+      if (!images.length) return `<div class="readonly-note">${escapeHtml(fallbackText)}</div>`;
+      return images.map((item) =>
+        `<img src="${escapeHtml(item.view_url)}" alt="${escapeHtml(item.original_file_name || "照片")}">`
+      ).join("");
+    }
+
+    function latestReview(report) {
+      return (report.reviews || [])[0] || null;
+    }
+
+    function actionAfterAttachments(report) {
+      return (report.actions || []).flatMap((action) => action.attachments || []);
+    }
+
+    function renderCompleteReport(report) {
+      const review = latestReview(report);
+      const afterImages = actionAfterAttachments(report);
+      const actionRows = (report.actions || []).map((action) => `
+        <tr>
+          <td>${escapeHtml(action.sequence_no)}</td>
+          <td>${escapeHtml(actionTypeLabel(action.action_type))}</td>
+          <td>${escapeHtml(action.action_content)}</td>
+          <td>${escapeHtml((action.assignees || []).map((item) => item.person_name).join("、"))}</td>
+          <td>${escapeHtml(formatDate(action.due_date) || "长期执行")}</td>
+          <td>${escapeHtml(action.status === "executed" ? "已执行" : reportStatusNames[action.status] || action.status)}</td>
+        </tr>
+      `).join("");
+      const verifyText = report.status === "archived" || report.status === "pending_archive"
+        ? `改善照片已上传；复核人：${review?.reviewer_name || report.default_reviewer_name || ""}；复核意见：${review?.review_comment || "待填写"}`
+        : "待责任人执行后填写改善照片、完成日期和复核意见。";
+      return `
+        <div class="report-paper archive-report-paper">
+          <h2>改善措施报告</h2>
+          <table class="report-table">
+            <tr><th>报告编号</th><td>${escapeHtml(report.report_no)}</td><th>发现日期</th><td>${escapeHtml(formatDate(report.found_date))}</td><th>品牌</th><td>${escapeHtml(report.brand || "")}</td></tr>
+            <tr><th>款号</th><td>${escapeHtml(report.style_no || "")}</td><th>颜色</th><td>${escapeHtml(report.color || "")}</td><th>严重程度</th><td>${escapeHtml(severityName(report.severity))}</td></tr>
+            <tr><th>问题来源</th><td>${escapeHtml(report.source_department_name || "")}</td><th>责任部门</th><td>${escapeHtml(reportDepartments(report))}</td><th>责任人</th><td>${escapeHtml(reportPeople(report))}</td></tr>
+            <tr><th>所属工厂</th><td colspan="5">${escapeHtml(report.factory_name || "")}</td></tr>
+            <tr class="section-row"><td colspan="6">一、问题描述</td></tr>
+            <tr><td colspan="6"><span>${escapeHtml(report.problem_description || "")}</span><div class="photo-row">${attachmentImages(report.attachments?.filter((item) => item.attachment_type === "problem_before") || report.problem_attachments, "暂无问题照片")}<span class="pill amber">改善前</span></div></td></tr>
+            <tr class="section-row"><td colspan="6">二、根本原因分析</td></tr>
+            <tr><td colspan="6">${escapeHtml(report.root_cause || "")}</td></tr>
+            <tr class="section-row"><td colspan="6">三、改善与预防措施</td></tr>
+            <tr><td colspan="6"><table class="measure-table"><thead><tr><th>序号</th><th>措施类型</th><th>措施内容</th><th>责任人</th><th>计划完成日期</th><th>状态</th></tr></thead><tbody>${actionRows}</tbody></table></td></tr>
+            <tr class="section-row"><td colspan="6">四、效果验证与确认</td></tr>
+            <tr><td colspan="6"><span>${escapeHtml(verifyText)}</span><div class="photo-row">${attachmentImages(afterImages, "待上传改善照片")}<span class="pill green">改善后</span></div></td></tr>
+            <tr><th>报告人</th><td>${escapeHtml(report.reporter_name || "")}</td><th>复核人</th><td>${escapeHtml(review?.reviewer_name || report.default_reviewer_name || "")}</td><th>审批人</th><td>${escapeHtml(report.archive?.approved_by_name || report.intended_approver_name || "")}</td></tr>
+            <tr class="section-row"><td colspan="6">五、备注</td></tr>
+            <tr><td colspan="6" style="height: 48px;">KPI按报告责任人归集；逾期、未执行按措施任务追加扣分。归档后报告锁定，可导出图片或PDF打印。</td></tr>
+          </table>
+        </div>
+      `;
+    }
+
+    async function loadReviewReports() {
+      const container = document.getElementById("reviewList");
+      if (!container || location.protocol === "file:") return;
+      container.innerHTML = '<div class="readonly-note">正在读取待复核报告...</div>';
+      try {
+        const reports = await readReportsByStatus(["pending_review", "review_rejected"]);
+        container.innerHTML = reports.map((report) => {
+          const afterImages = actionAfterAttachments(report);
+          return `
+            <article class="task-card" data-review-report="${escapeHtml(report.report_no)}">
+              <div class="task-card-head">
+                <div>
+                  <h3>${escapeHtml(report.problem_description || "待复核改善报告")}</h3>
+                  <div class="task-meta">
+                    <span>报告：<b>${escapeHtml(report.report_no)}</b></span>
+                    <span>款号：<b>${escapeHtml(report.style_no || "")}</b></span>
+                    <span>责任部门：<b>${escapeHtml(reportDepartments(report))}</b></span>
+                    <span>责任人：<b>${escapeHtml(reportPeople(report))}</b></span>
+                  </div>
+                </div>
+                ${reportStatusPill(report.status)}
+              </div>
+              <div class="compare-grid">
+                <div class="compare-photo">
+                  <b>改善前</b>
+                  ${attachmentImages(report.attachments?.filter((item) => item.attachment_type === "problem_before") || [], "暂无问题照片")}
+                  <p class="readonly-note">问题描述：<b>${escapeHtml(report.problem_description || "未填写")}</b></p>
+                </div>
+                <div class="compare-photo">
+                  <b>责任人改善后</b>
+                  ${attachmentImages(afterImages, "责任人还未上传改善照片")}
+                  <p class="readonly-note">执行说明：<b>${escapeHtml((report.actions || []).map((action) => action.execution_note).filter(Boolean).join("；") || "未填写")}</b></p>
+                </div>
+              </div>
+              <div class="field">
+                <label>复核意见</label>
+                <textarea data-review-comment="${escapeHtml(report.report_no)}" placeholder="填写来源部门复核意见"></textarea>
+              </div>
+              <div class="actions">
+                <button class="btn primary review-submit-btn" data-report-no="${escapeHtml(report.report_no)}" data-result="approved" data-reviewer="${escapeHtml(report.default_reviewer_name || report.reporter_name || "")}" type="button">复核通过，提交归档</button>
+                <button class="btn review-submit-btn" data-report-no="${escapeHtml(report.report_no)}" data-result="rejected" data-reviewer="${escapeHtml(report.default_reviewer_name || report.reporter_name || "")}" type="button">退回改善</button>
+                <button class="btn" type="button">补充复核照片</button>
+              </div>
+              <div class="upload-status" data-review-status="${escapeHtml(report.report_no)}"></div>
+            </article>`;
+        }).join("") || '<div class="readonly-note">当前没有待复核报告；责任人完成全部措施后会自动进入这里。</div>';
+        container.querySelectorAll(".review-submit-btn").forEach((button) => {
+          button.addEventListener("click", () => submitReview(button));
+        });
+      } catch (error) {
+        container.innerHTML = `<div class="readonly-note">${escapeHtml(error.message || "读取复核报告失败")}</div>`;
+      }
+    }
+
+    async function submitReview(button) {
+      const reportNo = button.dataset.reportNo;
+      const status = document.querySelector(`[data-review-status="${CSS.escape(reportNo)}"]`);
+      const comment = document.querySelector(`[data-review-comment="${CSS.escape(reportNo)}"]`)?.value || "";
+      if (!comment.trim()) {
+        setUploadStatus(status, "请填写复核意见。", "error");
+        return;
+      }
+      button.disabled = true;
+      button.textContent = "正在提交";
+      try {
+        const response = await fetch(`/api/qc/reports/${encodeURIComponent(reportNo)}/review`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ result: button.dataset.result, comment, reviewer: button.dataset.reviewer })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "提交复核失败");
+        setUploadStatus(status, `已提交：${reportStatusNames[result.status] || result.status}`, "success");
+        await Promise.all([loadReviewReports(), loadArchiveReports(), loadHistoryReports(), loadProjectorReports()]);
+      } catch (error) {
+        button.disabled = false;
+        button.textContent = button.dataset.result === "approved" ? "复核通过，提交归档" : "退回改善";
+        setUploadStatus(status, error.message || "提交复核失败", "error");
+      }
+    }
+
+    async function loadArchiveReports() {
+      const container = document.getElementById("archiveList");
+      if (!container || location.protocol === "file:") return;
+      container.innerHTML = '<div class="readonly-note">正在读取归档审批报告...</div>';
+      try {
+        const reports = await readReportsByStatus(["pending_archive", "archived"]);
+        container.innerHTML = reports.map((report) => `
+          <article class="task-card" data-archive-report="${escapeHtml(report.report_no)}">
+            <div class="task-card-head">
+              <div>
+                <h3>${escapeHtml(report.report_no)} ${escapeHtml((report.problem_description || "").slice(0, 30))}</h3>
+                <div class="task-meta">
+                  <span>款号：<b>${escapeHtml(report.style_no || "")}</b></span>
+                  <span>来源：<b>${escapeHtml(report.source_department_name || "")}</b></span>
+                  <span>责任：<b>${escapeHtml(reportDepartments(report))}</b></span>
+                  <span>KPI影响：<b>${report.kpi_enabled ? severityDeduction(report.severity) : 0}</b></span>
+                </div>
+              </div>
+              ${report.status === "archived" ? '<span class="pill green">已归档</span>' : '<span class="pill green">资料完整</span>'}
+            </div>
+            <div class="compare-grid archive-approval-grid">
+              ${renderCompleteReport(report)}
+              <div class="archive-check-grid">
+                <div class="summary-box">
+                  <h3>归档前检查</h3>
+                  <div class="summary-list">
+                    <div><span>问题照片</span><span class="pill green">${(report.attachments || []).some((item) => item.attachment_type === "problem_before") ? "已上传" : "待补充"}</span></div>
+                    <div><span>改善照片</span><span class="pill green">${actionAfterAttachments(report).length ? "已上传" : "待补充"}</span></div>
+                    <div><span>责任人执行确认</span><span class="pill green">已确认</span></div>
+                    <div><span>来源部门复核</span><span class="pill green">${latestReview(report) ? "已通过" : "待复核"}</span></div>
+                    <div><span>KPI责任</span><span class="pill green">${report.kpi_enabled ? "已计算" : "不计入"}</span></div>
+                  </div>
+                </div>
+                <div class="summary-box">
+                  <h3>归档结果</h3>
+                  <div class="summary-list">
+                    <div><span>锁定报告</span><b>${report.status === "archived" ? "是" : "待确认"}</b></div>
+                    <div><span>进入KPI</span><b>${report.kpi_enabled ? "是，100分倒扣" : "否，仅培训"}</b></div>
+                    <div><span>历史记录</span><b>按款号 ${escapeHtml(report.style_no || "")} 归集</b></div>
+                    <div><span>后续权限</span><b>仅补充说明/评论</b></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label>审批人（默认厂长，可按所在工厂选择）</label>
+              <select data-archive-approver="${escapeHtml(report.report_no)}">${allPeople().map((person) => `<option ${person === (report.intended_approver_name || defaultFactoryApprover()) ? "selected" : ""}>${escapeHtml(person)}</option>`).join("")}</select>
+            </div>
+            <div class="field">
+              <label>主管归档意见</label>
+              <input data-archive-comment="${escapeHtml(report.report_no)}" value="资料完整，复核通过，归档并进入本月KPI。" ${report.status === "archived" ? "readonly" : ""}>
+            </div>
+            <div class="actions">
+              <button class="btn primary archive-submit-btn" data-report-no="${escapeHtml(report.report_no)}" type="button" ${report.status === "archived" ? "disabled" : ""}>${report.status === "archived" ? "已归档锁定" : "确认归档并锁定KPI"}</button>
+              <button class="btn" onclick="window.print()" type="button">导出PDF</button>
+              <button class="btn" type="button">退回补充资料</button>
+            </div>
+            <div class="upload-status" data-archive-status="${escapeHtml(report.report_no)}"></div>
+          </article>
+        `).join("") || '<div class="readonly-note">当前没有待归档报告；部门复核通过后会显示在这里。</div>';
+        container.querySelectorAll(".archive-submit-btn").forEach((button) => {
+          button.addEventListener("click", () => submitArchive(button));
+        });
+      } catch (error) {
+        container.innerHTML = `<div class="readonly-note">${escapeHtml(error.message || "读取归档报告失败")}</div>`;
+      }
+    }
+
+    async function submitArchive(button) {
+      const reportNo = button.dataset.reportNo;
+      const status = document.querySelector(`[data-archive-status="${CSS.escape(reportNo)}"]`);
+      const approver = document.querySelector(`[data-archive-approver="${CSS.escape(reportNo)}"]`)?.value || "";
+      const comment = document.querySelector(`[data-archive-comment="${CSS.escape(reportNo)}"]`)?.value || "";
+      button.disabled = true;
+      button.textContent = "正在归档";
+      try {
+        const response = await fetch(`/api/qc/reports/${encodeURIComponent(reportNo)}/archive`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ approver, comment })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "归档失败");
+        setUploadStatus(status, `已归档并同步 KPI：${result.kpiEntries || 0} 条`, "success");
+        await Promise.all([loadArchiveReports(), loadHistoryReports(), loadProjectorReports()]);
+        renderKpiPeopleRows();
+      } catch (error) {
+        button.disabled = false;
+        button.textContent = "确认归档并锁定KPI";
+        setUploadStatus(status, error.message || "归档失败", "error");
       }
     }
 
@@ -4024,6 +4431,26 @@
       }));
     }
 
+    function currentProblemImages() {
+      const uploaded = [...document.querySelectorAll("#problemThumbs img")].map((image) => ({
+        src: image.src,
+        alt: image.alt || "问题照片"
+      }));
+      return uploaded;
+    }
+
+    function renderProblemPhotoRows(images = currentProblemImages()) {
+      ["paperProblemPhotoRow", "archiveProblemPhotoRow"].forEach((id) => {
+        const row = document.getElementById(id);
+        if (!row) return;
+        row.innerHTML = images.length
+          ? images.map((image) =>
+              `<img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt)}" data-problem-image>`
+            ).join("") + '<span class="pill amber">改善前</span>'
+          : '<span class="readonly-note">待上传问题照片</span>';
+      });
+    }
+
     async function saveReport() {
       const button = document.getElementById("saveReportBtn");
       const status = document.getElementById("saveReportStatus");
@@ -4078,7 +4505,7 @@
         button.textContent = "已保存";
         setUploadStatus(status, `报告 ${result.reportNo} 已保存，措施任务已分配。`, "success");
         updateReportPreview();
-        await Promise.all([loadHistoryReports(), loadProjectorReports(), loadTaskReports(), loadFactories()]);
+        await Promise.all([loadHistoryReports(), loadProjectorReports(), loadTaskReports(), loadReviewReports(), loadArchiveReports(), loadFactories()]);
       } catch (error) {
         button.disabled = false;
         button.textContent = "重新保存";
@@ -4097,10 +4524,6 @@
       const status = document.getElementById("problemUploadStatus");
       container.innerHTML = "";
       const files = [...event.target.files].slice(0, 6);
-      const firstUrl = files.length ? URL.createObjectURL(files[0]) : "assets/issue-photo-sewing-clean.png";
-      document.querySelectorAll("[data-problem-image]").forEach((image) => {
-        image.src = firstUrl;
-      });
       const previewImages = files.map((file) => {
         const img = document.createElement("img");
         img.src = URL.createObjectURL(file);
@@ -4109,26 +4532,41 @@
         return img;
       });
       if (!event.target.files.length) {
-        container.innerHTML = '<img src="assets/issue-photo-sewing-clean.png" alt="问题照片示例">';
+        container.innerHTML = '<span class="thumb-placeholder"></span><span class="thumb-placeholder"></span><span class="thumb-placeholder"></span>';
         setUploadStatus(status, "");
+        renderProblemPhotoRows();
         return;
       }
 
+      renderProblemPhotoRows(previewImages.map((image) => ({ src: image.src, alt: image.alt })));
       setUploadStatus(status, `正在上传 ${files.length} 张问题照片...`);
-      try {
-        const results = await Promise.all(files.map((file) => uploadFileToS3(file, "problem-before")));
-        results.forEach((result, index) => {
+      const settled = await Promise.allSettled(files.map((file) => uploadFileToS3(file, "problem-before")));
+      let successCount = 0;
+      settled.forEach((item, index) => {
+        if (item.status === "fulfilled") {
+          const result = item.value;
           previewImages[index].dataset.s3Key = result.key;
           previewImages[index].dataset.fileName = files[index].name;
           previewImages[index].dataset.contentType = files[index].type || "image/jpeg";
           previewImages[index].dataset.fileSize = String(files[index].size);
-        });
-        const message = results.some((result) => result.skipped)
+          successCount += 1;
+        } else {
+          previewImages[index].classList.add("upload-failed");
+        }
+      });
+      renderProblemPhotoRows(previewImages.map((image) => ({ src: image.src, alt: image.alt })));
+      if (successCount === files.length) {
+        const message = settled.some((item) => item.status === "fulfilled" && item.value.skipped)
           ? "本地预览模式：上线域名打开后会上传到 S3。"
-          : `已上传到 S3：${results.length} 张`;
+          : `已上传到 S3：${successCount} 张`;
         setUploadStatus(status, message, "success");
-      } catch (error) {
-        setUploadStatus(status, error.message || "图片上传失败，请重试。", "error");
+      } else {
+        const firstError = settled.find((item) => item.status === "rejected");
+        setUploadStatus(
+          status,
+          `已上传 ${successCount}/${files.length} 张；失败项请重新选择上传。${firstError?.reason?.message || ""}`,
+          successCount ? "success" : "error"
+        );
       }
     });
     document.getElementById("saveReportBtn").addEventListener("click", saveReport);
@@ -4141,6 +4579,8 @@
     loadHistoryReports();
     loadProjectorReports();
     loadTaskReports();
+    loadReviewReports();
+    loadArchiveReports();
     fields.sourceDept.value = "压胶部";
     renderResponsibleDepartments();
     renderMeasures();
