@@ -6,6 +6,18 @@ export function qcImageKey(params: {
   actionSequenceNo?: number;
 }) {
   const actionPrefix = params.actionSequenceNo ? `action-${params.actionSequenceNo}-` : "";
-  return `qc-os/${params.year}/${params.reportNo}/${params.type}/${actionPrefix}${params.fileName}`;
+  return `qc-os/${params.year}/${params.reportNo}/${params.type}/${actionPrefix}${safeS3FileName(params.fileName)}`;
 }
 
+export function safeS3FileName(fileName: string) {
+  const parts = fileName.split(".");
+  const extension = parts.length > 1 ? `.${parts.pop()}` : "";
+  const baseName = parts.join(".") || "upload";
+  const safeBaseName = baseName
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-zA-Z0-9._-]/g, "")
+    .slice(0, 80);
+  const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, "");
+  return `${timestamp}-${safeBaseName || "upload"}${extension.toLowerCase()}`;
+}

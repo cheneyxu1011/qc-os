@@ -409,13 +409,14 @@ archived            已归档锁定
 
 - 先接报告、措施、人员库、复核、归档。
 - 用 Supabase RLS 做权限隔离。
-- 本阶段图片可以先用 Supabase Storage 或临时 S3。
+- 图片不进入 Supabase Storage，Supabase 只保存 S3 key、文件类型、上传人、所属报告和措施序号。
 
 ### 阶段 4：接 S3
 
-- 后端生成 presigned upload URL。
-- 前端直传 S3。
+- 后端生成 presigned POST upload form。
+- 前端直传 S3，单文件默认限制 15MB。
 - Supabase 只保存图片 metadata 和 S3 key。
+- S3 bucket 保持 private；如需直接预览，可后续接 CloudFront 或由后端生成短期查看链接。
 
 ### 阶段 5：接 Factory OS / People OS
 
@@ -445,4 +446,3 @@ archived            已归档锁定
 - KPI按责任人归集
 
 这些就是后续迁移到正式 `qc-os` 仓库时的核心字段。
-
