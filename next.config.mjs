@@ -13,14 +13,6 @@ const nextConfig = {
         permanent: true
       }
     ];
-  },
-  async rewrites() {
-    return [
-      {
-        source: "/",
-        destination: "/prototype/qc.html"
-      }
-    ];
   }
 };
 
