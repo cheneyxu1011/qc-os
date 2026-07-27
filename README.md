@@ -8,12 +8,8 @@ Current deployment strategy:
 - The mobile capture prototype is served from `/prototype/mobile.html`.
 - Root `/` redirects to `/prototype/qc.html` for the first workshop trial.
 - Current Vercel production URL: `https://qc-os.vercel.app/prototype/qc.html`.
-- Planned production domain: `https://qc-os.vanwellfgroup.com`.
-- DNS record needed for the planned domain, based on the latest Vercel inspection:
-  - Type: `A`
-  - Name: `qc-os`
-  - Value: `76.76.21.21`
-- Alternative CNAME option from Vercel verification:
+- Planned production domain: `https://qc-os.vanwellgroup.com`.
+- DNS record needed for the planned domain:
   - Type: `CNAME`
   - Name: `qc-os`
   - Value: `111751b2c1b95b55.vercel-dns-016.com.`
@@ -24,7 +20,7 @@ Future integrations:
 - People OS: departments, people, roles, active status.
 - Supabase: reports, corrective actions, reviews, archives, KPI entries.
 - Amazon S3: problem photos, improvement photos, review evidence, archive exports.
-- Vercel: production deployment at `qc-os.vanwellfgroup.com`.
+- Vercel: production deployment at `qc-os.vanwellgroup.com`.
 
 ## Local Development
 

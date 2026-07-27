@@ -67,14 +67,14 @@ qc-os/
 - Supabase Postgres
 - Amazon S3 图片存储
 - Vercel 部署
-- 域名：`qc-os.vanwellfgroup.com`
+- 域名：`qc-os.vanwellgroup.com`
 
 ## 3. Vercel 与域名
 
 正式上线目标：
 
 ```text
-https://qc-os.vanwellfgroup.com
+https://qc-os.vanwellgroup.com
 ```
 
 Vercel 环境变量预留：
@@ -98,7 +98,7 @@ FACTORY_OS_API_KEY=""
 PEOPLE_OS_API_BASE_URL=""
 PEOPLE_OS_API_KEY=""
 
-QC_OS_PUBLIC_BASE_URL="https://qc-os.vanwellfgroup.com"
+QC_OS_PUBLIC_BASE_URL="https://qc-os.vanwellgroup.com"
 ```
 
 注意：
@@ -427,7 +427,7 @@ archived            已归档锁定
 
 - Vercel 项目绑定 GitHub `qc-os`。
 - 配置环境变量。
-- 绑定域名 `qc-os.vanwellfgroup.com`。
+- 绑定域名 `qc-os.vanwellgroup.com`。
 - 生产环境开启日志、错误监控和备份策略。
 
 ## 11. 当前原型需要保留的对接点
