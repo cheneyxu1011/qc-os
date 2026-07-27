@@ -9,7 +9,11 @@ Current deployment strategy:
 - Root `/` redirects to `/prototype/qc.html` for the first workshop trial.
 - Current Vercel production URL: `https://qc-os.vercel.app/prototype/qc.html`.
 - Planned production domain: `https://qc-os.vanwellfgroup.com`.
-- DNS record needed for the planned domain:
+- DNS record needed for the planned domain, based on the latest Vercel inspection:
+  - Type: `A`
+  - Name: `qc-os`
+  - Value: `76.76.21.21`
+- Alternative CNAME option from Vercel verification:
   - Type: `CNAME`
   - Name: `qc-os`
   - Value: `111751b2c1b95b55.vercel-dns-016.com.`
