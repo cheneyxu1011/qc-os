@@ -5,8 +5,8 @@ QC OS stores report records in Supabase and stores all photos/export files in Am
 ## Required Vercel Environment Variables
 
 ```text
-AWS_REGION="ap-east-1"
-AWS_S3_BUCKET_QC_IMAGES="your-qc-os-bucket"
+AWS_REGION="ap-northeast-1"
+AWS_S3_BUCKET_QC_IMAGES="vanwell-qc-os-media"
 AWS_S3_PUBLIC_BASE_URL=""
 AWS_ACCESS_KEY_ID=""
 AWS_SECRET_ACCESS_KEY=""
@@ -35,7 +35,13 @@ Add this CORS rule to the S3 bucket:
 
 ## IAM Policy
 
-Create a dedicated IAM user or role for QC OS. Replace `your-qc-os-bucket` before use:
+Current IAM user:
+
+```text
+qc-os-s3-uploader
+```
+
+This user should only have access to the QC OS media prefix. Policy:
 
 ```json
 {
@@ -48,7 +54,17 @@ Create a dedicated IAM user or role for QC OS. Replace `your-qc-os-bucket` befor
         "s3:GetObject",
         "s3:DeleteObject"
       ],
-      "Resource": "arn:aws:s3:::your-qc-os-bucket/qc-os/*"
+      "Resource": "arn:aws:s3:::vanwell-qc-os-media/qc-os/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::vanwell-qc-os-media",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": "qc-os/*"
+        }
+      }
     }
   ]
 }
