@@ -33,11 +33,14 @@ export async function POST(request: Request, context: RouteContext) {
     const { reportNo } = await context.params;
     const cleanedReportNo = decodeURIComponent(reportNo).trim().toUpperCase();
     const body = await request.json();
+    const action = cleanText(body.action, 20) || "archive";
     const approverName = cleanText(body.approver, 80);
     const archiveComment = cleanText(body.comment, 5000);
 
     if (!/^[A-Z]{2,4}\d{4}-\d{3,}$/.test(cleanedReportNo)) throw new Error("报告编号格式不正确");
+    if (!["archive", "return"].includes(action)) throw new Error("归档操作不正确");
     if (!approverName) throw new Error("请选择审批人");
+    if (action === "return" && !archiveComment) throw new Error("请填写需要补充的资料");
 
     const supabase = createAdminSupabaseClient();
     const { data: report, error: reportError } = await supabase
@@ -62,6 +65,31 @@ export async function POST(request: Request, context: RouteContext) {
       .maybeSingle();
     if (approverError) throw approverError;
     if (!approver) throw new Error("审批人不在人员库中");
+
+    if (action === "return") {
+      const { error: returnError } = await supabase
+        .from("qc_reports")
+        .update({ status: "pending_review", workflow_step: 3 })
+        .eq("id", report.id);
+      if (returnError) throw returnError;
+
+      await supabase.from("qc_audit_events").insert({
+        report_id: report.id,
+        event_type: "archive_returned_for_supplement",
+        actor_person_id: approver.id,
+        actor_name: approver.name,
+        event_data: {
+          report_no: cleanedReportNo,
+          supplement_request: archiveComment,
+        },
+      });
+
+      return NextResponse.json({
+        reportNo: cleanedReportNo,
+        status: "pending_review",
+        returned: true,
+      });
+    }
 
     const [
       { data: responsiblePeople, error: peopleError },
